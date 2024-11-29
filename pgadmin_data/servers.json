@@ -1,0 +1,16 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "sprintbms-db",
+      "Group": "Server Group",
+      "Host": "db",
+      "Port": 5432,
+      "Username": "postgres",
+      "Password": "your_password",
+      "MaintenanceDB": "postgres",
+      "SSLMode": "prefer",
+      "ConnSettings": "",
+      "Comment": ""
+    }
+  }
+}

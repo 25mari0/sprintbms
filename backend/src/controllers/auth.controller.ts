@@ -7,7 +7,11 @@ import AppDataSource from '../db/data-source';
 
 const userRepository = AppDataSource.getRepository(User);
 
-export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const { email, password } = req.body;
 
   try {
@@ -18,33 +22,52 @@ export const register = async (req: Request, res: Response, next: NextFunction):
     const user = userRepository.create({ email, password: hashedPassword });
     await userRepository.save(user);
 
-    res.status(201).json({ message: 'User registered successfully', userId: user.id });
+    res
+      .status(201)
+      .json({ message: 'User registered successfully', userId: user.id });
   } catch (error) {
     next(error);
   }
 };
 
-export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const { email, password } = req.body;
-  console.log(req.body)
+  console.log(req.body);
 
   try {
-    const user = await userRepository.findOne({ where: { email }, select: ['id', 'email', 'password', 'role', 'mustChangePassword'] });
+    const user = await userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'password', 'role', 'mustChangePassword'],
+    });
 
     if (!user) return next(new Error('User not found'));
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return next(new Error('Invalid credentials'))
+    if (!isMatch) return next(new Error('Invalid credentials'));
 
-    const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET!,
+      { expiresIn: '1h' },
+    );
 
-    res.status(200).json({ token, mustChangePassword: user.mustChangePassword });
+    res
+      .status(200)
+      .json({ token, mustChangePassword: user.mustChangePassword });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
-export const resetPassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const { email } = req.body;
 
   try {
@@ -66,7 +89,11 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-export const updatePassword = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updatePassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
   const { userId, newPassword } = req.body;
 
   try {

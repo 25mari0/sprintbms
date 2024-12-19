@@ -1,13 +1,12 @@
-// src/db/index.ts
 import pgPromise from 'pg-promise';
 import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 
-// Initialize pg-promise instance
+// initialize pg-promise instance
 const pgp = pgPromise();
 
-// Create a database connection
+// create a database connection
 const db = pgp({
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,

@@ -13,21 +13,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
 });
 
 app.use(express.json());
 
 app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'");
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self'",
+  );
   next();
 });
 
-app.use(authRoutes, limiter)
+app.use(authRoutes, limiter);
 app.use(errorHandler);
 
-
-// Retry logic for TypeORM initialization
+// retry logic for TypeORM initialization
 const connectWithRetry = async () => {
   let retries = 10;
   while (retries) {
@@ -38,16 +40,16 @@ const connectWithRetry = async () => {
     } catch (err) {
       console.error('Error during DataSource initialization, retrying...', err);
       retries -= 1;
-      await new Promise((res) => setTimeout(res, 5000)); // Wait 5 seconds before retrying
+      await new Promise((res) => setTimeout(res, 5000)); // wait 5 seconds before retrying
     }
   }
   if (!retries) {
     console.error('Could not initialize DataSource after multiple attempts.');
-    process.exit(1); // Exit the process if connection fails after retries
+    process.exit(1); // exit the process if connection fails after retries
   }
 };
 
-// Call retry logic for DB connection
+// call retry logic for DB connection
 connectWithRetry();
 
 app.get('/', (req, res) => {

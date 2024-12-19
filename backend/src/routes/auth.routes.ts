@@ -4,7 +4,6 @@ import {
   validate,
   emailValidation,
   passwordValidation,
-  roleValidation,
 } from '../middlewares/validations.middleware';
 import { body } from 'express-validator';
 import {

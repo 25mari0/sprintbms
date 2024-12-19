@@ -1,11 +1,12 @@
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { validationResult, body } from 'express-validator';
 
 // reused validations go here - DRY (DONT REPEAT YOURSELF) DUMMY
 
-export const validate = (
-    req: any, 
-    res: any, 
-    next: any
+export const validate: RequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
   const errors = validationResult(req);
   if (errors.isEmpty()) {

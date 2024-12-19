@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
-import { Booking } from "./Booking";
-import { Worker } from "./Worker";
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Booking } from './Booking';
+import { Worker } from './Worker';
 
 @Entity()
 export class BookingWorker {
@@ -8,10 +8,10 @@ export class BookingWorker {
   id!: number;
 
   @ManyToOne(() => Booking, (booking) => booking.bookingWorkers)
-  @JoinColumn({ name: "booking_id" })
+  @JoinColumn({ name: 'booking_id' })
   booking!: Booking;
 
   @ManyToOne(() => Worker, (worker) => worker.bookingWorkers)
-  @JoinColumn({ name: "worker_id" })
+  @JoinColumn({ name: 'worker_id' })
   worker!: Worker;
 }

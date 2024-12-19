@@ -1,6 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
-import { Business } from "../models/Business";
-import { BookingWorker } from "../models/BookingWorker";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
+import { Business } from './Business';
+import { BookingWorker } from './BookingWorker';
 
 @Entity()
 export class Worker {
@@ -11,7 +18,7 @@ export class Worker {
   name!: string;
 
   @ManyToOne(() => Business, (business) => business.workers)
-  @JoinColumn({ name: "business_id" })
+  @JoinColumn({ name: 'business_id' })
   business!: Business;
 
   @OneToMany(() => BookingWorker, (bookingWorker) => bookingWorker.worker)

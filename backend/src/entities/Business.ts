@@ -1,7 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
-import { Worker } from "../models/Worker";
-import { Customer } from "../models/Customer";
-import { Booking } from "../models/Booking";
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Worker } from './Worker';
+import { Customer } from './Customer';
+import { Booking } from './Booking';
 
 @Entity()
 export class Business {
@@ -11,16 +11,10 @@ export class Business {
   @Column({ length: 100 })
   name!: string;
 
-  @Column({ unique: true })
-  email!: string;
-
-  @Column()
-  password!: string;
-
   @Column({ default: true })
   active!: boolean;
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at!: Date;
 
   @OneToMany(() => Worker, (worker) => worker.business)

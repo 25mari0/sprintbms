@@ -1,24 +1,54 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 import AppDataSource from './db/data-source';
+import errorHandler from './middlewares/error.middleware';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
 
 app.use(express.json());
 
-// Initialize TypeORM connection
-AppDataSource.initialize()
-  .then(() => {
-    console.log('DataSource has been initialized!');
-  })
-  .catch((err) => {
-    console.error('Error during DataSource initialization:', err);
-  });
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'");
+  next();
+});
+
+app.use(authRoutes, limiter)
+app.use(errorHandler);
+
+
+// Retry logic for TypeORM initialization
+const connectWithRetry = async () => {
+  let retries = 10;
+  while (retries) {
+    try {
+      await AppDataSource.initialize();
+      console.log('DataSource has been initialized!');
+      break;
+    } catch (err) {
+      console.error('Error during DataSource initialization, retrying...', err);
+      retries -= 1;
+      await new Promise((res) => setTimeout(res, 5000)); // Wait 5 seconds before retrying
+    }
+  }
+  if (!retries) {
+    console.error('Could not initialize DataSource after multiple attempts.');
+    process.exit(1); // Exit the process if connection fails after retries
+  }
+};
+
+// Call retry logic for DB connection
+connectWithRetry();
 
 app.get('/', (req, res) => {
   res.send('API is running!');

@@ -6,6 +6,8 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 import AppDataSource from './db/data-source';
 import errorHandler from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
+import cookieParser from 'cookie-parser';
+
 
 dotenv.config();
 
@@ -26,8 +28,10 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(cookieParser());
 app.use(authRoutes, limiter);
 app.use(errorHandler);
+
 
 // retry logic for TypeORM initialization
 const connectWithRetry = async () => {

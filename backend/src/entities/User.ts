@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { Token } from './Token';
 import bcrypt from 'bcryptjs';
 
 @Entity()
@@ -21,8 +23,14 @@ export class User {
   @Column({ default: false })
   mustChangePassword!: boolean; // flag is set to true, on worker creation or if owner resets the worker's pw
 
+  @OneToMany(() => Token, token => token.user)
+  tokens!: Token[]; // array of Token entities
+
   @Column({ default: 'owner' })
   role!: 'owner' | 'worker';
+
+  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  lastPasswordChange!: Date;
 
   @CreateDateColumn()
   createdAt!: Date;

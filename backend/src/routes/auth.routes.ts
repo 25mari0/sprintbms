@@ -12,6 +12,7 @@ import {
   resetPassword,
   updatePassword,
 } from '../controllers/auth.controller';
+import { authenticate } from '../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -34,7 +35,12 @@ router.post(
   login,
 );
 
-router.post('/reset-password', ...emailValidation, validate, resetPassword);
+router.post('/reset-password', 
+  ...emailValidation, 
+  validate, 
+  authenticate,
+  resetPassword,
+);
 
 router.post(
   '/update-password',

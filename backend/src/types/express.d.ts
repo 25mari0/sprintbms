@@ -1,7 +1,8 @@
 interface JwtPayload {
-  id: string;
-  username: string;
-  // other fields, tba
+  userId: string; // Changed from 'id' to 'userId' to match your JWT payload
+  role: string;
+  iat: number; // Added to represent 'issued at' time
+  // Add other fields as needed
 }
 
 declare global {

@@ -22,7 +22,7 @@ export default [
   ),
   {
     // Use the recursive pattern to ignore `dist` anywhere in the backend directory
-    ignores: ['backend/dist/**'],
+    ignores: ['backend/dist/**', 'migrations/**'],
   },
   // Backend configuration
   {

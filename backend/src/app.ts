@@ -8,7 +8,6 @@ import errorHandler from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import cookieParser from 'cookie-parser';
 
-
 dotenv.config();
 
 const app = express();
@@ -31,7 +30,6 @@ app.use((req, res, next) => {
 app.use(cookieParser());
 app.use(authRoutes, limiter);
 app.use(errorHandler);
-
 
 // retry logic for TypeORM initialization
 const connectWithRetry = async () => {

@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 import { User } from './User';
 
 @Entity()
@@ -6,7 +12,7 @@ export class Token {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'text' }) 
+  @Column({ type: 'text' })
   token!: string; // hashed refresh token
 
   @Column({ type: 'text' }) // To store the salt
@@ -15,7 +21,7 @@ export class Token {
   @Column()
   userId!: string;
 
-  @ManyToOne(() => User, user => user.tokens)
+  @ManyToOne(() => User, (user) => user.tokens)
   @Index()
   user!: User;
 

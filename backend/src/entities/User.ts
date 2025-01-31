@@ -23,13 +23,13 @@ export class User {
   @Column({ default: false })
   mustChangePassword!: boolean; // flag is set to true, on worker creation or if owner resets the worker's pw
 
-  @OneToMany(() => Token, token => token.user)
+  @OneToMany(() => Token, (token) => token.user)
   tokens!: Token[]; // array of Token entities
 
   @Column({ default: 'owner' })
   role!: 'owner' | 'worker';
 
-  @Column({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastPasswordChange!: Date;
 
   @CreateDateColumn()
@@ -38,12 +38,11 @@ export class User {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  async hashPassword(): Promise<void> {
-    const saltRounds = 10;
-    this.password = await bcrypt.hash(this.password, saltRounds);
+  async hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, 10);
   }
 
-  async validatePassword(plainPassword: string): Promise<boolean> {
-    return await bcrypt.compare(plainPassword, this.password);
+  async validatePassword(password: string): Promise<boolean> {
+    return await bcrypt.compare(password, this.password);
   }
 }

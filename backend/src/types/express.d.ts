@@ -1,9 +1,4 @@
-interface JwtPayload {
-  userId: string; // Changed from 'id' to 'userId' to match your JWT payload
-  role: string;
-  iat: number; // Added to represent 'issued at' time
-  // Add other fields as needed
-}
+import { JwtPayload } from './authTypes.ts';
 
 declare global {
   namespace Express {
@@ -12,5 +7,3 @@ declare global {
     }
   }
 }
-
-export { JwtPayload };

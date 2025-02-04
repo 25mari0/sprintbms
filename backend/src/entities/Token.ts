@@ -18,6 +18,7 @@ export class Token {
   @Column({ type: 'text' }) // To store the salt
   salt!: string;
 
+  @Index()
   @Column()
   userId!: string;
 

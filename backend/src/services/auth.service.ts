@@ -39,6 +39,7 @@ class AuthService {
     userId: string,
     refreshToken: string,
   ): Promise<void> {
+    try {
     // Generate a salt once
     const salt = await bcrypt.genSalt(10);
     const hashedToken = await bcrypt.hash(refreshToken, salt);
@@ -50,11 +51,17 @@ class AuthService {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     });
     await this.tokenRepository.save(newToken);
+    } catch (error) {
+    const err = error as Error;
+    err.message = `Error storing refresh token: ${err.message}`;
+    throw err; 
+    }
   }
 
   private async validateRefreshToken(
     refreshToken: string,
   ): Promise<{ userId: string; valid: boolean }> {
+    try {
     const userId = await this.getUserIdFromRefreshToken(refreshToken);
     if (!userId) {
       return { userId: '', valid: false };
@@ -62,7 +69,7 @@ class AuthService {
 
     const tokens = await this.tokenRepository.find({
       where: { userId },
-      relations: ['user'],
+      select: ['token', 'expiresAt'],
     });
 
     for (const token of tokens) {
@@ -71,16 +78,21 @@ class AuthService {
           await this.tokenRepository.remove(token);
           return { userId: '', valid: false };
         }
-        return { userId: token.user.id, valid: true };
+        return { userId, valid: true };
       }
     }
-
     return { userId: '', valid: false };
+    } catch (error) {
+    const err = error as Error;
+    err.message = `Error validating refresh token: ${err.message}`;
+    throw err; 
+    }
   }
 
   async refreshAccessToken(
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
+    try {
     const { userId, valid } = await this.validateRefreshToken(refreshToken);
     if (!valid) {
       throw new Error('Invalid or expired refresh token');
@@ -100,36 +112,63 @@ class AuthService {
     await this.storeRefreshToken(userId, newRefreshToken); // store the new one
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  } catch (error) {
+    const err = error as Error;
+    err.message = `Error refreshing access token: ${err.message}`;
+    throw err; // Unexpected error
+    } 
   }
 
   async revokeAllRefreshTokens(userId: string): Promise<void> {
-    await this.tokenRepository.delete({ userId });
+    try {
+      await this.tokenRepository.delete({ userId });
+    } catch {
+      throw new Error('Failed to revoke all refresh tokens');
+    }
   }
 
   public async revokeRefreshToken(refreshToken: string): Promise<void> {
-    const { userId, valid } = await this.validateRefreshToken(refreshToken);
-    if (valid) {
-      await this.tokenRepository.delete({
-        userId: userId,
-        token: refreshToken,
-      });
+    try {
+      const { userId, valid } = await this.validateRefreshToken(refreshToken);
+      if (valid) {
+        await this.tokenRepository.delete({
+          userId: userId,
+          token: refreshToken,
+        });
+      }
+    } catch {
+      throw new Error('Failed to revoke refresh token');
     }
   }
 
   public async hasValidRefreshTokens(userId: string): Promise<boolean> {
-    const currentDate = new Date();
-    const validTokens = await this.tokenRepository.find({
-      where: {
-        userId: userId,
-        expiresAt: MoreThan(currentDate),
-      },
-    });
-    return validTokens.length > 0;
+    try {
+      const currentDate = new Date();
+      const validTokens = await this.tokenRepository.find({
+        where: {
+          userId: userId,
+          expiresAt: MoreThan(currentDate),
+        },
+      });
+      return validTokens.length > 0;
+    } catch (error) {
+      const err = error as Error;
+      err.message = `Error checking for valid refresh tokens: ${err.message}`;
+      throw err;
+    }
   }
 
   public async getUserById(userId: string): Promise<User | null> {
-    return await this.userRepository.findOne({ where: { id: userId } });
+    try {
+      return await this.userRepository.findOne({ where: { id: userId } });
+    } catch (error) {
+      const err = error as Error;
+      err.message = `Error fetching user by ID: ${err.message}`;
+      throw err;
+    }
   }
+
 }
+
 
 export default new AuthService();

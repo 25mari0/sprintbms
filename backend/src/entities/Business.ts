@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Worker } from './Worker';
 import { Customer } from './Customer';
 import { Booking } from './Booking';
+import { User } from './User';
 
 @Entity()
 export class Business {
@@ -11,18 +11,18 @@ export class Business {
   @Column({ length: 100 })
   name!: string;
 
-  @Column({ default: true })
-  active!: boolean;
+  @Column({ type: 'timestamp', nullable: true })
+  licenseExpirationDate?: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at!: Date;
-
-  @OneToMany(() => Worker, (worker) => worker.business)
-  workers!: Worker[];
 
   @OneToMany(() => Customer, (customer) => customer.business)
   customers!: Customer[];
 
   @OneToMany(() => Booking, (booking) => booking.business)
   bookings!: Booking[];
+
+  @OneToMany(() => User, (user) => user.business)
+  users!: User[]; 
 }

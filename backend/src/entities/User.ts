@@ -5,8 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Token } from './Token';
+import { Business } from './Business';
+import { BookingWorker } from './BookingWorker';
 import bcrypt from 'bcryptjs';
 
 @Entity()
@@ -21,7 +25,10 @@ export class User {
   password!: string;
 
   @Column({ default: false })
-  mustChangePassword!: boolean; // flag is set to true, on worker creation or if owner resets the worker's pw
+  mustChangePassword!: boolean; // flag is set to true, on worker creation && if owner resets the worker's pw
+  
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  lastPasswordChange!: Date;
 
   @OneToMany(() => Token, (token) => token.user)
   tokens!: Token[]; // array of Token entities
@@ -29,8 +36,12 @@ export class User {
   @Column({ default: 'owner' })
   role!: 'owner' | 'worker';
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  lastPasswordChange!: Date;
+  @ManyToOne(() => Business, (business) => business.users)
+  @JoinColumn({ name: 'business_id' })
+  business?: Business; // Nullable because not all users (like owners) might have a business linked yet
+
+  @OneToMany(() => BookingWorker, (bookingWorker) => bookingWorker.worker)
+  bookingWorkers!: BookingWorker[];
 
   @CreateDateColumn()
   createdAt!: Date;

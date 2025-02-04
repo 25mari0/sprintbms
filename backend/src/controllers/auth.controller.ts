@@ -52,6 +52,11 @@ const authController = {
       if (!user || !(await user.validatePassword(password)))
         throw new Error('Invalid credentials');
 
+      if (user.mustChangePassword) {
+        //TO-DO: Redirect to /change-password or similar, or send a special response
+        throw new Error('Password must be changed');
+      }
+
       const accessToken = authService.generateAccessToken(user.id, user.role);
       const refreshToken = await authService.generateRefreshToken(user.id);
 

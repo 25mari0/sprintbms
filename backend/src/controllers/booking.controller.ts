@@ -65,6 +65,24 @@ const bookingController = {
     }
   },
 
+  //update booking information (status, workers, charged_price, pickup_at)
+  updateBooking: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const booking = await bookingService.updateBooking(id, updateData);
+
+      res.json({ status: 'success', data: booking });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   getBookingsWithFilter: async (
     req: Request & { user?: JwtPayload },
     res: Response,
@@ -111,6 +129,7 @@ const bookingController = {
       next(err);
     }
   },
+
 };
 
 export default bookingController;

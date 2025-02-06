@@ -75,6 +75,19 @@ class BookingManagementService {
     await this.bookingRepository.remove(booking);
   }
 
+  async updateBooking(
+    bookingId: string,
+    updateData: Partial<Booking>,
+  ): Promise<Booking> {
+    const booking = await this.bookingRepository.findOne({
+      where: { id: bookingId },
+    });
+    if (!booking) throw new Error('Booking not found');
+    Object.assign(booking, updateData);
+    await this.bookingRepository.save(booking);
+    return booking;
+  }
+
   async getBookingsWithFilter(
     businessId: string,
     filters: BookingFilter = {},

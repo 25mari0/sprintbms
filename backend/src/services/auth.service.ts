@@ -110,11 +110,12 @@ class AuthService {
         where: { id: userId },
         select: ['id', 'role'],
       });
+
       if (!user) {
         throw new Error('User not found');
       }
 
-      const newAccessToken = this.generateAccessToken(user.id, user.role);
+      const newAccessToken = this.generateAccessToken(user.id, user.role, user.business?.id);
       const newRefreshToken = await this.generateRefreshToken(userId);
       await this.revokeRefreshToken(refreshToken); // revoke the old token
       await this.storeRefreshToken(userId, newRefreshToken); // store the new one

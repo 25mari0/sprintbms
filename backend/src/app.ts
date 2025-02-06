@@ -8,6 +8,8 @@ import errorHandler from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
 import bookingRoutes from './routes/booking.routes';
 import cookieParser from 'cookie-parser';
+import customerRoutes from './routes/customer.routes';
+import businessRoutes from './routes/business.routes';
 
 dotenv.config();
 
@@ -30,7 +32,9 @@ app.use((req, res, next) => {
 
 app.use(cookieParser());
 app.use('/bookings', bookingRoutes, limiter);
-app.use('/customer', authRoutes, limiter);
+app.use('/client', authRoutes, limiter);
+app.use('/customer', customerRoutes, limiter);
+app.use('/business', businessRoutes, limiter);
 app.use(errorHandler);
 
 // retry logic for TypeORM initialization

@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  Column,
+} from 'typeorm';
 import { Booking } from './Booking';
 import { Service } from './Service';
 
@@ -14,4 +20,7 @@ export class BookingService {
   @ManyToOne(() => Service, (service) => service.id)
   @JoinColumn({ name: 'service_id' })
   service!: Service;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  charged_price!: number;
 }

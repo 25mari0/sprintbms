@@ -26,7 +26,7 @@ export class User {
 
   @Column({ default: false })
   mustChangePassword!: boolean; // flag is set to true, on worker creation && if owner resets the worker's pw
-  
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastPasswordChange!: Date;
 

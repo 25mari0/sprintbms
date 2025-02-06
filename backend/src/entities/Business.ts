@@ -24,5 +24,5 @@ export class Business {
   bookings!: Booking[];
 
   @OneToMany(() => User, (user) => user.business)
-  users!: User[]; 
+  users!: User[];
 }

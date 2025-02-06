@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { User } from '../entities/User';
 import AppDataSource from '../db/data-source';
 import authService from '../services/auth.service';
+import { JwtPayload } from '../types/authTypes';
 // import { sendResetEmail } from '../services/email.service';
 
 const userRepository = AppDataSource.getRepository(User);
@@ -47,20 +48,20 @@ const authController = {
         select: ['id', 'email', 'password', 'role', 'mustChangePassword'],
       });
 
-      if (!user) throw new Error('User not found');
+      if (!user) throw new Error('User does not exist');
 
-      if (!user || !(await user.validatePassword(password)))
+      if (!(await user!.validatePassword(password)))
         throw new Error('Invalid credentials');
 
-      if (user.mustChangePassword) {
+      if (user!.mustChangePassword) {
         //TO-DO: Redirect to /change-password or similar, or send a special response
         throw new Error('Password must be changed');
       }
 
-      const accessToken = authService.generateAccessToken(user.id, user.role);
-      const refreshToken = await authService.generateRefreshToken(user.id);
+      const accessToken = authService.generateAccessToken(user!.id, user!.role);
+      const refreshToken = await authService.generateRefreshToken(user!.id);
 
-      await authService.storeRefreshToken(user.id, refreshToken);
+      await authService.storeRefreshToken(user!.id, refreshToken);
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -78,23 +79,21 @@ const authController = {
   },
 
   resetPassword: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const { email } = req.body;
-
     try {
-      const user = await userRepository.findOne({ where: { email } });
-      if (!user) throw new Error('User not found');
+      const userId = req.user!.userId;
+      const user = await userRepository.findOne({ where: { id: userId } });
 
       const tempPassword = Math.random().toString(36).substring(2, 10);
-      user.password = await user.hashPassword(tempPassword);
-      user.mustChangePassword = true;
-      user.lastPasswordChange = new Date(); // invalidates access tokens
+      user!.password = await user!.hashPassword(tempPassword);
+      user!.mustChangePassword = true;
+      user!.lastPasswordChange = new Date(); // invalidates access tokens
 
-      await userRepository.save(user);
-      await authService.revokeAllRefreshTokens(user.id);
+      await userRepository.save(user!);
+      await authService.revokeAllRefreshTokens(user!.id);
       // await sendResetEmail(email, tempPassword);
 
       res.status(200).json({
@@ -109,22 +108,21 @@ const authController = {
   },
 
   updatePassword: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const { userId, newPassword } = req.body;
-
     try {
+      const newPassword = req.body;
+      const userId = req.user!.userId;
       const user = await userRepository.findOne({ where: { id: userId } });
-      if (!user) throw new Error('User not found');
 
-      user.password = await user.hashPassword(newPassword);
-      user.mustChangePassword = false;
-      user.lastPasswordChange = new Date(); // invalidates access tokens
+      user!.password = await user!.hashPassword(newPassword);
+      user!.mustChangePassword = false;
+      user!.lastPasswordChange = new Date(); // invalidates access tokens
 
-      await userRepository.save(user);
-      await authService.revokeAllRefreshTokens(user.id);
+      await userRepository.save(user!);
+      await authService.revokeAllRefreshTokens(user!.id);
 
       res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {

@@ -6,6 +6,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', '.env') });
 import AppDataSource from './db/data-source';
 import errorHandler from './middlewares/error.middleware';
 import authRoutes from './routes/auth.routes';
+import bookingRoutes from './routes/booking.routes';
 import cookieParser from 'cookie-parser';
 
 dotenv.config();
@@ -28,7 +29,8 @@ app.use((req, res, next) => {
 });
 
 app.use(cookieParser());
-app.use(authRoutes, limiter);
+app.use('/bookings', bookingRoutes, limiter);
+app.use('/customer', authRoutes, limiter);
 app.use(errorHandler);
 
 // retry logic for TypeORM initialization

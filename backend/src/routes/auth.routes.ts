@@ -6,7 +6,7 @@ import {
 } from '../middlewares/validations.middleware';
 import { body } from 'express-validator';
 import authController from '../controllers/auth.controller';
-import authMiddleware from '../middlewares/auth.middleware';
+import tokenMiddleware from '../middlewares/token.middleware';
 
 const router = Router();
 
@@ -31,9 +31,7 @@ router.post(
 
 router.post(
   '/reset-password',
-  ...emailValidation,
-  validate,
-  authMiddleware.authenticate,
+  tokenMiddleware.authenticate,
   authController.resetPassword,
 );
 
@@ -42,6 +40,7 @@ router.post(
   body('userId').exists().isUUID().withMessage('User ID must be a valid UUID'),
   ...passwordValidation,
   validate,
+  tokenMiddleware.authenticate,
   authController.updatePassword,
 );
 

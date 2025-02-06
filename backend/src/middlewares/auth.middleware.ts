@@ -1,73 +1,48 @@
+// middlewares/business.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { JwtPayload } from '../types/authTypes';
-import authService from '../services/auth.service';
-import {
-  getAccessTokenFromHeader,
-  getRefreshTokenFromCookie,
-} from '../utils/auth';
+import AppDataSource from '../db/data-source';
+import { User } from '../entities/User';
+
+const userRepository = AppDataSource.getRepository(User);
 
 export const authMiddleware = {
-  authenticate: async (
+  tokenUserExists: async (
     req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const accessToken = getAccessTokenFromHeader(req);
-      if (!accessToken) {
-        throw new Error('No token provided');
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new Error('User ID not found in token');
       }
 
-      const decoded = jwt.verify(
-        accessToken,
-        process.env.JWT_SECRET!,
-      ) as JwtPayload & { iat: number };
-      const user = await authService.getUserById(decoded.userId);
-
+      const user = await userRepository.findOne({ where: { id: userId } });
       if (!user) {
-        throw new Error('User not found');
+        throw new Error('User does not exist');
       }
-
-      // Check if password was changed after token was issued
-      if (
-        user.lastPasswordChange &&
-        user.lastPasswordChange.getTime() > decoded.iat * 1000
-      ) {
-        throw new Error('Token is no longer valid');
-      }
-
-      req.user = decoded;
       next();
     } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        // access token is expired but was otherwise valid
-        const refreshToken = getRefreshTokenFromCookie(req);
-        if (!refreshToken) {
-          throw new Error('No refresh token provided');
-        }
+      next(error);
+    }
+  },
 
-        try {
-          // Validate refresh token and generate new access token
-          const { accessToken } =
-            await authService.refreshAccessToken(refreshToken);
-          res.setHeader('Authorization', `Bearer ${accessToken}`);
-          const newDecoded = jwt.verify(
-            accessToken,
-            process.env.JWT_SECRET!,
-          ) as JwtPayload;
-          req.user = newDecoded;
-          next();
-        } catch {
-          // refresh token is invalid or there was an error in the process
-          throw new Error('Failed to refresh access token');
-        }
-      } else {
-        // token is invalid for reasons other than expiration (e.g., tampered, wrong signature)
-        const err = error as Error;
-        err.message = `The token is invalid: ${err.message}`;
-        next(err);
+  //check if user exists
+  emailUserExists: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { email } = req.body;
+
+      const user = await userRepository.findOne({ where: { email } });
+      if (!user) {
+        throw new Error('User does not exist');
       }
+      next();
+    } catch (error) {
+      next(error);
     }
   },
 };

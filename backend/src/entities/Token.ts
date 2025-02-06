@@ -3,7 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
-  Index,
 } from 'typeorm';
 import { User } from './User';
 
@@ -18,12 +17,10 @@ export class Token {
   @Column({ type: 'text' }) // To store the salt
   salt!: string;
 
-  @Index()
   @Column()
   userId!: string;
 
   @ManyToOne(() => User, (user) => user.tokens)
-  @Index()
   user!: User;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })

@@ -23,10 +23,18 @@ class AuthService {
     }
   }
 
-  public generateAccessToken(userId: string, role: string): string {
-    return jwt.sign({ userId, role }, process.env.JWT_SECRET!, {
-      expiresIn: '30m',
-    });
+  // needs to be re-generated when a subscription/business is purchased
+  // so that it contains the updated business ID
+  public generateAccessToken(
+    userId: string,
+    role: string,
+    businessId?: string,
+  ): string {
+    return jwt.sign(
+      { userId, role, business: businessId ? { id: businessId } : undefined },
+      process.env.JWT_SECRET!,
+      { expiresIn: '30m' },
+    );
   }
 
   public generateRefreshToken(userId: string): string {
@@ -40,21 +48,21 @@ class AuthService {
     refreshToken: string,
   ): Promise<void> {
     try {
-    // Generate a salt once
-    const salt = await bcrypt.genSalt(10);
-    const hashedToken = await bcrypt.hash(refreshToken, salt);
+      // Generate a salt once
+      const salt = await bcrypt.genSalt(10);
+      const hashedToken = await bcrypt.hash(refreshToken, salt);
 
-    const newToken = this.tokenRepository.create({
-      token: hashedToken,
-      userId: userId,
-      salt: salt,
-      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-    });
-    await this.tokenRepository.save(newToken);
+      const newToken = this.tokenRepository.create({
+        token: hashedToken,
+        userId: userId,
+        salt: salt,
+        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      });
+      await this.tokenRepository.save(newToken);
     } catch (error) {
-    const err = error as Error;
-    err.message = `Error storing refresh token: ${err.message}`;
-    throw err; 
+      const err = error as Error;
+      err.message = `Error storing refresh token: ${err.message}`;
+      throw err;
     }
   }
 
@@ -62,30 +70,30 @@ class AuthService {
     refreshToken: string,
   ): Promise<{ userId: string; valid: boolean }> {
     try {
-    const userId = await this.getUserIdFromRefreshToken(refreshToken);
-    if (!userId) {
-      return { userId: '', valid: false };
-    }
-
-    const tokens = await this.tokenRepository.find({
-      where: { userId },
-      select: ['token', 'expiresAt'],
-    });
-
-    for (const token of tokens) {
-      if (await bcrypt.compare(refreshToken, token.token)) {
-        if (token.expiresAt < new Date()) {
-          await this.tokenRepository.remove(token);
-          return { userId: '', valid: false };
-        }
-        return { userId, valid: true };
+      const userId = await this.getUserIdFromRefreshToken(refreshToken);
+      if (!userId) {
+        return { userId: '', valid: false };
       }
-    }
-    return { userId: '', valid: false };
+
+      const tokens = await this.tokenRepository.find({
+        where: { userId },
+        select: ['token', 'expiresAt'],
+      });
+
+      for (const token of tokens) {
+        if (await bcrypt.compare(refreshToken, token.token)) {
+          if (token.expiresAt < new Date()) {
+            await this.tokenRepository.remove(token);
+            return { userId: '', valid: false };
+          }
+          return { userId, valid: true };
+        }
+      }
+      return { userId: '', valid: false };
     } catch (error) {
-    const err = error as Error;
-    err.message = `Error validating refresh token: ${err.message}`;
-    throw err; 
+      const err = error as Error;
+      err.message = `Error validating refresh token: ${err.message}`;
+      throw err;
     }
   }
 
@@ -93,30 +101,30 @@ class AuthService {
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
-    const { userId, valid } = await this.validateRefreshToken(refreshToken);
-    if (!valid) {
-      throw new Error('Invalid or expired refresh token');
+      const { userId, valid } = await this.validateRefreshToken(refreshToken);
+      if (!valid) {
+        throw new Error('Invalid or expired refresh token');
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { id: userId },
+        select: ['id', 'role'],
+      });
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const newAccessToken = this.generateAccessToken(user.id, user.role);
+      const newRefreshToken = await this.generateRefreshToken(userId);
+      await this.revokeRefreshToken(refreshToken); // revoke the old token
+      await this.storeRefreshToken(userId, newRefreshToken); // store the new one
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+    } catch (error) {
+      const err = error as Error;
+      err.message = `Error refreshing access token: ${err.message}`;
+      throw err; // Unexpected error
     }
-
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      select: ['id', 'role'],
-    });
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const newAccessToken = this.generateAccessToken(user.id, user.role);
-    const newRefreshToken = await this.generateRefreshToken(userId);
-    await this.revokeRefreshToken(refreshToken); // revoke the old token
-    await this.storeRefreshToken(userId, newRefreshToken); // store the new one
-
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
-  } catch (error) {
-    const err = error as Error;
-    err.message = `Error refreshing access token: ${err.message}`;
-    throw err; // Unexpected error
-    } 
   }
 
   async revokeAllRefreshTokens(userId: string): Promise<void> {
@@ -160,15 +168,16 @@ class AuthService {
 
   public async getUserById(userId: string): Promise<User | null> {
     try {
-      return await this.userRepository.findOne({ where: { id: userId } });
+      return await this.userRepository.findOne({
+        where: { id: userId },
+        relations: ['business'],
+      });
     } catch (error) {
       const err = error as Error;
       err.message = `Error fetching user by ID: ${err.message}`;
       throw err;
     }
   }
-
 }
-
 
 export default new AuthService();

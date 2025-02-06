@@ -13,8 +13,8 @@ import { BookingWorker } from './BookingWorker';
 
 @Entity()
 export class Booking {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
   @ManyToOne(() => Business, (business) => business.bookings)
   @JoinColumn({ name: 'business_id' })
@@ -25,7 +25,11 @@ export class Booking {
   customer!: Customer;
 
   @Column({ type: 'timestamp' })
-  booking_date!: Date;
+  created_at!: Date;
+
+  //expected completion date and time, informed to the customer
+  @Column({ type: 'timestamp' })
+  pickup_at!: Date;
 
   @Column({
     type: 'enum',
@@ -33,6 +37,9 @@ export class Booking {
     default: 'Pending',
   })
   status!: string;
+
+  @Column({ type: 'text' })
+  vehicle_license_plate!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   total_price!: number;

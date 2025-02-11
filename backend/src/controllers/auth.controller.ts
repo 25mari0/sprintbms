@@ -78,27 +78,31 @@ const authController = {
     }
   },
 
-  resetPassword: async (
+  resetWorkerPassword: async (
     req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const userId = req.user!.userId;
-      const user = await userRepository.findOne({ where: { id: userId } });
+      const { workerEmail } = req.body;
+      const worker = await userRepository.findOne({ where: { email: workerEmail } });
+      if (!worker) throw new Error('Worker not found');
+
+      const owner = await userRepository.findOne({ where: { id: req.user!.userId } });
+      if (worker.business?.id !== owner!.business?.id) throw new Error('Worker not associated with business');
 
       const tempPassword = Math.random().toString(36).substring(2, 10);
-      user!.password = await user!.hashPassword(tempPassword);
-      user!.mustChangePassword = true;
-      user!.lastPasswordChange = new Date(); // invalidates access tokens
+      worker!.password = await worker!.hashPassword(tempPassword);
+      worker!.mustChangePassword = true;
+      worker!.lastPasswordChange = new Date(); // invalidates access tokens
 
-      await userRepository.save(user!);
-      await authService.revokeAllRefreshTokens(user!.id);
+      await userRepository.save(worker!);
+      await authService.revokeAllRefreshTokens(worker!.id);
       // await sendResetEmail(email, tempPassword);
 
       res.status(200).json({
         status: 'success',
-        message: 'Temporary password sent to your email',
+        message: 'Temporary password sent to email',
       });
     } catch (error) {
       const err = error as Error;

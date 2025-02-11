@@ -7,6 +7,7 @@ import {
 import { body } from 'express-validator';
 import authController from '../controllers/auth.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
+import businessMiddleware from '../middlewares/business.middleware';
 
 const router = Router();
 
@@ -30,9 +31,10 @@ router.post(
 );
 
 router.post(
-  '/reset-password',
+  '/reset-worker-pw',
   tokenMiddleware.authenticate,
-  authController.resetPassword,
+  businessMiddleware.isOwner,
+  authController.resetWorkerPassword,
 );
 
 router.post(

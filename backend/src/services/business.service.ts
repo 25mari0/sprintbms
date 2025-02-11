@@ -36,6 +36,18 @@ class BusinessService {
 
     return { business, newToken };
   }
+
+  async getBusinessById(businessId: string): Promise<Business | null> {
+    try {
+      return await this.businessRepository.findOne({ where: { id: businessId } });
+    }
+    catch (error) {
+      const err = error as Error;
+      err.message = `Failed to retrieve business: ${err.message}`;
+      throw err;
+    }
+
+  }
 }
 
 export default new BusinessService();

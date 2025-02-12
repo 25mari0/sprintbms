@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import AppDataSource from '../db/data-source';
 import jwt from 'jsonwebtoken';
 import { MoreThan } from 'typeorm';
+import { WorkerStatus } from '../types/authTypes';
 
 class AuthService {
   private userRepository = AppDataSource.getRepository(User);
@@ -179,6 +180,34 @@ class AuthService {
       throw err;
     }
   }
+
+  public getUserStatus(user: User) {
+    const now = new Date();
+    if (user.mustChangePassword) {
+      if (user.temporaryPasswordExpiresAt && user.temporaryPasswordExpiresAt < now) {
+        return 'Expired';
+      }
+      return 'Waiting Verification';
+    }
+    if (!user.mustChangePassword && !user.temporaryPasswordExpiresAt) {
+      return 'Verified';
+    }
+    // This case should not occur, but just in case:
+    throw new Error('Unexpected status ocurred')
+  }
+
+  public async listWorkersByBusiness(businessId: string): Promise<WorkerStatus[]> {
+    const workers = await this.userRepository.find({
+      where: { business: { id: businessId }, role: 'worker' },
+      select: ['id', 'email', 'name', 'mustChangePassword', 'temporaryPasswordExpiresAt']
+    });
+
+    return workers.map(user => ({
+      user,
+      status: this.getUserStatus(user)
+    }));
+  }
+
 }
 
 export default new AuthService();

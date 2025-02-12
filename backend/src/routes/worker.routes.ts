@@ -1,15 +1,13 @@
 import { Router } from 'express';
-import businessController from '../controllers/business.controller';
+import workerController from '../controllers/worker.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
 import businessMiddleware from '../middlewares/business.middleware';
 
 const router = Router();
 
 router.post(
-    '/createBusiness',
+    '/createWorker',
     tokenMiddleware.authenticate,
-    businessMiddleware.isOwner,
-    businessController.createBusiness,
+    businessMiddleware.isBusinessOwner,
+    workerController.createWorker,
 );
-
-export default router;

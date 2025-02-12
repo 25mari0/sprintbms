@@ -20,3 +20,8 @@ export interface RefreshTokenResult {
   accessToken: string;
   refreshToken: string;
 }
+
+export interface WorkerStatus {
+  user: User;
+  status: 'Waiting Verification' | 'Expired' | 'Verified';
+}

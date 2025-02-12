@@ -14,30 +14,28 @@ export const businessMiddleware = {
     next();
   },
 
-  isOwner: (
+  isBusinessOwner: (
     req: Request & { user?: JwtPayload },
-    res: Response, 
-    next: NextFunction
+    res: Response,
+    next: NextFunction,
   ): void => {
-    if (req.user?.role !== 'owner') {
-      throw new Error('User is not a business owner');
+    if (req.user?.role !== 'owner' && !req.user?.business?.id) {
+      throw new Error('User does not own a business');
     }
     next();
   },
 
-  isOwnerOfBusiness: (
+  isOwner: (
     req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): void => {
     if (req.user?.role !== 'owner') {
-      throw new Error('User is not a business owner');
-    }
-    if (req.user?.business?.id !== req.params.businessId) {
-      throw new Error('User is not associated with the business');
+      throw new Error('User is not an owner');
     }
     next();
   },
+  
 };
 
 export default businessMiddleware;

@@ -18,6 +18,9 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Column()
+  name!: string;
+
   @Column({ unique: true })
   email!: string;
 
@@ -25,7 +28,10 @@ export class User {
   password!: string;
 
   @Column({ default: false })
-  mustChangePassword!: boolean; // flag is set to true, on worker creation && if owner resets the worker's pw
+  mustChangePassword!: boolean; // 
+
+  @Column({ type: 'timestamp', nullable: true })
+  temporaryPasswordExpiresAt?: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastPasswordChange!: Date;
@@ -34,7 +40,7 @@ export class User {
   tokens!: Token[]; // array of Token entities
 
   @Column({ default: 'owner' })
-  role!: 'owner' | 'worker';
+  role!: 'owner' | 'worker' | 'deleted';
 
   @ManyToOne(() => Business, (business) => business.users)
   @JoinColumn({ name: 'business_id' })

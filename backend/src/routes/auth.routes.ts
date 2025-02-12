@@ -33,7 +33,7 @@ router.post(
 router.post(
   '/reset-worker-pw',
   tokenMiddleware.authenticate,
-  businessMiddleware.isOwner,
+  businessMiddleware.isBusinessOwner,
   authController.resetWorkerPassword,
 );
 

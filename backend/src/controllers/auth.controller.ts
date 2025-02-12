@@ -13,13 +13,13 @@ const authController = {
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    const { email, password } = req.body;
+    const { name, email, password } = req.body;
 
     try {
       const existingUser = await userRepository.findOne({ where: { email } });
       if (existingUser) throw new Error('Email is already in use');
 
-      const user = userRepository.create({ email });
+      const user = userRepository.create({ name, email });
       user.password = await user.hashPassword(password);
       await userRepository.save(user);
 
@@ -57,6 +57,8 @@ const authController = {
         //TO-DO: Redirect to /change-password or similar, or send a special response
         throw new Error('Password must be changed');
       }
+
+      if (user!.role === 'deleted') throw new Error('User account is suspended');
 
       const accessToken = authService.generateAccessToken(user!.id, user!.role);
       const refreshToken = await authService.generateRefreshToken(user!.id);

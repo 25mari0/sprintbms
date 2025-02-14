@@ -4,11 +4,13 @@ import bcrypt from 'bcryptjs';
 import AppDataSource from '../db/data-source';
 import jwt from 'jsonwebtoken';
 import { MoreThan } from 'typeorm';
-import { WorkerStatus } from '../types/authTypes';
+import { VerificationToken } from '../entities/VerificationToken';
+import { v4 as uuidv4 } from 'uuid';
 
 class AuthService {
   private userRepository = AppDataSource.getRepository(User);
   private tokenRepository = AppDataSource.getRepository(Token);
+  private verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
 
   private async getUserIdFromRefreshToken(
     refreshToken: string,
@@ -151,6 +153,17 @@ class AuthService {
     }
   }
 
+  async revokeAccessTokens(userId: string): Promise<void> {
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } });
+      // Update last password change date to invalidate existing access tokens
+      user!.lastPasswordChange = new Date();
+      await this.userRepository.save(user!);
+    } catch {
+      throw new Error('Failed to revoke access token');
+    }
+  }
+
   public async hasValidRefreshTokens(userId: string): Promise<boolean> {
     try {
       const currentDate = new Date();
@@ -181,32 +194,66 @@ class AuthService {
     }
   }
 
-  public getUserStatus(user: User) {
-    const now = new Date();
-    if (user.mustChangePassword) {
-      if (user.temporaryPasswordExpiresAt && user.temporaryPasswordExpiresAt < now) {
-        return 'Expired';
-      }
-      return 'Waiting Verification';
-    }
-    if (!user.mustChangePassword && !user.temporaryPasswordExpiresAt) {
-      return 'Verified';
-    }
-    // This case should not occur, but just in case:
-    throw new Error('Unexpected status ocurred')
-  }
+  async generateVerificationToken(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['verificationToken'] });
+    if (!user) throw new Error('User not found');
 
-  public async listWorkersByBusiness(businessId: string): Promise<WorkerStatus[]> {
-    const workers = await this.userRepository.find({
-      where: { business: { id: businessId }, role: 'worker' },
-      select: ['id', 'email', 'name', 'mustChangePassword', 'temporaryPasswordExpiresAt']
+    // Remove any existing token
+    if (user.verificationToken) {
+      await this.verificationTokenRepository.remove(user.verificationToken);
+    }
+
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    const newToken = this.verificationTokenRepository.create({
+      token,
+      expiresAt,
+      user,
     });
 
-    return workers.map(user => ({
-      user,
-      status: this.getUserStatus(user)
-    }));
+    await this.verificationTokenRepository.save(newToken);
+    user.verificationToken = newToken;
+    await this.userRepository.save(user);
+
+    return token;
   }
+
+  async validateVerificationToken(token: string): Promise<{ userId: string } | null> {
+    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token } });
+    if (verificationToken && verificationToken.expiresAt > new Date()) {
+      return { userId: verificationToken.user.id };
+    }
+    return null; // Token invalid or expired
+  }
+
+  async resendVerificationToken(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+
+    const newToken = await this.generateVerificationToken(userId);
+    return newToken;
+  }
+
+  async resetWorkerPassword(userId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId, role: 'worker' } });
+    if (!user) throw new Error('Worker not found');
+
+    // Remove any existing refresh tokens or invalidate them
+    await this.revokeAllRefreshTokens(userId);
+
+    // Update last password change to invalidate existing access tokens
+    await this.revokeAccessTokens(userId);
+    
+    // Generate a new verification token
+    await this.generateVerificationToken(userId);
+
+    const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${user.verificationToken?.token}`;
+    await emailService.sendPasswordResetEmail(user.email, resetLink);
+
+    return user;
+  }
+
 
 }
 

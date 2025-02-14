@@ -31,10 +31,20 @@ router.post(
 );
 
 router.post(
-  '/reset-worker-pw',
+  '/workers/:userId/reset-password',
   tokenMiddleware.authenticate,
   businessMiddleware.isBusinessOwner,
   authController.resetWorkerPassword,
+);
+
+router.get(
+  '/set-password',
+  authController.validateTokenAndShowForm
+);
+
+router.post(
+  '/set-password',
+  authController.setPassword
 );
 
 router.post(

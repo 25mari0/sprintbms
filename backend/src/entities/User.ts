@@ -7,10 +7,12 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { Token } from './Token';
 import { Business } from './Business';
 import { BookingWorker } from './BookingWorker';
+import { VerificationToken } from './VerificationToken';
 import bcrypt from 'bcryptjs';
 
 @Entity()
@@ -24,20 +26,17 @@ export class User {
   @Column({ unique: true })
   email!: string;
 
-  @Column({ select: false }) // ensure password is excluded by default
+  @Column({ select: false }) 
   password!: string;
-
-  @Column({ default: false })
-  mustChangePassword!: boolean; // 
-
-  @Column({ type: 'timestamp', nullable: true })
-  temporaryPasswordExpiresAt?: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastPasswordChange!: Date;
 
+  @OneToOne(() => VerificationToken, token => token.user, { cascade: true })
+  verificationToken?: VerificationToken;
+
   @OneToMany(() => Token, (token) => token.user)
-  tokens!: Token[]; // array of Token entities
+  tokens!: Token[];
 
   @Column({ default: 'owner' })
   role!: 'owner' | 'worker' | 'deleted';

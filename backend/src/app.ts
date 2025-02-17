@@ -10,10 +10,22 @@ import bookingRoutes from './routes/booking.routes';
 import cookieParser from 'cookie-parser';
 import customerRoutes from './routes/customer.routes';
 import businessRoutes from './routes/business.routes';
+import serviceRoutes from './routes/service.routes';
+import workerRoutes from './routes/worker.routes';
+import bodyParser from 'body-parser';
+import multer from 'multer';
+
+
 
 dotenv.config();
 
 const app = express();
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+// For multipart/form-data, you can use multer
+const upload = multer(); // for parsing multipart/form-data
+app.use(upload.none()); // If you don't expect file uploads
 const PORT = process.env.PORT || 5000;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -35,6 +47,9 @@ app.use('/bookings', bookingRoutes, limiter);
 app.use('/client', authRoutes, limiter);
 app.use('/customer', customerRoutes, limiter);
 app.use('/business', businessRoutes, limiter);
+app.use('/services', serviceRoutes, limiter);
+app.use('/worker', workerRoutes, limiter);
+
 app.use(errorHandler);
 
 // retry logic for TypeORM initialization

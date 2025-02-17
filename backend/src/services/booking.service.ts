@@ -18,41 +18,36 @@ class BookingManagementService {
     customerId: string,
     licensePlate: string,
     pickupDate: Date,
-    services: { serviceId: number; price: number }[],
+    services: { serviceId: number; price: number }[]
   ): Promise<Booking> {
-    const customer = await this.customerRepository.findOne({
-      where: { id: customerId },
-    });
-    if (!customer) {
-      throw new Error('Customer not found');
-    }
+    const customer = await this.customerRepository.findOneBy({ id: customerId });
+    if (!customer) throw new Error('Customer not found');
 
-    const newBooking = this.bookingRepository.create({
+    const booking = this.bookingRepository.create({
       business: { id: businessId },
       customer: customer,
       vehicle_license_plate: licensePlate,
       pickup_at: pickupDate,
       status: 'Pending',
-      total_price: services.reduce((sum, s) => sum + s.price, 0),
     });
 
-    await this.bookingRepository.save(newBooking);
+    await this.bookingRepository.save(booking);
 
-    // Link services to booking
     for (const service of services) {
-      const serviceEntity = await this.serviceRepository.findOne({
-        where: { id: service.serviceId },
-      });
+      const serviceEntity = await this.serviceRepository.findOneBy({ id: service.serviceId });
       if (!serviceEntity) throw new Error('Service not found');
+      
       await this.bookingServiceRepository.save({
-        booking: newBooking,
+        booking: booking,
         service: serviceEntity,
-        price: service.price, // Note: This might differ from the service's base price due to discounts or surcharges
+        base_price: serviceEntity.price,
+        charged_price: service.price,
       });
     }
 
-    return newBooking;
+    return booking;
   }
+
 
   async getBookingById(bookingId: string): Promise<Booking | null> {
     return await this.bookingRepository.findOne({
@@ -68,9 +63,7 @@ class BookingManagementService {
   }
 
   async deleteBooking(bookingId: string): Promise<void> {
-    const booking = await this.bookingRepository.findOne({
-      where: { id: bookingId },
-    });
+    const booking = await this.bookingRepository.findOneBy({ id: bookingId });
     if (!booking) throw new Error('Booking not found');
     await this.bookingRepository.remove(booking);
   }
@@ -79,13 +72,10 @@ class BookingManagementService {
     bookingId: string,
     updateData: Partial<Booking>,
   ): Promise<Booking> {
-    const booking = await this.bookingRepository.findOne({
-      where: { id: bookingId },
-    });
+    const booking = await this.bookingRepository.findOneBy({ id: bookingId });
     if (!booking) throw new Error('Booking not found');
     Object.assign(booking, updateData);
-    await this.bookingRepository.save(booking);
-    return booking;
+    return await this.bookingRepository.save(booking);
   }
 
   async getBookingsWithFilter(

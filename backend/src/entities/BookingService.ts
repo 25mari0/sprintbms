@@ -21,6 +21,11 @@ export class BookingService {
   @JoinColumn({ name: 'service_id' })
   service!: Service;
 
+  //the value which the customer paid, can change due to discounts or vehicle complexity
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   charged_price!: number;
+
+  //the base price of the service at the time of booking
+  @Column({ type: 'decimal', precision: 10, scale: 2 })
+  base_price!: number; 
 }

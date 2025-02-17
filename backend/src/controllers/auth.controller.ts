@@ -18,12 +18,7 @@ const authController = {
     const { name, email, password } = req.body;
 
     try {
-      const existingUser = await userRepository.findOne({ where: { email } });
-      if (existingUser) throw new Error('Email is already in use');
-
-      const user = userRepository.create({ name, email });
-      user.password = await user.hashPassword(password);
-      await userRepository.save(user);
+      const user = await authService.registerUser(name, email, password);
 
       res.status(201).json({
         status: 'success',
@@ -45,27 +40,10 @@ const authController = {
     const { email, password } = req.body;
 
     try {
-      const user = await userRepository.findOne({
-        where: { email },
-        relations: ['verificationToken'],
-        select: ['id', 'email', 'password', 'role'],
-      });
-
-      if (!user) throw new Error('User does not exist');
-
-      if (!(await user!.validatePassword(password)))
-        throw new Error('Invalid credentials');
-
-      if (user!.role === 'deleted') throw new Error('User account is suspended');
-
-      if (user.verificationToken) {
-        throw new Error('Password reset required. Please use the reset link sent to your email.');
-      }
+      const user = await authService.authenticateUser(email, password);
 
       const accessToken = authService.generateAccessToken(user!.id, user!.role);
       const refreshToken = await authService.generateRefreshToken(user!.id);
-
-      await authService.storeRefreshToken(user!.id, refreshToken);
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
@@ -78,36 +56,6 @@ const authController = {
     } catch (error) {
       const err = error as Error;
       err.message = `Error logging in: ${err.message}`;
-      next(err);
-    }
-  },
-
-  resetWorkerPassword: async (
-    req: Request & { user?: JwtPayload },
-    res: Response,
-    next: NextFunction,
-  ): Promise<void> => {
-    try {
-      const workerId = req.params.userId; // Assuming userId is passed as a route parameter
-      const ownerId = req.user?.userId; // Assuming owner is authenticated
-  
-      // Check if the owner has permission to reset this worker's password
-      const owner = await userRepository.findOne({ where: { id: ownerId }, relations: ['business'] });
-      const worker = await userRepository.findOne({ where: { id: workerId, role: 'worker' }, relations: ['business'] });
-  
-      if (!owner || !worker || owner.business?.id !== worker.business?.id) {
-        throw new Error('Worker does not belong to your business');
-      }
-      
-      await authService.resetWorkerPassword(workerId);
-
-      res.status(200).json({
-        status: 'success',
-        message: 'Temporary password sent to email',
-      });
-    } catch (error) {
-      const err = error as Error;
-      err.message = `Error resetting password: ${err.message}`;
       next(err);
     }
   },

@@ -5,6 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Business } from './Business';
 import { Customer } from './Customer';
@@ -24,7 +25,7 @@ export class Booking {
   @JoinColumn({ name: 'customer_id' })
   customer!: Customer;
 
-  @Column({ type: 'timestamp' })
+  @CreateDateColumn()
   created_at!: Date;
 
   //expected completion date and time, informed to the customer
@@ -33,7 +34,7 @@ export class Booking {
 
   @Column({
     type: 'enum',
-    enum: ['Pending', 'In Progress', 'Completed', 'Cancelled'],
+    enum: ['Pending', 'In Progress', 'Awaiting Customer', 'Completed', 'Cancelled'],
     default: 'Pending',
   })
   status!: string;
@@ -41,12 +42,17 @@ export class Booking {
   @Column({ type: 'text' })
   vehicle_license_plate!: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  total_price!: number;
-
   @OneToMany(() => BookingService, (bookingService) => bookingService.booking)
   bookingServices!: BookingService[];
 
   @OneToMany(() => BookingWorker, (bookingWorker) => bookingWorker.booking)
   bookingWorkers!: BookingWorker[];
+
+//add function to calculate the total price of a booking
+//based on the service prices (this is stored on the BookingService entity as charged_price)
+  calculateTotalPrice(): number {
+    return this.bookingServices.reduce((acc, service) => acc + service.charged_price, 0);
+  }
+
 }
+

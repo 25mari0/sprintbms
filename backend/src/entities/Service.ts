@@ -15,6 +15,7 @@ export class Service {
   @Column({ length: 100 })
   name!: string;
 
+  //current price of a service
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   price!: number;
 

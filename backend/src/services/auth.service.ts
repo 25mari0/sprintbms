@@ -26,6 +26,30 @@ class AuthService {
     }
   }
 
+  async authenticateUser(email: string, password: string): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['verificationToken'],
+      select: ['id', 'email', 'password', 'role'],
+    });
+
+    if (!user) throw new Error('User does not exist');
+    if (!(await user.validatePassword(password))) throw new Error('Invalid credentials');
+    if (user.role === 'deleted') throw new Error('User account is suspended');
+    if (user.verificationToken) throw new Error('Password reset required. Please use the reset link sent to your email.');
+
+    return user;
+  }
+
+  async registerUser(name: string, email: string, password: string): Promise<User> {
+    const existingUser = await this.userRepository.findOne({ where: { email } });
+    if (existingUser) throw new Error('Email is already in use');
+
+    const user = this.userRepository.create({ name, email });
+    user.password = await user.hashPassword(password);
+    return await this.userRepository.save(user);
+  }
+
   // needs to be re-generated when a subscription/business is purchased
   // so that it contains the updated business ID
   public generateAccessToken(
@@ -40,10 +64,12 @@ class AuthService {
     );
   }
 
-  public generateRefreshToken(userId: string): string {
-    return jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
+  async generateRefreshToken(userId: string): Promise<string> {
+    const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
       expiresIn: '30d',
     });
+    await this.storeRefreshToken(userId, refreshToken);
+    return refreshToken;
   }
 
   public async storeRefreshToken(
@@ -233,25 +259,6 @@ class AuthService {
 
     const newToken = await this.generateVerificationToken(userId);
     return newToken;
-  }
-
-  async resetWorkerPassword(userId: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id: userId, role: 'worker' } });
-    if (!user) throw new Error('Worker not found');
-
-    // Remove any existing refresh tokens or invalidate them
-    await this.revokeAllRefreshTokens(userId);
-
-    // Update last password change to invalidate existing access tokens
-    await this.revokeAccessTokens(userId);
-    
-    // Generate a new verification token
-    await this.generateVerificationToken(userId);
-
-    const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${user.verificationToken?.token}`;
-    await emailService.sendPasswordResetEmail(user.email, resetLink);
-
-    return user;
   }
 
 

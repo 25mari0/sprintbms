@@ -11,3 +11,12 @@ router.post(
     businessMiddleware.isBusinessOwner,
     workerController.createWorker,
 );
+
+router.post(
+    '/:userId/reset-password',
+    tokenMiddleware.authenticate,
+    businessMiddleware.isBusinessOwner,
+    workerController.resetWorkerPassword,
+  );
+
+export default router;

@@ -21,23 +21,43 @@ export class EmailService {
     });
   }
 
-  async sendWorkerWelcomeEmail(email: string, resetLink: string): Promise<void> {
+  async sendWorkerWelcome(email: string, resetLink: string): Promise<void> {
     await this.transporter.sendMail({
       from: '"Your App Name" <noreply@yourdomain.com>',
       to: email,
-      subject: "Welcome to Our Service - Set Your Password",
+      subject: "Welcome to SprintBMS - Set Your Password",
       text: `Welcome! Please set your password by clicking this link: ${resetLink}`,
       html: `<b>Welcome!</b> Please set your password by clicking this link: <a href="${resetLink}">Set Password</a>`,
     });
   }
 
-  async sendPasswordResetEmail(email: string, resetLink: string): Promise<void> {
+  async sendPasswordReset(email: string, resetLink: string): Promise<void> {
     await this.transporter.sendMail({
       from: '"Your App Name" <noreply@yourdomain.com>',
       to: email,
-      subject: "Password Reset Request",
+      subject: "SprintBMS - Password Reset Request",
       text: `Please reset your password by clicking this link: ${resetLink}`,
       html: `<b>Please reset your password by clicking this link:</b> <a href="${resetLink}">Reset Password</a>`,
+    });
+  }
+
+  async sendAccountVerification(email: string, verificationLink: string): Promise<void> {
+    await this.transporter.sendMail({
+      from: '"Your App Name" <noreply@yourdomain.com>',
+      to: email,
+      subject: "SprintBMS - Account Verification Request",
+      text: `Please verify your account by clicking this link: ${verificationLink}`,
+      html: `<b>Please reset your password by clicking this link:</b> <a href="${verificationLink}">Verify Account</a>`,
+  });
+  }
+
+  async sendWorkerSuspended(email: string): Promise<void> {
+    await this.transporter.sendMail({
+      from: '"Your App Name" <noreply@yourdomain.com>',
+      to: email,
+      subject: "Your account has been suspended",
+      text: "We're sorry to inform you that your account has been suspended. Please contact support for more information.",
+      html: "<b>We're sorry to inform you that your account has been suspended.</b> Please contact <a href='mailto:support@yourdomain.com'>support</a> for more information."
     });
   }
 

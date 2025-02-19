@@ -6,10 +6,13 @@ import { Service } from '../entities/Service';
 import { Customer } from '../entities/Customer';
 import { BookingFilter } from '../types/bookingTypes';
 import { PaginationOptions } from '../types/sharedTypes';
+import { SelectQueryBuilder } from 'typeorm';
+import { BookingWorker } from '../entities/BookingWorker';
 
 class BookingManagementService {
   private bookingRepository = AppDataSource.getRepository(Booking);
   private bookingServiceRepository = AppDataSource.getRepository(BookingService);
+  private bookingWorkerRepository = AppDataSource.getRepository(BookingWorker);
   private serviceRepository = AppDataSource.getRepository(Service);
   private customerRepository = AppDataSource.getRepository(Customer);
 
@@ -42,6 +45,7 @@ class BookingManagementService {
         service: serviceEntity,
         base_price: serviceEntity.price,
         charged_price: service.price,
+        service_name_at_booking: serviceEntity.name
       });
     }
 
@@ -65,6 +69,8 @@ class BookingManagementService {
   async deleteBooking(bookingId: string): Promise<void> {
     const booking = await this.bookingRepository.findOneBy({ id: bookingId });
     if (!booking) throw new Error('Booking not found');
+    await this.bookingServiceRepository.delete({ booking: { id: bookingId } });
+    await this.bookingWorkerRepository.delete({ booking: { id: bookingId } });
     await this.bookingRepository.remove(booking);
   }
 
@@ -78,49 +84,50 @@ class BookingManagementService {
     return await this.bookingRepository.save(booking);
   }
 
+  private applyFilterCondition(queryBuilder: SelectQueryBuilder<Booking>, filters: BookingFilter) {
+    const conditions = [
+      { key: 'status', condition: 'booking.status = :status' },
+      { key: 'vehicle_license_plate', condition: 'booking.vehicle_license_plate = :vehicle_license_plate', transform: (value: string) => `%${value}%` },
+      { key: 'pickup_at', condition: 'DATE(booking.pickup_at) = DATE(:pickupAt)' },
+      { key: 'created_at', condition: 'DATE(booking.created_at) = DATE(:createdAt)' },
+    ];
+  
+    conditions.forEach(({ key, condition, transform }) => {
+      if (filters[key as keyof BookingFilter]) {
+        const value = transform ? transform(filters[key as keyof BookingFilter] as string) : filters[key as keyof BookingFilter];
+        queryBuilder = queryBuilder.andWhere(condition, { [key]: value });
+      }
+    });
+  
+    return queryBuilder;
+  }
+  
   async getBookingsWithFilter(
     businessId: string,
     filters: BookingFilter = {},
-    { page = 1, pageSize = 10, maxPageSize = 100 }: PaginationOptions = {},
+    { page = 1, pageSize = 10, maxPageSize = 100 }: PaginationOptions = {}
   ): Promise<{ bookings: Booking[]; total: number }> {
-    // Ensure pageSize doesn't exceed maxPageSize
     pageSize = Math.min(pageSize, maxPageSize);
-
-    const queryBuilder = this.bookingRepository
+  
+    let queryBuilder = this.bookingRepository
       .createQueryBuilder('booking')
-      .where('booking.businessId = :businessId', { businessId });
-
-    // Apply filters if provided
-    if (filters.status)
-      queryBuilder.andWhere('booking.status = :status', {
-        status: filters.status,
-      });
-    if (filters.vehicle_license_plate)
-      queryBuilder.andWhere(
-        'booking.vehicle_license_plate LIKE :licensePlate',
-        { licensePlate: `%${filters.vehicle_license_plate}%` },
-      );
-    if (filters.pickup_at)
-      queryBuilder.andWhere('DATE(booking.pickup_at) = DATE(:pickupAt)', {
-        pickupAt: filters.pickup_at,
-      });
-    if (filters.created_at)
-      queryBuilder.andWhere('DATE(booking.created_at) = DATE(:createdAt)', {
-        createdAt: filters.created_at,
-      });
-
-    // Count total results before applying pagination
+      .innerJoinAndSelect('booking.business', 'business')
+      .where('business.id = :businessId', { businessId: businessId });
+  
+    // This line should apply named parameters for all conditions
+    queryBuilder = this.applyFilterCondition(queryBuilder, filters);
+  
     const total = await queryBuilder.getCount();
-
-    // Apply pagination
+  
     const bookings = await queryBuilder
       .orderBy('booking.created_at', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize)
       .getMany();
-
+  
     return { bookings, total };
   }
+  
 }
 
 export default new BookingManagementService();

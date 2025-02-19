@@ -1,8 +1,10 @@
 import { Service } from '../entities/Service';
 import AppDataSource from '../db/data-source';
+import { BookingService } from '../entities/BookingService';
 
 export class ServiceService {
   private serviceRepository = AppDataSource.getRepository(Service);
+  private bookingserviceRepository = AppDataSource.getRepository(BookingService)
 
   async createService(
     businessId: string,
@@ -40,10 +42,31 @@ export class ServiceService {
   }
 
   async deleteService(serviceId: string, businessId: string): Promise<boolean> {
+    const serviceToDelete = await this.serviceRepository.findOne({
+      where: {
+        id: parseInt(serviceId, 10),
+        business: { id: businessId }
+      }
+    });  
+
+    if(!serviceToDelete) throw new Error('Service not found')
+    
+      
+    await this.bookingserviceRepository
+    .createQueryBuilder()
+    .update()
+    .set({ 
+      service: () => 'NULL',  // Use this syntax to set to NULL in SQL
+      service_name_at_booking: serviceToDelete.name 
+    })    .where("service_id = :serviceId", { serviceId: parseInt(serviceId, 10) })
+    .execute();
+
+    // Now delete the service
     const result = await this.serviceRepository.delete({
-      id: parseInt(serviceId, 10),
-      business: { id: businessId },
+    id: parseInt(serviceId, 10),
+    business: { id: businessId },
     });
+
     return result.affected !== undefined && result.affected !== null && result.affected > 0;
   }
 }

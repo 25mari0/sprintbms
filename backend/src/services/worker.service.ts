@@ -36,7 +36,7 @@ class WorkerService {
 
     const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
-    await emailService.sendWorkerWelcomeEmail(email, resetLink);
+    await emailService.sendWorkerWelcome(email, resetLink);
 
     return worker;
   }
@@ -47,8 +47,8 @@ class WorkerService {
       relations: ['verificationToken']
     });
     if (!user) throw new Error('Worker not found');
-    
-    if (!await this.canResetPassword(ownerId, workerId)) {
+
+    if (!await this.ownerManagesWorker(ownerId, workerId)) {
       throw new Error('Worker does not belong to your business');
     }
 
@@ -61,15 +61,46 @@ class WorkerService {
 
     // Send reset email
     const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${verificationToken}`;
-    await emailService.sendPasswordResetEmail(user.email, resetLink);
+    await emailService.sendPasswordReset(user.email, resetLink);
   }
 
   //check if the owner belongs to the same business as the worker
-  private async canResetPassword(ownerId: string, workerId: string): Promise<boolean> {
+  private async ownerManagesWorker(ownerId: string, workerId: string): Promise<boolean> {
     const owner = await this.userRepository.findOne({ where: { id: ownerId }, relations: ['business'] });
     const worker = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' }, relations: ['business'] });
     
     return !!owner && !!worker && owner.business?.id === worker.business?.id;
+  }
+
+  async suspendWorker(ownerId: string, workerId: string): Promise<void> {
+    if (!await this.ownerManagesWorker(ownerId, workerId)) {
+      throw new Error('Worker does not belong to your business');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' } });
+    if (!user) throw new Error('Worker not found');
+
+    user.role = 'suspended';
+    await this.userRepository.save(user);
+
+    // Invalidate existing tokens
+    await authService.revokeAllRefreshTokens(workerId);
+    await authService.revokeAccessTokens(workerId);
+
+    // Send suspension email
+    await emailService.sendWorkerSuspended(user.email);
+  }
+
+  async reactivateWorker(ownerId: string, workerId: string): Promise<void> {
+    if (!await this.ownerManagesWorker(ownerId, workerId)) {
+      throw new Error('Worker does not belong to your business');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' } });
+    if (!user) throw new Error('Worker not found');
+
+    user.role = 'worker';
+    await this.userRepository.save(user);
   }
 
 }

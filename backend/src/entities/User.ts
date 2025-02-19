@@ -39,7 +39,7 @@ export class User {
   tokens!: Token[];
 
   @Column({ default: 'owner' })
-  role!: 'owner' | 'worker' | 'deleted';
+  role!: 'owner' | 'worker' | 'suspended';
 
   @ManyToOne(() => Business, (business) => business.users)
   @JoinColumn({ name: 'business_id' })

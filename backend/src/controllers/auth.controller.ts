@@ -4,7 +4,6 @@ import AppDataSource from '../db/data-source';
 import authService from '../services/auth.service';
 import { JwtPayload } from '../types/authTypes';
 import { VerificationToken } from '../entities/VerificationToken';
-// import { sendResetEmail } from '../services/email.service';
 
 const userRepository = AppDataSource.getRepository(User);
 const verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
@@ -22,7 +21,7 @@ const authController = {
 
       res.status(201).json({
         status: 'success',
-        message: 'User registered successfully',
+        message: 'User registered successfully, please check your email for the verification link',
         userId: user.id,
       });
     } catch (error) {
@@ -42,7 +41,7 @@ const authController = {
     try {
       const user = await authService.authenticateUser(email, password);
 
-      const accessToken = authService.generateAccessToken(user!.id, user!.role);
+      const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id);
       const refreshToken = await authService.generateRefreshToken(user!.id);
 
       res.cookie('refreshToken', refreshToken, {
@@ -60,8 +59,23 @@ const authController = {
     }
   },
 
+  logout: async (
+    req: Request & { user?: JwtPayload },
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+      try {
+        authService.revokeAllRefreshTokens(req.user!.userId!)
+        authService.revokeAccessTokens(req.user!.userId!)
+
+        res.status(200).json({ status: 'success'});
+      } catch (error) {
+        next(error);
+      }
+  },
+
   //sets password when using a verification token link
-  setPassword: async (
+  setPasswordToken: async (
     req: Request, 
     res: Response, 
     next: NextFunction
@@ -96,7 +110,7 @@ const authController = {
     }
   },
 
-  validateTokenAndShowForm: async (
+  validateVerificationToken: async (
     req: Request, 
     res: Response, 
     next: NextFunction
@@ -115,7 +129,7 @@ const authController = {
       res.json({ 
         status: 'success', 
         token,
-        message: 'Please set your new password.'
+        message: 'Token is valid.'
       });
   
     } catch (error) {
@@ -123,6 +137,68 @@ const authController = {
     }
   },
 
+  verifyAccount: async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+  ) => {
+    const token = req.body;
+
+    try {
+      const verificationToken = await authService.validateVerificationToken(token);
+      if (!verificationToken) 
+        throw new Error('Invalid or expired token'); 
+
+      const user = await userRepository.findOne({ where: { id: verificationToken.userId } });
+      if (!user) 
+        throw new Error('User not found');
+
+      if (user.verificationToken) {
+        await verificationTokenRepository.remove(user.verificationToken); // Delete the token
+      }
+
+      // Redirect or respond with success, depending on your frontend needs
+      res.json({ 
+        status: 'success', 
+        message: 'Account verified successfully. Please log in with your password.', 
+        redirect: '/login'
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  resendVerificationLink: async (
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+  ) => {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') 
+      throw new Error('Invalid token');
+
+    try {
+      const result = await authService.getUserIdFromVerificationToken(token);
+      //if a valid token is still available, we delete it and send a new email
+      if (!result)
+        throw new Error('Verification token is invalid')
+
+      authService.resendPasswordToken(result.userId)
+
+      res.json({ 
+        status: 'success', 
+        token,
+        message: 'Verification link was re-sent to the email.'
+      });
+
+    } catch (error) {
+      next(error);
+    }  
+  },
+
+
+  //update password for logged in user
   updatePassword: async (
     req: Request & { user?: JwtPayload },
     res: Response,

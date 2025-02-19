@@ -48,8 +48,8 @@ export class Booking {
   @OneToMany(() => BookingWorker, (bookingWorker) => bookingWorker.booking)
   bookingWorkers!: BookingWorker[];
 
-//add function to calculate the total price of a booking
-//based on the service prices (this is stored on the BookingService entity as charged_price)
+  //add function to calculate the total price of a booking
+  //based on the service prices (this is stored on the BookingService entity as charged_price)
   calculateTotalPrice(): number {
     return this.bookingServices.reduce((acc, service) => acc + service.charged_price, 0);
   }

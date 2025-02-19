@@ -47,6 +47,46 @@ const workerController = {
           next(error);
         }
     },
+
+    suspendWorker: async (
+        req: Request & { user?: JwtPayload },
+        res: Response,
+        next: NextFunction
+      ): Promise<void> => {
+        try {
+          const workerId = req.params.userId;
+          const ownerId = req.user!.userId;
+      
+          await workerService.suspendWorker(ownerId, workerId);
+      
+          res.status(200).json({
+            status: 'success',
+            message: 'Worker suspended',
+          });
+        } catch (error) {
+          next(error);
+        }
+    },
+
+    reactivateWorker: async (
+        req: Request & { user?: JwtPayload },
+        res: Response,
+        next: NextFunction
+      ): Promise<void> => {
+        try {
+          const workerId = req.params.userId;
+          const ownerId = req.user!.userId;
+      
+          await workerService.reactivateWorker(ownerId, workerId);
+      
+          res.status(200).json({
+            status: 'success',
+            message: 'Worker reactivated',
+          });
+        } catch (error) {
+          next(error);
+        }
+    }
 };
 
 export default workerController;

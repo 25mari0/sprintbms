@@ -17,15 +17,20 @@ export class BookingService {
   @JoinColumn({ name: 'booking_id' })
   booking!: Booking;
 
-  @ManyToOne(() => Service, (service) => service.id)
+  @ManyToOne(() => Service, (service) => service.id, { nullable: true })
   @JoinColumn({ name: 'service_id' })
-  service!: Service;
+  service?: Service;
 
   //the value which the customer paid, can change due to discounts or vehicle complexity
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   charged_price!: number;
 
-  //the base price of the service at the time of booking
+  //price of the service at the time of booking
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   base_price!: number; 
+
+  //show this on the front end, not the service.name
+  //name of the service at the time of booking
+  @Column({ length: 100 })
+  service_name_at_booking!: string;
 }

@@ -23,7 +23,6 @@ const businessController = {
             );
 
             //console.log current header token
-            console.log(req.headers.authorization);
             console.log(newToken);
             res.setHeader('Authorization', `Bearer ${newToken}`);
 

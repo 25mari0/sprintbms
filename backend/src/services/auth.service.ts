@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import { MoreThan } from 'typeorm';
 import { VerificationToken } from '../entities/VerificationToken';
 import { v4 as uuidv4 } from 'uuid';
+import emailService from './email.service';
 
 class AuthService {
   private userRepository = AppDataSource.getRepository(User);
@@ -29,14 +30,15 @@ class AuthService {
   async authenticateUser(email: string, password: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
-      relations: ['verificationToken'],
-      select: ['id', 'email', 'password', 'role'],
+      relations: ['verificationToken', 'business'],
+      select: ['id', 'email', 'password', 'role', 'business'],
     });
 
     if (!user) throw new Error('User does not exist');
     if (!(await user.validatePassword(password))) throw new Error('Invalid credentials');
     if (user.role === 'deleted') throw new Error('User account is suspended');
-    if (user.verificationToken) throw new Error('Password reset required. Please use the reset link sent to your email.');
+    if (user.verificationToken && user.role == 'worker') throw new Error('Password reset required. Please use the reset link sent to your email.');
+    if (user.verificationToken && user.role == 'owner') throw new Error ('Account is not verified. Please use the verification link sent to your email')
 
     return user;
   }
@@ -47,7 +49,11 @@ class AuthService {
 
     const user = this.userRepository.create({ name, email });
     user.password = await user.hashPassword(password);
-    return await this.userRepository.save(user);
+    await this.userRepository.save(user);
+    const token = await this.generateVerificationToken(user.id)
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+    emailService.sendAccountVerification(email, verificationLink)
+    return user
   }
 
   // needs to be re-generated when a subscription/business is purchased
@@ -230,7 +236,7 @@ class AuthService {
     }
 
     const token = uuidv4();
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    const expiresAt = new Date(Date.now() + 600 * 60 * 1000); // 60 minutes
 
     const newToken = this.verificationTokenRepository.create({
       token,
@@ -253,7 +259,15 @@ class AuthService {
     return null; // Token invalid or expired
   }
 
-  async resendVerificationToken(userId: string): Promise<string> {
+  async getUserIdFromVerificationToken(token: string): Promise<{ userId: string } | null> {
+    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token } });
+    if(verificationToken) {
+      return { userId: verificationToken.user.id };
+    }
+   return null;
+  }
+
+  async resendPasswordToken(userId: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 

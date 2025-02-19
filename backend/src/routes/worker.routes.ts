@@ -19,4 +19,18 @@ router.post(
     workerController.resetWorkerPassword,
   );
 
+router.post(
+    '/:userId/suspend',
+    tokenMiddleware.authenticate,
+    businessMiddleware.isBusinessOwner,
+    workerController.suspendWorker,
+)
+
+router.post(
+    '/:userId/reactivate',
+    tokenMiddleware.authenticate,
+    businessMiddleware.isBusinessOwner,
+    workerController.reactivateWorker,
+)
+
 export default router;

@@ -29,14 +29,38 @@ router.post(
   authController.login,
 );
 
+router.post(
+  '/logout',
+  tokenMiddleware.authenticate,
+  authController.logout,
+)
+
 router.get(
-  '/set-password',
-  authController.validateTokenAndShowForm
+  '/password-reset/token',
+  authController.validateVerificationToken
 );
 
 router.post(
-  '/set-password',
-  authController.setPassword
+  '/password-reset/confirm',
+  authController.setPasswordToken
+);
+
+//PRESENT & EXPIRED ? respond with, EXPIRED!, show small notification under the log in form, 
+//with the option to to a function which resends a new link (route /account-verification/resend)
+router.get(
+  '/account-verification/token',
+  authController.validateVerificationToken
+);
+
+router.post(
+  '/account-verification/confirm',
+  authController.verifyAccount
+);
+
+//presented as an option on front-end when a GET /verify-account replies with Invalid or expired token.
+router.post(
+  '/account-verification/resend',
+  authController.resendVerificationLink
 );
 
 router.post(

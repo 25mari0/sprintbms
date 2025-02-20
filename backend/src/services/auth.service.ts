@@ -36,7 +36,7 @@ class AuthService {
 
     if (!user) throw new Error('User does not exist');
     if (!(await user.validatePassword(password))) throw new Error('Invalid credentials');
-    if (user.role === 'deleted') throw new Error('User account is suspended');
+    if (user.role === 'suspended') throw new Error('User account is suspended');
     if (user.verificationToken && user.role == 'worker') throw new Error('Password reset required. Please use the reset link sent to your email.');
     if (user.verificationToken && user.role == 'owner') throw new Error ('Account is not verified. Please use the verification link sent to your email')
 

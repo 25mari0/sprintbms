@@ -48,6 +48,26 @@ const workerController = {
         }
     },
 
+    resendWorkerWelcome: async (
+        req: Request & { user?: JwtPayload },
+        res: Response,
+        next: NextFunction
+      ): Promise<void> => {
+        try {
+          const workerId = req.params.userId;
+          const ownerId = req.user!.userId;
+      
+          await workerService.resendWorkerWelcome(ownerId, workerId);
+      
+          res.status(200).json({
+            status: 'success',
+            message: 'Verification link sent to worker\'s email',
+          });
+        } catch (error) {
+          next(error);
+        }
+    },
+
     suspendWorker: async (
         req: Request & { user?: JwtPayload },
         res: Response,

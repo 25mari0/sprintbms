@@ -55,9 +55,19 @@ export class EmailService {
     await this.transporter.sendMail({
       from: '"Your App Name" <noreply@yourdomain.com>',
       to: email,
-      subject: "Your account has been suspended",
-      text: "We're sorry to inform you that your account has been suspended. Please contact support for more information.",
-      html: "<b>We're sorry to inform you that your account has been suspended.</b> Please contact <a href='mailto:support@yourdomain.com'>support</a> for more information."
+      subject: "SprintBMS - Your account has been suspended",
+      text: "We're sorry to inform you that your account has been suspended. Please contact the business manager for more information.",
+      html: "<b>We're sorry to inform you that your account has been suspended.</b> Please contact the business manager for more information."
+    });
+  }
+
+  async sendAccountReactivated(email: string): Promise<void> {
+    await this.transporter.sendMail({
+      from: '"Your App Name" <noreply@yourdomain.com>',
+      to: email,
+      subject: "SprintBMS - Your account has been reactivated",
+      text: "We're happy to inform you that your account has been reactivated.",
+      html: "<b>Welcome back!</b> Your account has been reactivated."
     });
   }
 

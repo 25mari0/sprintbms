@@ -21,6 +21,11 @@ class WorkerService {
       throw new Error('Business not found');
     }
 
+    const existingWorker = await this.userRepository.findOne({ where: { email, role: 'worker' } });
+    if (existingWorker) {
+      throw new Error('Worker with this email already exists');
+    }
+
     // Create new worker
     const worker = this.userRepository.create({
       name: name,
@@ -52,6 +57,10 @@ class WorkerService {
       throw new Error('Worker does not belong to your business');
     }
 
+    if (user.role === 'suspended') {
+      throw new Error('Worker is suspended');
+    }
+
     // Invalidate existing tokens
     await authService.revokeAllRefreshTokens(workerId);
     await authService.revokeAccessTokens(workerId);
@@ -72,13 +81,41 @@ class WorkerService {
     return !!owner && !!worker && owner.business?.id === worker.business?.id;
   }
 
+  async resendWorkerWelcome(ownerId: string, workerId: string): Promise<void> {
+    if (!await this.ownerManagesWorker(ownerId, workerId)) {
+      throw new Error('Worker does not belong to your business');
+    }
+
+    const user = await this.userRepository.findOne({ 
+      where: { id: workerId, role: 'worker' },
+      relations: ['verificationToken']
+    });
+    if (!user) throw new Error('Worker not found');
+
+    if (user.role === 'suspended') {
+      throw new Error('Worker is suspended');
+    }
+
+    // Generate a new verification token
+    const token = await authService.generateVerificationToken(workerId);
+
+    // Send verification email
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+    await emailService.sendWorkerWelcome(user.email, verificationLink);
+  }
+
+  //suspend a worker - does not remove verification token, because if the
+  //worker is reactivated, they will need to verify their account again 
+  //in case they werent verified before suspension
   async suspendWorker(ownerId: string, workerId: string): Promise<void> {
     if (!await this.ownerManagesWorker(ownerId, workerId)) {
       throw new Error('Worker does not belong to your business');
     }
 
     const user = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' } });
+
     if (!user) throw new Error('Worker not found');
+    if (user.role == 'suspended') throw new Error('Worker is already suspended');
 
     user.role = 'suspended';
     await this.userRepository.save(user);
@@ -98,6 +135,7 @@ class WorkerService {
 
     const user = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' } });
     if (!user) throw new Error('Worker not found');
+    if (user.role !== 'suspended') throw new Error('Worker is not suspended');
 
     user.role = 'worker';
     await this.userRepository.save(user);

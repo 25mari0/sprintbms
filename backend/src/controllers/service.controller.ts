@@ -64,9 +64,7 @@ const serviceController = {
         req.user!.business!.id,
         { name, price, estimated_time_minutes }
       );
-      if (!updatedService) {
-        throw new Error ('Service not found');
-      }
+
       res.json({ status: 'success', data: updatedService });
     } catch (error) {
       next(error);
@@ -79,10 +77,8 @@ const serviceController = {
     next: NextFunction
   ): Promise<void> => {
     try {
-      const deleted = await serviceService.deleteService(req.params.id, req.user!.business!.id);
-      if (!deleted) {
-        throw new Error ('Service not found');
-      }
+      await serviceService.deleteService(req.params.id, req.user!.business!.id);
+
       res.status(204).send(); // No content - successful delete
     } catch (error) {
         next(error);

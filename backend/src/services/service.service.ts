@@ -1,6 +1,7 @@
 import { Service } from '../entities/Service';
 import AppDataSource from '../db/data-source';
 import { BookingService } from '../entities/BookingService';
+import { AppError } from '../utils/error';
 
 export class ServiceService {
   private serviceRepository = AppDataSource.getRepository(Service);
@@ -27,18 +28,46 @@ export class ServiceService {
     });
   }
 
-  async getServiceById(serviceId: string, businessId: string): Promise<Service | null> {
-    return await this.serviceRepository.findOne({
-      where: { id: parseInt(serviceId, 10), business: { id: businessId } },
+  async getServiceById(serviceId: string, businessId: string): Promise<Service> {
+    // Validate inputs
+    if (!serviceId) {
+      throw new AppError(400, 'Service ID is required');
+    }
+    if (!businessId) {
+      throw new AppError(400, 'Business ID is required');
+    }
+
+    // Parse serviceId to integer and check validity
+    const parsedServiceId = parseInt(serviceId, 10);
+    if (isNaN(parsedServiceId) || parsedServiceId <= 0) {
+      throw new AppError(400, 'Service ID must be a valid positive integer');
+    }
+
+    const service = await this.serviceRepository.findOne({
+      where: { id: parsedServiceId, business: { id: businessId } },
     });
+
+    if (!service) {
+      throw new AppError(404, `Service with ID ${serviceId} not found for business ${businessId}`);
+    }
+
+    return service;
   }
 
-  async updateService(serviceId: string, businessId: string, updates: Partial<Service>): Promise<Service | null> {
-    const service = await this.getServiceById(serviceId, businessId);
-    if (!service) return null;
+  async updateService(serviceId: string, businessId: string, updates: Partial<Service>): Promise<Service> {
+    // Validate updates
+    if (!updates || Object.keys(updates).length === 0) {
+      throw new AppError(400, 'No updates provided');
+    }
 
+    // Get the existing service (this will throw if not found)
+    const service = await this.getServiceById(serviceId, businessId);
+
+    // Apply updates and save
     Object.assign(service, updates);
-    return await this.serviceRepository.save(service);
+    const updatedService = await this.serviceRepository.save(service);
+
+    return updatedService;
   }
 
   async deleteService(serviceId: string, businessId: string): Promise<boolean> {
@@ -49,8 +78,7 @@ export class ServiceService {
       }
     });  
 
-    if(!serviceToDelete) throw new Error('Service not found')
-    
+    if(!serviceToDelete) throw new AppError(400, 'Service not found')
       
     await this.bookingserviceRepository
     .createQueryBuilder()

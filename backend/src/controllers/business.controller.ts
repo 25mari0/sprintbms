@@ -16,18 +16,13 @@ const businessController = {
             // const { licenseExpirationDate } = req.body; 
 
             //returns new access token with the business ID associated
-            const { business, newToken } = await BusinessService.createBusiness(
+            const { business, newAccessToken } = await BusinessService.createBusiness(
             userId,
             name,
             licenseExpirationDate // Convert to Date if it comes as a string
             );
 
-            //console.log current header token
-            console.log(newToken);
-            res.setHeader('Authorization', `Bearer ${newToken}`);
-
-
-            res.status(201).json({ status: 'success', data: business });
+            res.status(201).json({ status: 'success', data: business, accessToken: newAccessToken});
         } catch (error) {
             next(error);
         }

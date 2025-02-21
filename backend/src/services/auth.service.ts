@@ -7,6 +7,7 @@ import { MoreThan } from 'typeorm';
 import { VerificationToken } from '../entities/VerificationToken';
 import { v4 as uuidv4 } from 'uuid';
 import emailService from './email.service';
+import { AppError } from '../utils/error';
 
 class AuthService {
   private userRepository = AppDataSource.getRepository(User);
@@ -23,7 +24,7 @@ class AuthService {
       ) as { userId: string };
       return decoded.userId;
     } catch {
-      throw new Error('Failed to verify refresh token');
+      throw new AppError(400, 'Failed to verify refresh token');
     }
   }
 
@@ -34,10 +35,10 @@ class AuthService {
       select: ['id', 'email', 'password', 'role', 'business'],
     });
 
-    if (!user) throw new Error('User does not exist');
-    if (!(await user.validatePassword(password))) throw new Error('Invalid credentials');
-    if (user.role === 'suspended') throw new Error('User account is suspended');
-    if (user.verificationToken && user.role == 'worker') throw new Error('Password reset required. Please use the reset link sent to your email.');
+    if (!user) throw new AppError(400, 'User does not exist');
+    if (!(await user.validatePassword(password))) throw new AppError(400, 'Invalid credentials');
+    if (user.role === 'suspended') throw new AppError(400, 'User account is suspended');
+    if (user.verificationToken && user.role == 'worker') throw new AppError(400, 'Password reset required. Please use the reset link sent to your email.');
     if (user.verificationToken && user.role == 'owner') throw new Error ('Account is not verified. Please use the verification link sent to your email')
 
     return user;
@@ -45,7 +46,7 @@ class AuthService {
 
   async registerUser(name: string, email: string, password: string): Promise<User> {
     const existingUser = await this.userRepository.findOne({ where: { email } });
-    if (existingUser) throw new Error('Email is already in use');
+    if (existingUser) throw new AppError(400, 'Email is already in use');
 
     const user = this.userRepository.create({ name, email });
     user.password = await user.hashPassword(password);
@@ -138,7 +139,7 @@ class AuthService {
     try {
       const { userId, valid } = await this.validateRefreshToken(refreshToken);
       if (!valid) {
-        throw new Error('Invalid or expired refresh token');
+        throw new AppError(400, 'Invalid or expired refresh token');
       }
 
       const user = await this.userRepository.findOne({
@@ -147,7 +148,7 @@ class AuthService {
       });
 
       if (!user) {
-        throw new Error('User not found');
+        throw new AppError(400, 'User not found');
       }
 
       const newAccessToken = this.generateAccessToken(user.id, user.role, user.business?.id);
@@ -167,7 +168,7 @@ class AuthService {
     try {
       await this.tokenRepository.delete({ userId });
     } catch {
-      throw new Error('Failed to revoke all refresh tokens');
+      throw new AppError(400, 'Failed to revoke all refresh tokens');
     }
   }
 
@@ -181,7 +182,7 @@ class AuthService {
         });
       }
     } catch {
-      throw new Error('Failed to revoke refresh token');
+      throw new AppError(400, 'Failed to revoke refresh token');
     }
   }
 
@@ -192,7 +193,7 @@ class AuthService {
       user!.lastPasswordChange = new Date();
       await this.userRepository.save(user!);
     } catch {
-      throw new Error('Failed to revoke access token');
+      throw new AppError(400, 'Failed to revoke access token');
     }
   }
 
@@ -228,7 +229,7 @@ class AuthService {
 
   async generateVerificationToken(userId: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['verificationToken'] });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError(400, 'User not found');
 
     // Remove any existing token
     if (user.verificationToken) {
@@ -256,7 +257,7 @@ class AuthService {
     if (verificationToken && verificationToken.expiresAt > new Date()) {
       return { userId: verificationToken.user.id };
     }
-    return null; // Token invalid or expired
+    throw new AppError(400, 'Invalid or expired token');
   }
 
   async getUserIdFromVerificationToken(token: string): Promise<{ userId: string } | null> {
@@ -269,7 +270,7 @@ class AuthService {
 
   async resendPasswordToken(userId: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new Error('User not found');
+    if (!user) throw new AppError(400, 'User not found');
 
     const newToken = await this.generateVerificationToken(userId);
     return newToken;

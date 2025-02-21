@@ -1,6 +1,7 @@
 import AppDataSource from '../db/data-source';
 import { Business } from '../entities/Business';
 import { Customer } from '../entities/Customer';
+import { AppError } from '../utils/error';
 
 class CustomerService {
   private customerRepository = AppDataSource.getRepository(Customer);
@@ -15,7 +16,7 @@ class CustomerService {
     const business = await this.businessRepository.findOne({ where: { id: businessId } });
 
     if (!business) {
-      throw new Error('Business not found');
+      throw new AppError(400, 'Business not found');
     }
 
     // Create new customer

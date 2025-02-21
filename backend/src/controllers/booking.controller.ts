@@ -41,8 +41,6 @@ const bookingController = {
       const { id } = req.params;
       const booking = await bookingService.getBookingById(id);
 
-      if (!booking) throw new Error('Booking not found');
-
       res.json({ status: 'success', data: booking });
     } catch (error) {
       next(error);
@@ -58,6 +56,7 @@ const bookingController = {
       const { id } = req.params;
       await bookingService.deleteBooking(id);
       res.status(204).send();
+      
     } catch (error) {
       const err = error as Error;
       err.message = `Error deleting booking: ${err.message}`;

@@ -1,6 +1,7 @@
 // middlewares/business.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { JwtPayload } from '../types/authTypes';
+import { AppError } from '../utils/error';
 
 export const businessMiddleware = {
   hasBusiness: (
@@ -9,7 +10,7 @@ export const businessMiddleware = {
     next: NextFunction
   ): void => {
     if (!req.user?.business) {
-      throw new Error('User does not have an associated business');
+      throw new AppError(400, 'User does not have an associated business');
     }
     next();
   },
@@ -20,7 +21,7 @@ export const businessMiddleware = {
     next: NextFunction,
   ): void => {
     if (req.user?.role !== 'owner' && !req.user?.business?.id) {
-      throw new Error('User does not own a business');
+      throw new AppError(400, 'User does not own a business');
     }
     next();
   },
@@ -31,7 +32,7 @@ export const businessMiddleware = {
     next: NextFunction,
   ): void => {
     if (req.user?.role !== 'owner') {
-      throw new Error('User is not an owner');
+      throw new AppError(400, 'User is not an owner');
     }
     next();
   },

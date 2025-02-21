@@ -6,6 +6,7 @@ import {
   getAccessTokenFromHeader,
   getRefreshTokenFromCookie,
 } from '../utils/auth';
+import { AppError } from '../utils/error';
 
 export const tokenMiddleware = {
   authenticate: async (
@@ -16,7 +17,7 @@ export const tokenMiddleware = {
     try {
       const accessToken = getAccessTokenFromHeader(req);
       if (!accessToken) {
-        throw new Error('No token provided');
+        throw new AppError(400, 'No token provided');
       }
 
       const decoded = jwt.verify(
@@ -26,14 +27,14 @@ export const tokenMiddleware = {
       const user = await authService.getUserById(decoded.userId);
 
       if (!user) {
-        throw new Error('User not found');
+        throw new AppError(400, 'User not found');
       }
 
       if (
         user.lastPasswordChange &&
         user.lastPasswordChange.getTime() > decoded.iat * 1000
       ) {
-        throw new Error('Token is no longer valid');
+        throw new AppError(400, 'Token is no longer valid');
       }
 
       req.user = decoded;
@@ -43,7 +44,7 @@ export const tokenMiddleware = {
         // access token is expired but was otherwise valid
         const refreshToken = getRefreshTokenFromCookie(req);
         if (!refreshToken) {
-          throw new Error('No refresh token provided');
+          throw new AppError(400, 'No refresh token provided');
         }
 
         try {
@@ -60,7 +61,7 @@ export const tokenMiddleware = {
           next();
         } catch {
           // refresh token is invalid or there was an error in the process
-          throw new Error('Failed to refresh access token');
+          throw new AppError(400, 'Failed to refresh access token');
         }
       } else {
         // token is invalid for reasons other than expiration (e.g., tampered, wrong signature)

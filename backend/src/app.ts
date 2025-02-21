@@ -1,3 +1,4 @@
+import 'express-async-errors'; 
 import express from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -14,33 +15,39 @@ import serviceRoutes from './routes/service.routes';
 import workerRoutes from './routes/worker.routes';
 import bodyParser from 'body-parser';
 import multer from 'multer';
+import cors from 'cors';
 
 
 
 dotenv.config();
 
 const app = express();
-app.use(bodyParser.json()); // for parsing application/json
+app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // For multipart/form-data, you can use multer
 const upload = multer(); // for parsing multipart/form-data
 app.use(upload.none()); // If you don't expect file uploads
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
 });
 
-app.use(express.json());
 
-app.use((req, res, next) => {
+/* app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; script-src 'self'",
   );
   next();
-});
+}); */
+
+app.use(cors({
+  origin: process.env.FRONTEND_URL, // Allow only your frontend origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
+  credentials: true, // Allow cookies/credentials if needed (e.g., JWT in cookies)
+}));
 
 app.use(cookieParser());
 app.use('/bookings', bookingRoutes, limiter);

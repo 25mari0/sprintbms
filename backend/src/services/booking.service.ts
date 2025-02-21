@@ -8,6 +8,7 @@ import { BookingFilter } from '../types/bookingTypes';
 import { PaginationOptions } from '../types/sharedTypes';
 import { SelectQueryBuilder } from 'typeorm';
 import { BookingWorker } from '../entities/BookingWorker';
+import { AppError } from '../utils/error';
 
 class BookingManagementService {
   private bookingRepository = AppDataSource.getRepository(Booking);
@@ -24,7 +25,7 @@ class BookingManagementService {
     services: { serviceId: number; price: number }[]
   ): Promise<Booking> {
     const customer = await this.customerRepository.findOneBy({ id: customerId });
-    if (!customer) throw new Error('Customer not found');
+    if (!customer) throw new AppError(400, 'Customer not found');
 
     const booking = this.bookingRepository.create({
       business: { id: businessId },
@@ -38,7 +39,7 @@ class BookingManagementService {
 
     for (const service of services) {
       const serviceEntity = await this.serviceRepository.findOneBy({ id: service.serviceId });
-      if (!serviceEntity) throw new Error('Service not found');
+      if (!serviceEntity) throw new AppError(400, 'Service not found');
       
       await this.bookingServiceRepository.save({
         booking: booking,
@@ -52,9 +53,12 @@ class BookingManagementService {
     return booking;
   }
 
+  async getBookingById(bookingId: string): Promise<Booking> {
+    if (!bookingId) {
+      throw new AppError(400, 'Booking ID is required');
+    }
 
-  async getBookingById(bookingId: string): Promise<Booking | null> {
-    return await this.bookingRepository.findOne({
+    const booking = await this.bookingRepository.findOne({
       where: { id: bookingId },
       relations: [
         'customer',
@@ -64,11 +68,17 @@ class BookingManagementService {
         'bookingWorkers.worker',
       ],
     });
+
+    if (!booking) {
+      throw new AppError(404, `Booking with ID ${bookingId} not found`);
+    }
+
+    return booking;
   }
 
   async deleteBooking(bookingId: string): Promise<void> {
     const booking = await this.bookingRepository.findOneBy({ id: bookingId });
-    if (!booking) throw new Error('Booking not found');
+    if (!booking) throw new AppError(400, 'Booking not found');
     await this.bookingServiceRepository.delete({ booking: { id: bookingId } });
     await this.bookingWorkerRepository.delete({ booking: { id: bookingId } });
     await this.bookingRepository.remove(booking);
@@ -79,7 +89,7 @@ class BookingManagementService {
     updateData: Partial<Booking>,
   ): Promise<Booking> {
     const booking = await this.bookingRepository.findOneBy({ id: bookingId });
-    if (!booking) throw new Error('Booking not found');
+    if (!booking) throw new AppError(400, 'Booking not found');
     Object.assign(booking, updateData);
     return await this.bookingRepository.save(booking);
   }

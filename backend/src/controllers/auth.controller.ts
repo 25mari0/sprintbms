@@ -4,6 +4,7 @@ import AppDataSource from '../db/data-source';
 import authService from '../services/auth.service';
 import { JwtPayload } from '../types/authTypes';
 import { VerificationToken } from '../entities/VerificationToken';
+import { AppError } from '../utils/error';
 
 const userRepository = AppDataSource.getRepository(User);
 const verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
@@ -84,12 +85,10 @@ const authController = {
 
     try {
       const verificationToken = await authService.validateVerificationToken(token);
-      if (!verificationToken) 
-        throw new Error('Invalid or expired token'); 
       
-      const user = await userRepository.findOne({ where: { id: verificationToken.userId } });
+      const user = await userRepository.findOne({ where: { id: verificationToken!.userId } });
       if (!user) 
-        throw new Error('User not found');
+        throw new AppError(400, 'User not found');
   
       user.password = await user.hashPassword(newPassword);
       user.lastPasswordChange = new Date(); // Invalidate existing access tokens
@@ -118,12 +117,10 @@ const authController = {
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') 
-      throw new Error('Invalid token');
+      throw new AppError(400, 'Invalid token');
   
     try {
-      const result = await authService.validateVerificationToken(token);
-      if (!result) 
-        throw new Error('Invalid or expired token');
+      await authService.validateVerificationToken(token);
   
       // For an API, send JSON to indicate the token is valid and the user can proceed
       res.json({ 
@@ -146,12 +143,10 @@ const authController = {
 
     try {
       const verificationToken = await authService.validateVerificationToken(token);
-      if (!verificationToken) 
-        throw new Error('Invalid or expired token'); 
 
-      const user = await userRepository.findOne({ where: { id: verificationToken.userId } });
+      const user = await userRepository.findOne({ where: { id: verificationToken!.userId } });
       if (!user) 
-        throw new Error('User not found');
+        throw new AppError(400, 'User not found');
 
       if (user.verificationToken) {
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
@@ -176,13 +171,13 @@ const authController = {
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') 
-      throw new Error('Invalid token');
+      throw new AppError(400, 'Invalid token');
 
     try {
       const result = await authService.getUserIdFromVerificationToken(token);
       //if a valid token is still available, we delete it and send a new email
       if (!result)
-        throw new Error('Verification token is invalid')
+        throw new AppError(400, 'Verification token is invalid')
 
       authService.resendPasswordToken(result.userId)
 

@@ -11,7 +11,8 @@ class BusinessService {
     userId: string,
     name: string,
     licenseExpirationDate: Date
-): Promise<{ business: Business; newToken: string }> {
+    ): Promise<{ business: Business; newAccessToken: string }> {
+      
     // Create new business
     const business = this.businessRepository.create({
       name,
@@ -27,14 +28,14 @@ class BusinessService {
     await this.userRepository.save(user!);
 
     // Generate new token with business ID
-    const newToken = authService.generateAccessToken(
+    const newAccessToken = authService.generateAccessToken(
     user!.id,
     user!.role,
     business.id
     ); // Assuming generateAccessToken can handle business ID
       
 
-    return { business, newToken };
+    return { business, newAccessToken };
   }
 
   async getBusinessById(businessId: string): Promise<Business | null> {

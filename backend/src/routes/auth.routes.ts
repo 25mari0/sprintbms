@@ -42,6 +42,7 @@ router.get(
 
 router.post(
   '/password-reset/confirm',
+  ...passwordValidation,
   authController.setPasswordToken
 );
 

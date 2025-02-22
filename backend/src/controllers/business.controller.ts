@@ -16,7 +16,7 @@ const businessController = {
             // const { licenseExpirationDate } = req.body; 
 
             //returns new access token with the business ID associated
-            const { business, newAccessToken } = await BusinessService.createBusiness(
+            const { business, newAccessToken } = await BusinessService.createBusiness(req.user?.business?.id, 
             userId,
             name,
             licenseExpirationDate // Convert to Date if it comes as a string

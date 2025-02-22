@@ -77,7 +77,7 @@ const authController = {
     res: Response, 
     next: NextFunction
   ) => {
-    const { newPassword, token } = req.body;
+    const { password: newPassword, token } = req.body;
 
     try {
       const verificationToken = await authService.validateVerificationToken(token);

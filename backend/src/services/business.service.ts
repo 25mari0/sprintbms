@@ -1,6 +1,7 @@
 import AppDataSource from '../db/data-source';
 import { Business } from '../entities/Business';
 import { User } from '../entities/User';
+import { AppError } from '../utils/error';
 import authService from './auth.service';
 
 class BusinessService {
@@ -8,11 +9,15 @@ class BusinessService {
   private userRepository = AppDataSource.getRepository(User);
 
   async createBusiness(
+    businessId: string | undefined,
     userId: string,
     name: string,
     licenseExpirationDate: Date
     ): Promise<{ business: Business; newAccessToken: string }> {
-      
+
+    // Check if user already has a business, by looking at the token payload
+    if (businessId) throw new AppError(400, 'User already has a business');
+  
     // Create new business
     const business = this.businessRepository.create({
       name,
@@ -39,13 +44,14 @@ class BusinessService {
   }
 
   async getBusinessById(businessId: string): Promise<Business | null> {
+
+    if (!businessId) throw new AppError(400, 'Business ID is required');
+
     try {
       return await this.businessRepository.findOne({ where: { id: businessId } });
     }
-    catch (error) {
-      const err = error as Error;
-      err.message = `Failed to retrieve business: ${err.message}`;
-      throw err;
+    catch {
+      throw new AppError(404, `Business with ID ${businessId} not found`); 
     }
 
   }

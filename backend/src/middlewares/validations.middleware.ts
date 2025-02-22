@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { validationResult, body } from 'express-validator';
+import { AppError } from '../utils/error';
 
 // reused validations go here - DRY (DONT REPEAT YOURSELF) DUMMY
 
@@ -12,7 +13,7 @@ export const validate: RequestHandler = (
   if (errors.isEmpty()) {
     return next();
   }
-  next(new Error(errors.array()[0].msg)); // or handle errors as needed
+  next(new AppError(400, errors.array()[0].msg)); // or handle errors as needed
 };
 
 // email validation

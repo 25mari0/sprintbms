@@ -26,9 +26,7 @@ const authController = {
         userId: user.id,
       });
     } catch (error) {
-      const err = error as Error;
-      err.message = `Error registering user: ${err.message}`;
-      next(err);
+      next(error);
     }
   },
 
@@ -54,9 +52,7 @@ const authController = {
 
       res.status(200).json({ status: 'success', accessToken });
     } catch (error) {
-      const err = error as Error;
-      err.message = `Error logging in: ${err.message}`;
-      next(err);
+      next(error);
     }
   },
 
@@ -212,9 +208,7 @@ const authController = {
 
       res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
-      const err = error as Error;
-      err.message = `Error updating password: ${err.message}`;
-      next(err);
+      next(error);
     }
   },
 

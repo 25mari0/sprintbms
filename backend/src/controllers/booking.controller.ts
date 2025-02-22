@@ -56,7 +56,7 @@ const bookingController = {
       const { id } = req.params;
       await bookingService.deleteBooking(id);
       res.status(204).send();
-      
+
     } catch (error) {
       const err = error as Error;
       err.message = `Error deleting booking: ${err.message}`;
@@ -123,9 +123,7 @@ const bookingController = {
         },
       });
     } catch (error) {
-      const err = error as Error;
-      err.message = `Error getting bookings: ${err.message}`;
-      next(err);
+      next(error);
     }
   },
 

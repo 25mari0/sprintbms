@@ -47,7 +47,7 @@ export class EmailService {
       to: email,
       subject: "SprintBMS - Account Verification Request",
       text: `Please verify your account by clicking this link: ${verificationLink}`,
-      html: `<b>Please reset your password by clicking this link:</b> <a href="${verificationLink}">Verify Account</a>`,
+      html: `<b>Please verify your account by clicking this link:</b> <a href="${verificationLink}">Verify Account</a>`,
   });
   }
 

@@ -253,7 +253,9 @@ class AuthService {
   }
 
   async validateVerificationToken(token: string): Promise<{ userId: string } | null> {
-    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token } });
+    console.log('token: ', token);
+    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token }, relations: ['user'] });
+    console.log('verificationToken: ', verificationToken);
     if (verificationToken && verificationToken.expiresAt > new Date()) {
       return { userId: verificationToken.user.id };
     }

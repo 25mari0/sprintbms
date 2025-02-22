@@ -135,18 +135,26 @@ const authController = {
     res: Response, 
     next: NextFunction
   ) => {
-    const token = req.body;
+    const token = req.body.token;
 
     try {
       const verificationToken = await authService.validateVerificationToken(token);
 
-      const user = await userRepository.findOne({ where: { id: verificationToken!.userId } });
+      const user = await userRepository.findOne({ 
+        where: { id: verificationToken!.userId },
+        relations: ['verificationToken'], // Load the relation
+      });
+      
       if (!user) 
         throw new AppError(400, 'User not found');
 
-      if (user.verificationToken) {
+      if (user.verificationToken && verificationToken) {
+        console.log('removing token')
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
       }
+
+      console.log('user verified')
+    
 
       // Redirect or respond with success, depending on your frontend needs
       res.json({ 

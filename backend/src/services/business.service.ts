@@ -36,7 +36,8 @@ class BusinessService {
     const newAccessToken = authService.generateAccessToken(
     user!.id,
     user!.role,
-    business.id
+    business.id,
+    licenseExpirationDate
     ); // Assuming generateAccessToken can handle business ID
       
 

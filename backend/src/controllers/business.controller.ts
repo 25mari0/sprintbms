@@ -12,8 +12,9 @@ const businessController = {
             const userId = req.user!.userId;
 
             const { name } = req.body;
+            // to-do: implement stripe integration to handle payments
+            // and set the license expiration date based on the payment success
             const licenseExpirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-            // const { licenseExpirationDate } = req.body; 
 
             //returns new access token with the business ID associated
             const { business, newAccessToken } = await BusinessService.createBusiness(req.user?.business?.id, 

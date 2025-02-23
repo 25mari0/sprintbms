@@ -1,7 +1,7 @@
 export interface JwtPayload {
   userId: string;
   role: string;
-  business?: { id: string }; // Optional, since it might not be available in all scenarios
+  business?: { id: string, licenseExpirationDate: Date }; // optional, since it might not be available in all scenarios
   iat: number;
 }
 

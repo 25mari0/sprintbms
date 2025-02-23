@@ -1,11 +1,11 @@
 // middlewares/premium.middleware.ts
 import { Request, Response, NextFunction } from 'express';
-import BusinessService from '../services/business.service';
 import { AppError } from '../utils/error';
+import { JwtPayload } from '../types/authTypes';
 
 export const premiumMiddleware = {
     isPremium: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction
     ): Promise<void> => {
@@ -14,15 +14,12 @@ export const premiumMiddleware = {
         throw new AppError(400, 'No business associated with user');
         }
 
-        // Assuming business entity has licenseExpirationDate
-        const business = await BusinessService.getBusinessById(req.user.business.id); // Assuming this method exists
-        if (!business) {
-            throw new AppError(400, 'Business not found');
-        }
-
+        // instead of accessing the db everytime, we store the licenseExpirationDate in the access token
+        // reducing the number of db calls
         const now = new Date();
-        if (business.licenseExpirationDate && business.licenseExpirationDate > now) {
+        if (req.user.business.licenseExpirationDate && req.user.business.licenseExpirationDate > now) {
         next(); // User is premium, proceed
+        
         } else {
         throw new AppError(400, 'Premium access required' );
         }

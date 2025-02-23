@@ -40,7 +40,7 @@ const authController = {
     try {
       const user = await authService.authenticateUser(email, password);
 
-      const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id);
+      const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id, user.business?.licenseExpirationDate);
       const refreshToken = await authService.generateRefreshToken(user!.id);
 
       res.cookie('refreshToken', refreshToken, {
@@ -149,12 +149,8 @@ const authController = {
         throw new AppError(400, 'User not found');
 
       if (user.verificationToken && verificationToken) {
-        console.log('removing token')
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
-      }
-
-      console.log('user verified')
-    
+      }    
 
       // Redirect or respond with success, depending on your frontend needs
       res.json({ 

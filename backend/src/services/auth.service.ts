@@ -63,9 +63,10 @@ class AuthService {
     userId: string,
     role: string,
     businessId?: string,
+    licenseExpirationDate?: Date
   ): string {
     return jwt.sign(
-      { userId, role, business: businessId ? { id: businessId } : undefined },
+      { userId, role, business: businessId ? { id: businessId, licenseExpirationDate  } : undefined },
       process.env.JWT_SECRET!,
       { expiresIn: '30m' },
     );
@@ -144,14 +145,15 @@ class AuthService {
 
       const user = await this.userRepository.findOne({
         where: { id: userId },
-        select: ['id', 'role'],
+        select: ['id', 'role', 'business'],
+        relations: ['business'],
       });
 
       if (!user) {
         throw new AppError(400, 'User not found');
       }
 
-      const newAccessToken = this.generateAccessToken(user.id, user.role, user.business?.id);
+      const newAccessToken = this.generateAccessToken(user.id, user.role, user.business?.id, user.business?.licenseExpirationDate);
       const newRefreshToken = await this.generateRefreshToken(userId);
       await this.revokeRefreshToken(refreshToken); // revoke the old token
       await this.storeRefreshToken(userId, newRefreshToken); // store the new one

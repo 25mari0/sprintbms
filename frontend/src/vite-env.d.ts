@@ -1,1 +1,9 @@
-const MAIN_BACKEND = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+    readonly VITE_MAIN_API_URL: string;
+  }
+  
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }

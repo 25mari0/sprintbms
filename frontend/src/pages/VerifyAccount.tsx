@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { validateToken, confirmAccount, resendVerification } from '../services/authService';
-import type { ApiError } from '../types/authTypes';
+import { ApiError } from '../types/authTypes.ts';
 
 const VerifyAccount: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -14,8 +14,9 @@ const VerifyAccount: React.FC = () => {
       try {
         const result = await validateToken(token);
         setStatus(result.status === 'success' ? 'valid' : 'expired');
-      } catch (err: ApiError) {
-        setError(err.message || 'Failed to validate token');
+      } catch (err) {
+        const apiError = err as ApiError;
+        setError(apiError.message || 'Failed to validate token');
         setStatus('expired');
       }
     };
@@ -26,8 +27,9 @@ const VerifyAccount: React.FC = () => {
     try {
       await confirmAccount(token);
       window.location.href = '/login';
-    } catch (err: ApiError) {
-      setError(err.message || 'Confirmation failed');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Confirmation failed');
     }
   };
 
@@ -35,8 +37,9 @@ const VerifyAccount: React.FC = () => {
     try {
       await resendVerification(token);
       setStatus('resent');
-    } catch (err: ApiError) {
-      setError(err.message || 'Failed to resend verification');
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Failed to resend verification');
     }
   };
 

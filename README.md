@@ -1,14 +1,18 @@
 project goals:
-full-stack application to streamline operations for car detailing businesses. 
-combine a robust Node.js backend with a dynamic React frontend to manage bookings, services, customers, and user authentication seamlessly, along with detailed and useful business management analytics
+
+- full-stack application to streamline operations for car detailing businesses. 
+- combine a robust Node.js backend with a dynamic React frontend to manage bookings, services, customers, and user authentication seamlessly, along with detailed and useful business management analytics
 
 "education" goals:
--learn and develop following true business/collaborative projects
--use proper coding & development procedures - structural organization, pipelines, modularity to avoid repetition, security, testing, separation between dev and prod enviroments, etc
--follow through with learning React & modern FE development
--implement a payment system for subscriptions (STRIPE)
+
+- learn and develop following true business/collaborative projects
+- use proper coding & development procedures - structural organization, pipelines, modularity to avoid repetition, security, testing, separation between dev and prod enviroments, etc
+- follow through with learning React & modern FE development
+- implement a payment system for subscriptions (STRIPE)
+
 
 tech stack:
+
     backend:
         -node.js & express
         -typescript
@@ -31,6 +35,6 @@ tech stack:
         -pgadmin, tableplus & postman 
 
 setup notes:
-    -email:
-        ethereal.email is used while in development, just go their website, click the create button and replaced the backend .env variables for it
+	
+ 	-ethereal.email is used while in development, go their website, click the create button & replace the backend .env variables for it
     

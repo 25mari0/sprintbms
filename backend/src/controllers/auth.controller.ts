@@ -179,7 +179,7 @@ const authController = {
       if (!result)
         throw new AppError(400, 'Verification token is invalid')
 
-      authService.resendPasswordToken(result.userId)
+      authService.resendVerificationToken(result.userId)
 
       res.json({ 
         status: 'success', 

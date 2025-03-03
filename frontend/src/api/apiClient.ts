@@ -5,7 +5,6 @@ export const apiFetch = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   const defaultOptions: RequestInit = {
-    method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   };
   const response = await fetch(url, { ...defaultOptions, ...options });
@@ -25,4 +24,6 @@ export const apiPost = <T>(url: string, data: any): Promise<T> =>
 
 // GET helper (for token validation)
 export const apiGet = <T>(url: string): Promise<T> =>
-  apiFetch<T>(url);
+  apiFetch<T>(url, {
+     method: 'GET' 
+  });

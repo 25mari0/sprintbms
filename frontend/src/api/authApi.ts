@@ -1,4 +1,4 @@
-import { apiPost, apiGet } from '../utils/api';
+import { apiPost, apiGet } from './apiClient';
 import { RegisterResponse, LoginResponse, TokenValidationResponse, VerifyAccountResponse } from '../types/authTypes';
 
 const BASE_URL = import.meta.env.VITE_MAIN_API_URL;
@@ -21,13 +21,13 @@ export const validateToken = async (token: string) =>
 (`${BASE_URL}/client/account-verification/token?token=${token}`);
 
 export const confirmAccount = async (token: string) => {
-  console.log('Confirming account with token:', token);
   return apiPost<VerifyAccountResponse>
   (`${BASE_URL}/client/account-verification/confirm`, 
     { token });
 };
 
-export const resendVerification = async (token: string) =>
+export const resendVerification = (token: string) =>
   apiPost<VerifyAccountResponse>
-(`${BASE_URL}/client/account-verification/resend`, 
-  { token });
+  (`${BASE_URL}/client/account-verification/resend?token=${token}`, {
+    token,
+  });

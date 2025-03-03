@@ -28,9 +28,9 @@ export interface LoginResponse {
 }
 
 export interface TokenValidationResponse {
-  status: string;
-  token: string;
-  message: string;
+  status: 'success' | 'error';
+  token?: string; // Optional, only on success
+  message: string; // "Token is valid.", "Invalid token", "Expired token"
 }
 
 export interface VerifyAccountResponse {

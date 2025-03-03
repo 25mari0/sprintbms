@@ -39,7 +39,7 @@ class AuthService {
     if (!(await user.validatePassword(password))) throw new AppError(400, 'Invalid credentials');
     if (user.role === 'suspended') throw new AppError(400, 'User account is suspended');
     if (user.verificationToken && user.role == 'worker') throw new AppError(400, 'Password reset required. Please use the reset link sent to your email.');
-    if (user.verificationToken && user.role == 'owner') throw new Error ('Account is not verified. Please use the verification link sent to your email')
+    if (user.verificationToken && user.role == 'owner') throw new AppError(400, 'Account is not verified. Please use the verification link sent to your email')
 
     return user;
   }
@@ -256,14 +256,19 @@ class AuthService {
 
   async validateVerificationToken(token: string): Promise<{ userId: string } | null> {
     const verificationToken = await this.verificationTokenRepository.findOne({ where: { token }, relations: ['user'] });
-    if (verificationToken && verificationToken.expiresAt > new Date()) {
-      return { userId: verificationToken.user.id };
+    // first check if the token exists
+    if (!verificationToken) {
+      throw new AppError(400, 'Invalid token');
     }
-    throw new AppError(400, 'Invalid or expired token');
+    // now check if the token is expired
+    if (verificationToken.expiresAt < new Date()) {
+      throw new AppError(400, 'Expired token');
+    }
+    return { userId: verificationToken.user.id };
   }
 
   async getUserIdFromVerificationToken(token: string): Promise<{ userId: string } | null> {
-    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token } });
+    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token }, relations: ['user'] });
     if(verificationToken) {
       return { userId: verificationToken.user.id };
     }
@@ -275,6 +280,18 @@ class AuthService {
     if (!user) throw new AppError(400, 'User not found');
 
     const newToken = await this.generateVerificationToken(userId);
+    const verificationLink = `${process.env.FRONTEND_URL}/reset-password?token=${newToken}`;
+    emailService.sendPasswordReset(user.email, verificationLink);
+    return newToken;
+  }
+
+  async resendVerificationToken(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new AppError(400, 'User not found');
+
+    const newToken = await this.generateVerificationToken(userId);
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-account?token=${newToken}`;
+    emailService.sendAccountVerification(user.email, verificationLink);
     return newToken;
   }
 

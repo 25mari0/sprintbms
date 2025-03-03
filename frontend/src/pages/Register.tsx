@@ -1,55 +1,54 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
-import { register } from '../services/authService';
-import { handleApiError } from '../utils/errorHandler';
-import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
+import { useRegister } from '../hooks/useAuth';
 import { RegisterFormData } from '../types/authTypes';
+import { Button, Alert } from '@mui/material';
+import { FormField } from '../components/FormField';
+import { FormContainer } from '../components/FormContainer';
+import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
 
 const Register: React.FC = () => {
-  const { register: formRegister, handleSubmit, formState: { errors }, reset } = useForm<RegisterFormData>({
+  const { register: formRegister, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     mode: 'onSubmit',
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const { register: registerUser, error } = useRegister();
 
   const onSubmit = async (data: RegisterFormData) => {
-    setError('');
-    setSuccess('');
-    try {
-      const { message } = await register(data.name, data.email, data.password);
-      setSuccess(message);
-      reset();
-    } catch (err: unknown) {
-      setError(handleApiError(err));
-    }
+    await registerUser(data.name, data.email, data.password);
   };
 
   return (
-    <div>
-      <h1>Register</h1>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {success && <p style={{ color: 'green' }}>{success}</p>}
+    <FormContainer title="Register">
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <input
-          {...formRegister('name', nameValidation)}
-          placeholder="Name"
+        <FormField
+          register={formRegister('name', nameValidation)}
+          error={errors.name}
+          label="Name"
         />
-        {errors.name && <p style={{ color: 'red' }}>{errors.name.message}</p>}
-        <input
-          {...formRegister('email', emailValidation)}
-          placeholder="Email"
+        <FormField
+          register={formRegister('email', emailValidation)}
+          error={errors.email}
+          label="Email"
           type="email"
         />
-        {errors.email && <p style={{ color: 'red' }}>{errors.email.message}</p>}
-        <input
-          {...formRegister('password', passwordValidation)}
-          placeholder="Password"
+        <FormField
+          register={formRegister('password', passwordValidation)}
+          error={errors.password}
+          label="Password"
           type="password"
         />
-        {errors.password && <p style={{ color: 'red' }}>{errors.password.message}</p>}
-        <button type="submit">Register</button>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
+        >
+          Register
+        </Button>
       </form>
-    </div>
+    </FormContainer>
   );
 };
 

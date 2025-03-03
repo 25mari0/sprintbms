@@ -25,9 +25,9 @@ const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-// For multipart/form-data, you can use multer
+// for multipart/form-data, multer can be used
 const upload = multer(); // for parsing multipart/form-data
-app.use(upload.none()); // If you don't expect file uploads
+app.use(upload.none()); // file upload's are not expected
 const PORT = process.env.PORT;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -44,9 +44,9 @@ const limiter = rateLimit({
 }); */
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL, // Allow only your frontend origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
-  credentials: true, // Allow cookies/credentials if needed (e.g., JWT in cookies)
+  origin: process.env.FRONTEND_URL, // allow only our frontend origin
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // specify allowed methods
+  credentials: true, // allow cookies/credentials if needed (e.g., JWT in cookies)
 }));
 
 app.use(cookieParser());

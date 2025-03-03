@@ -19,7 +19,7 @@ router.post(
   workerController.resendWorkerWelcome,
 )
 
-//to resend the password reset link, the owner just has to call this route again
+// to resend the password reset link, the owner just has to call this route again
 router.post(
     '/:userId/reset-password',
     tokenMiddleware.authenticate,

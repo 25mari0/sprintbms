@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../utils/error';
 
+  // next is needed for it to be recognized as an error handler
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   export const errorHandler = (error: Error | AppError, req: Request, res: Response, next: NextFunction) => {
     const isDev = process.env.NODE_ENV === 'development';

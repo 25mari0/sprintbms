@@ -1,4 +1,3 @@
-// backend/src/routes/booking.routes.ts
 import { Router } from 'express';
 import bookingController from '../controllers/booking.controller';
 import tokenMiddleware from '../middlewares/token.middleware';

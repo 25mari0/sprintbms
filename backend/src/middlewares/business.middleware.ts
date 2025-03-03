@@ -1,4 +1,3 @@
-// middlewares/business.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import { JwtPayload } from '../types/authTypes';
 import { AppError } from '../utils/error';

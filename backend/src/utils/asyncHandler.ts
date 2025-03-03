@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-// Wraps async functions to catch errors and pass them to next
+// wraps async functions to catch errors and pass them to next
 export const asyncHandler = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<unknown>
 ) => {

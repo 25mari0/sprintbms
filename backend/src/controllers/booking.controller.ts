@@ -1,4 +1,3 @@
-// backend/src/controllers/booking.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import bookingService from '../services/booking.service';
 import { BookingFilter } from '../types/bookingTypes';

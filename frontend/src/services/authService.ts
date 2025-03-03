@@ -20,10 +20,12 @@ export const validateToken = async (token: string) =>
   apiGet<TokenValidationResponse>
 (`${BASE_URL}/client/account-verification/token?token=${token}`);
 
-export const confirmAccount = async (token: string) =>
-  apiPost<VerifyAccountResponse>
-(`${BASE_URL}/client/account-verification/confirm`, 
-  { token });
+export const confirmAccount = async (token: string) => {
+  console.log('Confirming account with token:', token);
+  return apiPost<VerifyAccountResponse>
+  (`${BASE_URL}/client/account-verification/confirm`, 
+    { token });
+};
 
 export const resendVerification = async (token: string) =>
   apiPost<VerifyAccountResponse>

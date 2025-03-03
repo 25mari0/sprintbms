@@ -1,4 +1,3 @@
-// middlewares/business.middleware.ts
 import { Request, Response, NextFunction } from 'express';
 import AppDataSource from '../db/data-source';
 import { User } from '../entities/User';

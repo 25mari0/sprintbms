@@ -42,10 +42,12 @@ const authController = {
 
       const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id, user.business?.licenseExpirationDate);
       const refreshToken = await authService.generateRefreshToken(user!.id);
+      
 
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: true,
+        // prevents issues with http and https in development
+        secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });

@@ -68,7 +68,7 @@ class AuthService {
     return jwt.sign(
       { userId, role, business: businessId ? { id: businessId, licenseExpirationDate  } : undefined },
       process.env.JWT_SECRET!,
-      { expiresIn: '30m' },
+      { expiresIn: '1m' },
     );
   }
 
@@ -88,6 +88,8 @@ class AuthService {
       // Generate a salt once
       const salt = await bcrypt.genSalt(10);
       const hashedToken = await bcrypt.hash(refreshToken, salt);
+      // Delete any existing tokens for the user
+      await this.tokenRepository.delete({ userId });
 
       const newToken = this.tokenRepository.create({
         token: hashedToken,

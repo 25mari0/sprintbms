@@ -7,6 +7,7 @@ import {
 import { body } from 'express-validator';
 import authController from '../controllers/auth.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
+import premiumMiddleware from '../middlewares/premium.middleware';
 
 const router = Router();
 
@@ -27,6 +28,14 @@ router.post(
   ...passwordValidation,
   validate,
   authController.login,
+);
+
+router.get('/protected', 
+  tokenMiddleware.authenticate,
+  premiumMiddleware.isPremium,  
+  (req, res) => {
+    res.json({ message: `Access granted & is Premium!` });
+  },
 );
 
 router.post(

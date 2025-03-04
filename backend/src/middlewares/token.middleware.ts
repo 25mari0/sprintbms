@@ -44,7 +44,7 @@ export const tokenMiddleware = {
         // access token is expired but was otherwise valid
         const refreshToken = getRefreshTokenFromCookie(req);
         if (!refreshToken) {
-          throw new AppError(400, 'No refresh token provided');
+          throw new AppError(400, 'Cannot re-new token without a refresh token');
         }
 
         try {

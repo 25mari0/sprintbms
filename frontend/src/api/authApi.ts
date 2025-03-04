@@ -12,6 +12,7 @@ export const login = async (email: string, password: string) => {
   const data = await apiPost<LoginResponse>
   (`${BASE_URL}/client/login`, 
     { email, password });
+    // recommended jwt flow here is to respond login with accessToken on the body and manually set it in localStorage
   localStorage.setItem('accessToken', data.accessToken);
   return data;
 };
@@ -31,3 +32,7 @@ export const resendVerification = (token: string) =>
   (`${BASE_URL}/client/account-verification/resend?token=${token}`, {
     token,
   });
+
+export const getDashboardData = async () => {
+  return apiGet<{ message: string }>(`${BASE_URL}/client/protected`);
+};

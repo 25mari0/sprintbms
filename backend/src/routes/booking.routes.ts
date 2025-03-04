@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bookingController from '../controllers/booking.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
 import premiumMiddleware from '../middlewares/premium.middleware';
+import businessMiddleware from '../middlewares/business.middleware';
 
 const router = Router();
 
@@ -11,24 +12,28 @@ const router = Router();
 router.post(
   '/',
   tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness,
   premiumMiddleware.isPremium,
   bookingController.createBooking,
 );
 router.get(
   '/:id',
   tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness,
   premiumMiddleware.isPremium,
   bookingController.getBooking,
 );
 router.delete(
   '/:id',
   tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness,
   premiumMiddleware.isPremium,
   bookingController.deleteBooking,
 );
 router.get(
   '/',
   tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness,
   premiumMiddleware.isPremium,
   bookingController.getBookingsWithFilter,
 );

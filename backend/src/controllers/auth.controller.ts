@@ -43,7 +43,6 @@ const authController = {
       const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id, user.business?.licenseExpirationDate);
       const refreshToken = await authService.generateRefreshToken(user!.id);
       
-
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         // prevents issues with http and https in development

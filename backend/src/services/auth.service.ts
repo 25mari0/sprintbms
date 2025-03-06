@@ -80,24 +80,19 @@ class AuthService {
     return refreshToken;
   }
 
-  public async storeRefreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<void> {
+  public async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
     try {
-      // Generate a salt once
       const salt = await bcrypt.genSalt(10);
       const hashedToken = await bcrypt.hash(refreshToken, salt);
-      // Delete any existing tokens for the user
-      await this.tokenRepository.delete({ userId });
-
-      const newToken = this.tokenRepository.create({
-        token: hashedToken,
-        userId: userId,
-        salt: salt,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  
+      await this.tokenRepository.manager.transaction(async (transactionalEntityManager) => {
+        await transactionalEntityManager.upsert(
+          Token,
+          { userId, token: hashedToken, salt, expiresAt },
+          ['userId'] // Conflict target: update if userId exists
+        );
       });
-      await this.tokenRepository.save(newToken);
     } catch (error) {
       const err = error as Error;
       err.message = `Error storing refresh token: ${err.message}`;
@@ -231,6 +226,7 @@ class AuthService {
     }
   }
 
+  //generates AND stores
   async generateVerificationToken(userId: string): Promise<string> {
     const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['verificationToken'] });
     if (!user) throw new AppError(400, 'User not found');
@@ -260,7 +256,7 @@ class AuthService {
     const verificationToken = await this.verificationTokenRepository.findOne({ where: { token }, relations: ['user'] });
     // first check if the token exists
     if (!verificationToken) {
-      throw new AppError(400, 'Invalid token');
+      throw new AppError(401, 'Invalid token');
     }
     // now check if the token is expired
     if (verificationToken.expiresAt < new Date()) {

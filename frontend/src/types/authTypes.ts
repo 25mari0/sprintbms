@@ -36,3 +36,10 @@ export interface TokenValidationResponse {
 export interface VerifyAccountResponse {
   message: string;
 }
+
+export interface AuthContextType {
+  isAuthenticated: boolean;
+  token: string | null;
+  setToken: (token: string | null) => void;
+  logout: () => void;
+}

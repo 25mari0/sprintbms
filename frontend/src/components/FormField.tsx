@@ -1,4 +1,3 @@
-import React from 'react';
 import { FieldError, UseFormRegisterReturn } from 'react-hook-form';
 import { TextField } from '@mui/material';
 
@@ -9,7 +8,12 @@ interface FormFieldProps {
   type?: string;
 }
 
-export const FormField: React.FC<FormFieldProps> = ({ register, error, label, type = 'text' }) => (
+export const FormField = ({
+  register,
+  error,
+  label,
+  type = 'text',
+}: FormFieldProps) => (
   <TextField
     {...register}
     label={label}

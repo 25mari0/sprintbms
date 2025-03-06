@@ -1,8 +1,10 @@
 import { ApiError } from '../types/authTypes';
 
-export const handleApiError = (err: unknown): string => {
+export const handleApiError = (err: unknown): ApiError => {
   if (err instanceof Error) {
-    return (err as ApiError).message || 'An unexpected error occurred';
+    return {
+      message: (err as ApiError).message || 'An unexpected error occurred',
+    };
   }
-  return 'An unexpected error occurred';
+  return { message: 'An unexpected error occurred' };
 };

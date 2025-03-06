@@ -114,13 +114,13 @@ const authController = {
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') 
-      throw new AppError(400, 'Invalid token');
+      throw new AppError(401, 'Invalid token');
   
     try {
       await authService.validateVerificationToken(token);
   
       // For an API, send JSON to indicate the token is valid and the user can proceed
-      res.json({ 
+      res.status(200).json({ 
         status: 'success', 
         token,
         message: 'Token is valid.'
@@ -147,14 +147,14 @@ const authController = {
       });
       
       if (!user) 
-        throw new AppError(400, 'User not found');
+        throw new AppError(401, 'User not found');
 
       if (user.verificationToken && verificationToken) {
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
       }    
 
       // Redirect or respond with success, depending on your frontend needs
-      res.json({ 
+      res.status(200).json({ 
         status: 'success', 
         message: 'Account verified successfully. Please log in with your password.', 
         redirect: '/login'
@@ -178,11 +178,11 @@ const authController = {
       const result = await authService.getUserIdFromVerificationToken(token);
       //if a valid token is still available, we delete it and send a new email
       if (!result)
-        throw new AppError(400, 'Verification token is invalid')
+        throw new AppError(401, 'Verification token is invalid')
 
       authService.resendVerificationToken(result.userId)
 
-      res.json({ 
+      res.status(200).json({ 
         status: 'success', 
         token,
         message: 'Verification link was re-sent to the email.'

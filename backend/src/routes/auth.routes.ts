@@ -7,7 +7,7 @@ import {
 import { body } from 'express-validator';
 import authController from '../controllers/auth.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
-import premiumMiddleware from '../middlewares/premium.middleware';
+//import premiumMiddleware from '../middlewares/premium.middleware';
 
 const router = Router();
 
@@ -32,7 +32,6 @@ router.post(
 
 router.get('/protected', 
   tokenMiddleware.authenticate,
-  premiumMiddleware.isPremium,  
   (req, res) => {
     res.json({ message: `Access granted & is Premium!` });
   },
@@ -57,13 +56,8 @@ router.post(
 
 // PRESENT & EXPIRED ? respond with, EXPIRED!, show small notification under the log in form, 
 // with the option to to a function which resends a new link (route /account-verification/resend)
-router.get(
-  '/account-verification/token',
-  authController.validateVerificationToken
-);
-
 router.post(
-  '/account-verification/confirm',
+  '/account-verification/token',
   authController.verifyAccount
 );
 

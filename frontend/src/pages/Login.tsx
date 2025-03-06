@@ -1,24 +1,57 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLogin, useVerifyAccount } from '../hooks/useAuth';
 import { LoginFormData } from '../types/authTypes';
-import { Button, Alert } from '@mui/material';
+import { Button } from '@mui/material';
+import { toast } from 'react-toastify';
 import { FormField } from '../components/FormField';
 import { FormContainer } from '../components/FormContainer';
 import { emailValidation, passwordValidation } from '../utils/formValidations';
 
-const Login: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    mode: 'onSubmit',
-  });
+const Login = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({ mode: 'onSubmit' });
   const { login: loginUser, error: loginError } = useLogin();
   const location = useLocation();
-  const successMessage = (location.state as { message?: string } | null)?.message;
-  const verifyError = (location.state as { error?: string } | null)?.error;
+  const navigate = useNavigate();
+  const successMessage = (location.state as { message?: string } | null)
+    ?.message;
+  const sessionError = (location.state as { error?: string } | null)?.error;
   const token = new URLSearchParams(location.search).get('token') || '';
   const { resend } = useVerifyAccount(token);
   const [resentSuccess, setResentSuccess] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/');
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const alertMap = {
+      error: [
+        { trigger: sessionError, message: sessionError },
+        { trigger: loginError, message: loginError },
+      ],
+      success: [
+        { trigger: successMessage, message: successMessage },
+        {
+          trigger: resentSuccess,
+          message: 'New verification email sent, check your inbox',
+        },
+      ],
+    };
+
+    Object.entries(alertMap).forEach(([type, alerts]) => {
+      alerts
+        .filter((alert) => alert.trigger)
+        .forEach((alert) => toast[type as 'error' | 'success'](alert.message));
+    });
+  }, [sessionError, successMessage, loginError, resentSuccess]);
 
   const onSubmit = async (data: LoginFormData) => {
     await loginUser(data.email, data.password);
@@ -29,29 +62,10 @@ const Login: React.FC = () => {
     setResentSuccess(true);
   };
 
-  const isExpiredToken = verifyError === 'Expired token';
+  const isExpiredToken = sessionError === 'Expired token';
 
   return (
     <FormContainer title="Login">
-      {loginError && <Alert severity="error" sx={{ mb: 2 }}>{loginError}</Alert>}
-      {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
-      {verifyError && !resentSuccess && (
-        <>
-          <Alert severity="error" sx={{ mb: 2 }}>{verifyError}</Alert>
-          {isExpiredToken && (
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              sx={{ mt: 1, mb: 2 }}
-              onClick={handleResend}
-            >
-              Resend Verification
-            </Button>
-          )}
-        </>
-      )}
-      {resentSuccess && <Alert severity="success" sx={{ mb: 2 }}>New verification email sent, check your inbox</Alert>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormField
           register={register('email', emailValidation)}
@@ -65,6 +79,17 @@ const Login: React.FC = () => {
           label="Password"
           type="password"
         />
+        {isExpiredToken && (
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 1, mb: 2 }}
+            onClick={handleResend}
+          >
+            Resend Verification
+          </Button>
+        )}
         <Button
           type="submit"
           variant="contained"

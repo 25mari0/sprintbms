@@ -1,33 +1,47 @@
-import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
+import { AuthProvider } from './contexts/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyAccount from './pages/VerifyAccount';
+import { ToastContainer } from 'react-toastify';
 
 const theme = createTheme({
   palette: {
     mode: 'dark',
-    primary: { main: '#90caf9' }, // Light blue for buttons
+    primary: { main: '#90caf9' },
     background: {
-      default: '#121212', // Dark background
-      paper: '#1d1d1d',   // Dark Paper for forms
+      default: '#121212',
+      paper: '#1d1d1d',
     },
   },
 });
 
-const App: React.FC = () => (
+const App = () => (
   <ThemeProvider theme={theme}>
-    <CssBaseline /> {/* Resets body margin and applies theme background */}
-    <Box sx={{ minHeight: '100vh' }}> {/* bgcolor removed—CssBaseline handles it */}
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify-account" element={<VerifyAccount />} />
-      </Routes>
-    </Box>
+    <AuthProvider>
+      <CssBaseline />
+      <Box sx={{ minHeight: '100vh' }}>
+        <Routes>
+          <Route element={<PrivateRoute />}>
+            <Route path="/" element={<Dashboard />} />
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
+        </Routes>
+      </Box>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar
+        closeOnClick
+        pauseOnHover
+        theme="dark"
+      />
+    </AuthProvider>
   </ThemeProvider>
 );
 

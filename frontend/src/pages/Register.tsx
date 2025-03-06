@@ -1,25 +1,50 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
 import { useRegister } from '../hooks/useAuth';
 import { RegisterFormData } from '../types/authTypes';
-import { Button, Alert } from '@mui/material';
+import { Button } from '@mui/material';
+import { toast } from 'react-toastify';
 import { FormField } from '../components/FormField';
 import { FormContainer } from '../components/FormContainer';
 import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
 
-const Register: React.FC = () => {
-  const { register: formRegister, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
-    mode: 'onSubmit',
-  });
+const Register = () => {
+  const {
+    register: formRegister,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({ mode: 'onSubmit' });
   const { register: registerUser, error } = useRegister();
+  const navigate = useNavigate();
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('accessToken')) {
+      navigate('/'); // Redirect if already logged in
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const alertMap = {
+      error: [{ trigger: error, message: error }],
+      success: [{ trigger: registerSuccess, message: 'Registration successful! Please check your email to verify your account.' }],
+    };
+
+    Object.entries(alertMap).forEach(([type, alerts]) => {
+      alerts
+        .filter(alert => alert.trigger)
+        .forEach(alert => toast[type as 'error' | 'success'](alert.message));
+    });
+  }, [error, registerSuccess]);
 
   const onSubmit = async (data: RegisterFormData) => {
     await registerUser(data.name, data.email, data.password);
+    setRegisterSuccess(true);
   };
 
   return (
     <FormContainer title="Register">
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <form onSubmit={handleSubmit(onSubmit)}>
         <FormField
           register={formRegister('name', nameValidation)}

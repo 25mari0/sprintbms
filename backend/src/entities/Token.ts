@@ -3,10 +3,12 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  Unique,
 } from 'typeorm';
 import { User } from './User';
 
 @Entity()
+@Unique(['userId']) // prevents multiple refresh tokens for the same user
 export class Token {
   @PrimaryGeneratedColumn('uuid')
   id!: string;

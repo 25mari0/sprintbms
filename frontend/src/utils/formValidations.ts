@@ -24,6 +24,7 @@ export const passwordValidation = {
   },
   pattern: {
     value: /^(?=.*[A-Z])(?=.*[0-9])/,
-    message: 'Password must contain at least one uppercase letter and one number',
+    message:
+      'Password must contain at least one uppercase letter and one number',
   },
 } as const satisfies RegisterOptions<AnyFormData, 'password'>;

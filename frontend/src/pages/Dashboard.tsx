@@ -1,23 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import { Button } from '@mui/material';
-import { getDashboardData } from '../api/authApi';
+import { useEffect, useState } from 'react';
+import { useProtectedApi } from '../hooks/useProtectedApi';
+import { useAuth } from '../contexts/AuthContext';
+import { AppError } from '../api/apiClient';
+import { Button, Box, Typography } from '@mui/material';
 
-const Dashboard: React.FC = () => {
-//call the authApi getDashboardData function and store the response in a state variable
+const Dashboard = () => {
   const [message, setMessage] = useState<string>('');
+  const { protectedGet } = useProtectedApi();
+  const { logout, token } = useAuth();
+
   useEffect(() => {
-    getDashboardData().then((response) => setMessage(response.message));
-  }, []);
+    console.log('Dashboard useEffect, token:', token);
+    const fetchData = async () => {
+      try {
+        const data = await protectedGet<{ message: string }>(
+          '/client/protected',
+        );
+        setMessage(data.message);
+      } catch (err) {
+        if (err instanceof AppError) {
+          if (err.message.includes('business')) {
+            setMessage('Please create a business to access the dashboard.');
+          } else {
+            setMessage(`Error: ${err.message}`);
+          }
+        } else {
+          setMessage('Failed to load dashboard data');
+        }
+      }
+    };
+
+    if (token) {
+      fetchData();
+    }
+  }, [protectedGet, token]);
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>{message}</p>
-      <Button variant="contained" color="primary" onClick={() => {}}>
+    <Box sx={{ p: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Dashboard
+      </Typography>
+      <Typography>{message || 'Loading...'}</Typography>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={logout}
+        sx={{ mt: 2 }}
+      >
         Logout
       </Button>
-    </div>
+    </Box>
   );
-}
+};
 
 export default Dashboard;

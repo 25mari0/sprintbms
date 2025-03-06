@@ -1,7 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ApiError } from '../types/authTypes';
-import { validateToken, confirmAccount, resendVerification, login, register } from '../api/authApi';
+import {
+  validateToken,
+  confirmAccount,
+  resendVerification,
+  login,
+  register,
+} from '../api/authApi';
+import { handleApiError } from '../utils/errorHandler';
+import { useAuth } from '../contexts/AuthContext';
 
 export const useVerifyAccount = (token: string) => {
   const navigate = useNavigate();
@@ -23,9 +30,8 @@ export const useVerifyAccount = (token: string) => {
         navigate(`/login?token=${token}`, { state: { error: result.message } });
       }
     } catch (err) {
-      const apiError = err as ApiError;
-      navigate(`/login?token=${token}`, { state: { error: apiError.message || 'Failed to validate token' } });
-
+      const apiError = handleApiError(err);
+      navigate(`/login?token=${token}`, { state: { error: apiError.message } });
     }
   };
 
@@ -35,8 +41,8 @@ export const useVerifyAccount = (token: string) => {
       setStatus('resent');
       setError('');
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message || 'Failed to resend verification');
+      const apiError = handleApiError(err);
+      setError(apiError.message);
     }
   };
 
@@ -45,15 +51,18 @@ export const useVerifyAccount = (token: string) => {
 
 export const useLogin = () => {
   const [error, setError] = useState<string>('');
+  const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const loginUser = async (email: string, password: string) => {
     setError('');
     try {
-      await login(email, password);
-      window.location.href = '/';
+      const data = await login(email, password);
+      setToken(data.accessToken);
+      navigate('/');
     } catch (err) {
-        const apiError = err as ApiError;
-        setError(apiError.message || 'Login failed');
+      const apiError = handleApiError(err);
+      setError(apiError.message);
     }
   };
 
@@ -64,14 +73,18 @@ export const useRegister = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
 
-  const registerUser = async (name: string, email: string, password: string) => {
+  const registerUser = async (
+    name: string,
+    email: string,
+    password: string,
+  ) => {
     setError('');
     try {
       const { message } = await register(name, email, password);
-      navigate('/login', { state: { message } }); // Pass message to /login
+      navigate('/login', { state: { message } });
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message || 'Registration failed');
+      const apiError = handleApiError(err);
+      setError(apiError.message);
     }
   };
 

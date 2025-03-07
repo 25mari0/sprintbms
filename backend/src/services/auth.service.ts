@@ -237,17 +237,19 @@ class AuthService {
     }
 
     const token = uuidv4();
-    const expiresAt = new Date(Date.now() + 600 * 60 * 1000); // 60 minutes
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 60 minutes
 
-    const newToken = this.verificationTokenRepository.create({
-      token,
-      expiresAt,
-      user,
-    });
-
-    await this.verificationTokenRepository.save(newToken);
-    user.verificationToken = newToken;
-    await this.userRepository.save(user);
+    try {
+      await this.verificationTokenRepository.manager.transaction(async (transactionalEntityManager) => {
+        await transactionalEntityManager.upsert(
+          VerificationToken,
+          { token, expiresAt, user },
+          ['user'] // update if user exists
+        );
+      });
+    } catch (error) {
+      throw new AppError(500, `Error storing verification token: ${(error as Error).message}`);
+    }
 
     return token;
   }

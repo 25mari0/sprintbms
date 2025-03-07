@@ -34,7 +34,9 @@ tech stack:
         -used .env which will be replaced by a Vault later
         -pgadmin, tableplus & postman 
 
-setup notes:
-	
- 	-ethereal.email is used while in development, go their website, click the create button & replace the backend .env variables for it
+progress:
+
+- backend is around 70% done, just needs an optimized & working get filter for bookings, Stripe payments integration and a couple more get requests for other entities.
+- frontend is starting to take shape, login, register, account verification are completed, working on making them more robust for now before proceeding
+ 	
     

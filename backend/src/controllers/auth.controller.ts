@@ -23,7 +23,7 @@ const authController = {
       res.status(201).json({
         status: 'success',
         message: 'User registered successfully, please check your email for the verification link',
-        userId: user.id,
+        data: { userId: user.id },
       });
     } catch (error) {
       next(error);
@@ -51,7 +51,10 @@ const authController = {
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(200).json({ status: 'success', accessToken });
+      res.status(200).json({ 
+        status: 'success', 
+        data: { accessToken },
+      });
     } catch (error) {
       next(error);
     }
@@ -99,7 +102,7 @@ const authController = {
       res.json({ 
         status: 'success', 
         message: 'Password set successfully. Please log in with your new password.', 
-        redirect: '/login'
+        data: { redirect: '/login' },
       });
     } catch (error) {
       next(error);
@@ -122,8 +125,8 @@ const authController = {
       // For an API, send JSON to indicate the token is valid and the user can proceed
       res.status(200).json({ 
         status: 'success', 
-        token,
-        message: 'Token is valid.'
+        message: 'Token is valid.',
+        data: { token },
       });
   
     } catch (error) {
@@ -136,7 +139,10 @@ const authController = {
     res: Response, 
     next: NextFunction
   ) => {
-    const token = req.body.token;
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') 
+      throw new AppError(401, 'Invalid token');
 
     try {
       const verificationToken = await authService.validateVerificationToken(token);
@@ -157,7 +163,7 @@ const authController = {
       res.status(200).json({ 
         status: 'success', 
         message: 'Account verified successfully. Please log in with your password.', 
-        redirect: '/login'
+        data: { redirect: '/login' },
       });
     } catch (error) {
       next(error);
@@ -180,12 +186,12 @@ const authController = {
       if (!result)
         throw new AppError(401, 'Verification token is invalid')
 
-      authService.resendVerificationToken(result.userId)
+      const newToken = await authService.resendVerificationToken(result.userId);
 
       res.status(200).json({ 
         status: 'success', 
-        token,
-        message: 'Verification link was re-sent to the email.'
+        message: 'Verification link was re-sent to the email.',
+        data: { token: newToken }
       });
 
     } catch (error) {
@@ -211,7 +217,10 @@ const authController = {
       await userRepository.save(user!);
       await authService.revokeAllRefreshTokens(user!.id);
 
-      res.status(200).json({ message: 'Password updated successfully' });
+      res.status(200).json({ 
+        status: 'success',
+        message: 'Password updated successfully' 
+      });
     } catch (error) {
       next(error);
     }

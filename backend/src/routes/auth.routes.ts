@@ -57,7 +57,7 @@ router.post(
 // PRESENT & EXPIRED ? respond with, EXPIRED!, show small notification under the log in form, 
 // with the option to to a function which resends a new link (route /account-verification/resend)
 router.post(
-  '/account-verification/token',
+  '/account-verification/verify',
   authController.verifyAccount
 );
 

@@ -23,7 +23,8 @@ const authController = {
       res.status(201).json({
         status: 'success',
         message: 'User registered successfully, please check your email for the verification link',
-        data: { userId: user.id },
+        data: { userId: user.id, redirect: '/login' },
+
       });
     } catch (error) {
       next(error);

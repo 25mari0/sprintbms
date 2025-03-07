@@ -1,12 +1,10 @@
 import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, Box } from '@mui/material';
-import { AuthProvider } from './contexts/AuthContext';
-import PrivateRoute from './components/PrivateRoute';
-import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyAccount from './pages/VerifyAccount';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css'; // Ensure styles are imported
 
 const theme = createTheme({
   palette: {
@@ -21,27 +19,23 @@ const theme = createTheme({
 
 const App = () => (
   <ThemeProvider theme={theme}>
-    <AuthProvider>
-      <CssBaseline />
-      <Box sx={{ minHeight: '100vh' }}>
-        <Routes>
-          <Route element={<PrivateRoute />}>
-            <Route path="/" element={<Dashboard />} />
-          </Route>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/verify-account" element={<VerifyAccount />} />
-        </Routes>
-      </Box>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar
-        closeOnClick
-        pauseOnHover
-        theme="dark"
-      />
-    </AuthProvider>
+    <CssBaseline />
+    <Box sx={{ minHeight: '100vh' }}>
+      <Routes>
+        <Route path="/" element={<Login />} /> {/* Default to Login for now */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/verify-account" element={<VerifyAccount />} />
+      </Routes>
+    </Box>
+    <ToastContainer
+      position="top-right"
+      autoClose={5000}
+      hideProgressBar
+      closeOnClick
+      pauseOnHover
+      theme="dark"
+    />
   </ThemeProvider>
 );
 

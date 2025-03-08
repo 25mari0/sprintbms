@@ -34,7 +34,7 @@ export const tokenMiddleware = {
         user.lastPasswordChange &&
         user.lastPasswordChange.getTime() > decoded.iat * 1000
       ) {
-        throw new AppError(400, 'Token is no longer valid');
+        throw new AppError(401, 'Session expired. Please log in again');
       }
 
       req.user = decoded;
@@ -44,7 +44,7 @@ export const tokenMiddleware = {
         // access token is expired but was otherwise valid
         const refreshToken = getRefreshTokenFromCookie(req);
         if (!refreshToken) {
-          throw new AppError(400, 'Cannot re-new token without a refresh token');
+          throw new AppError(401, 'Session expired. Please log in again');
         }
 
         try {

@@ -14,6 +14,17 @@ export const businessMiddleware = {
     next();
   },
 
+  doesNotHaveBusiness: (
+    req: Request & { user?: JwtPayload },
+    res: Response, 
+    next: NextFunction
+  ): void => {
+    if (req.user?.business) {
+      throw new AppError(400, 'User has a business associated');
+    }
+    next();
+  },
+
   isBusinessOwner: (
     req: Request & { user?: JwtPayload },
     res: Response,

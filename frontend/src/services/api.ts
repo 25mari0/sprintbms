@@ -20,6 +20,13 @@ const api = axios.create({
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse>) => {
     const data = response.data;
+    const newAccessToken = 
+      response.headers['Authorization']?.split('Bearer ')[1] || // From middleware refresh
+      (data.status === 'success' && data.data?.accessToken);   // From login/register
+      console.log('Storing accessToken:', newAccessToken);
+    if (newAccessToken) {
+      localStorage.setItem('accessToken', newAccessToken);
+    }
     if (data.status === 'success') {
       if (data.message) toast.success(data.message);
       if (data.data?.redirect && navigate) navigate(data.data.redirect);

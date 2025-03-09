@@ -24,10 +24,7 @@ const Login = () => {
   }, [navigate]);
 
   const onSubmit = async (data: LoginFormData) => {
-    const response = await login(data.email, data.password);
-    if (response.status === 'success' && response.data?.token) {
-      localStorage.setItem('accessToken', response.data.token);
-    }
+    await login(data.email, data.password); // api.ts stores accessToken
   };
 
   return (

@@ -52,6 +52,8 @@ const authController = {
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
+      res.setHeader('Authorization', `Bearer ${accessToken}`);
+
       res.status(200).json({ 
         status: 'success', 
         data: { accessToken },
@@ -70,6 +72,12 @@ const authController = {
         authService.revokeAllRefreshTokens(req.user!.userId!)
         authService.revokeAccessTokens(req.user!.userId!)
 
+        res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+        });
+        
         res.status(200).json({ status: 'success'});
       } catch (error) {
         next(error);

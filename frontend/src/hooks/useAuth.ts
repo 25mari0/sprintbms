@@ -1,9 +1,12 @@
 import { useCallback } from 'react';
 import { post } from '../services/api';
 import { AuthResponse } from '../types/authTypes';
+import { useNavigate } from 'react-router-dom';
 
 
 export const useAuth = () => {
+  const navigate = useNavigate(); // Local navigate instance
+
   const login = useCallback(async (email: string, password: string) => {
     return await post<AuthResponse>('/client/login', { email, password });
   }, []);
@@ -20,5 +23,11 @@ export const useAuth = () => {
     return await post<AuthResponse>(`/client/account-verification/resend?token=${token}`);
   }, []);
 
-  return { login, register, verifyAccount, resendVerification };
+  const logout = useCallback(async () => {
+    localStorage.removeItem('accessToken');
+    await post('/logout'); // Clear refreshToken cookie on backend
+    if (navigate) navigate('/login');
+  }, []);
+
+  return { login, register, verifyAccount, resendVerification, logout };
 };

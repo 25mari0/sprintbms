@@ -22,8 +22,13 @@ import cors from 'cors';
 dotenv.config();
 
 const app = express();
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+// Apply express.json() globally, but skip /business/webhook
+app.use((req, res, next) => {
+  if (req.path === '/business/webhook') {
+    return next(); // Skip JSON parsing for webhook
+  }
+  express.json()(req, res, next); // Parse JSON for other routes
+});app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // for multipart/form-data, multer can be used
 const upload = multer(); // for parsing multipart/form-data

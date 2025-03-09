@@ -9,14 +9,18 @@ class BusinessService {
   private userRepository = AppDataSource.getRepository(User);
 
   async createBusiness(
-    businessId: string | undefined,
     userId: string,
     name: string,
     licenseExpirationDate: Date
     ): Promise<{ business: Business; newAccessToken: string }> {
 
+    console.log('creating business for userid: ', userId)
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
     // Check if user already has a business, by looking at the token payload
-    if (businessId) throw new AppError(400, 'User already has a business');
+    if (user?.business) 
+      throw new AppError(400, 'User already has a business');
   
     // Create new business
     const business = this.businessRepository.create({
@@ -28,7 +32,6 @@ class BusinessService {
     await this.businessRepository.save(business);
 
     // Assuming you have an association between User and Business
-    const user = await this.userRepository.findOne({ where: { id: userId } });
     user!.business = business;
     await this.userRepository.save(user!);
 

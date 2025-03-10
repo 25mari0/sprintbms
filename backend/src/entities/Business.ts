@@ -11,8 +11,8 @@ export class Business {
   @Column({ length: 100 })
   name!: string;
 
-  @Column({ type: 'timestamp', nullable: true })
-  licenseExpirationDate?: Date;
+  @Column({ type: 'timestamp'})
+  licenseExpirationDate!: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at!: Date;

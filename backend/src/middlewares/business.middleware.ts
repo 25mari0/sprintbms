@@ -47,6 +47,7 @@ export const businessMiddleware = {
     next();
   },
   
+  
 };
 
 export default businessMiddleware;

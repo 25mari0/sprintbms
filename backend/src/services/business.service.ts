@@ -14,9 +14,9 @@ class BusinessService {
     licenseExpirationDate: Date
     ): Promise<{ business: Business; newAccessToken: string }> {
 
-    console.log('creating business for userid: ', userId)
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['business'] });
 
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    console.log(user)
 
     // Check if user already has a business, by looking at the token payload
     if (user?.business) 
@@ -45,6 +45,34 @@ class BusinessService {
       
 
     return { business, newAccessToken };
+  }
+
+  async getBusinessByUserId(userId: string): Promise<Business | null> {
+    console.log('now checking getBusinessByUserId for userId:', userId);
+    return this.businessRepository.findOne({
+      where: {
+        users: { id: userId }, 
+      },
+      relations: ['users'],
+    });
+  }
+
+  async extendBusinessExpiration(userId: string, daysToAdd: number): Promise<Business> {
+    const business = await this.getBusinessByUserId(userId);
+    if (!business) {
+      throw new AppError(404, 'Business not found'); // 404 more appropriate than 401
+    }
+
+    const today = new Date();
+    const currentExpiration = new Date(business.licenseExpirationDate);
+    const baseDate = currentExpiration > today ? currentExpiration : today;
+
+    const newExpiration = new Date(baseDate);
+    newExpiration.setDate(newExpiration.getDate() + daysToAdd);
+
+    business.licenseExpirationDate = newExpiration;
+    await this.businessRepository.save(business);
+    return business;
   }
 
   async getBusinessById(businessId: string): Promise<Business | null> {

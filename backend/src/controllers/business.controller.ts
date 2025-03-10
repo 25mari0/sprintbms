@@ -6,7 +6,6 @@ import { AppError } from '../utils/error';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-01-27.acacia' });
 
-
 const businessController = {
     createBusiness: async (
         req: Request & { user?: JwtPayload },
@@ -63,8 +62,8 @@ const businessController = {
 
       handleWebhook: async (
         req: Request,
-        res: Response,
-      ): Promise<void> => {
+        res: Response
+         ): Promise<void> => {
         const sig = req.headers['stripe-signature'] as string;
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
     
@@ -73,7 +72,7 @@ const businessController = {
           event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
           console.log('Webhook event:', event.type, 'ID:', event.id);
         } catch (err) {
-          console.error('Signature failed:', err, 'Expected secret:', endpointSecret);
+          console.error('Signature verification failed:', err);
           throw new AppError(400, 'Webhook signature verification failed');
         }
     
@@ -83,24 +82,44 @@ const businessController = {
           if (session.payment_status !== 'paid') {
             throw new AppError(400, 'Payment not completed');
           }
-        
-          const userId = session.metadata?.userId || 'c72e5549-6a29-4c74-990b-f2d8752a976d'; // Real user ID
-
-          // Calculate expiration based on subscription
-          const licenseExpirationDate = new Date();
-          licenseExpirationDate.setDate(licenseExpirationDate.getDate() + 30);
     
-          // Create Business (default name for now—customize later)
-          await BusinessService.createBusiness(
-            userId,
-            `Business-${userId}`, // Placeholder name
-            licenseExpirationDate
-          );
-
-          res.status(200).end(); // Stripe requires 200
+          const userId = session.metadata?.userId;
+          if (!userId) {
+            throw new AppError(400, 'User ID not found in session metadata');
+          }
     
+          const existingBusiness = await BusinessService.getBusinessByUserId(userId);
+    
+          if (existingBusiness) {
+            // Extend existing business
+            const extendedBusiness = await BusinessService.extendBusinessExpiration(userId, 30);
+            console.log(
+              'Business expiration extended for user:',
+              userId,
+              'New expiration:',
+              extendedBusiness.licenseExpirationDate
+            );
+          } else {
+            // Create new business
+            const licenseExpirationDate = new Date();
+            licenseExpirationDate.setDate(licenseExpirationDate.getDate() + 30);
+            const newBusiness = await BusinessService.createBusiness(
+              userId,
+              `Business-${userId}`, // Placeholder name
+              licenseExpirationDate
+            );
+            console.log(
+              'Business created for user:',
+              userId,
+              'Expiration:',
+              newBusiness.business.licenseExpirationDate
+            );
+          }
+
         }
-    },
+    
+        res.status(200).end(); // Stripe requires 200
+      },
 };
 
 export default businessController;

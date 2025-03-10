@@ -6,14 +6,14 @@ import express from 'express';
 
 const router = Router();
 
-router.post(
+/* router.post(
     '/createBusiness',
 
     tokenMiddleware.authenticate,
     businessMiddleware.isOwner,
     businessMiddleware.doesNotHaveBusiness,
     businessController.createBusiness,
-);
+); */
 
 router.post(
     '/create-checkout-session',

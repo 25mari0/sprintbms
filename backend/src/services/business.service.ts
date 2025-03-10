@@ -48,7 +48,6 @@ class BusinessService {
   }
 
   async getBusinessByUserId(userId: string): Promise<Business | null> {
-    console.log('now checking getBusinessByUserId for userId:', userId);
     return this.businessRepository.findOne({
       where: {
         users: { id: userId }, 

@@ -19,12 +19,23 @@ const Login = () => {
 
   useEffect(() => {
     if (localStorage.getItem('accessToken')) {
-      navigate('/');
+      navigate('/dashboard');
     }
   }, [navigate]);
 
   const onSubmit = async (data: LoginFormData) => {
-    await login(data.email, data.password); // api.ts stores accessToken
+    try {
+      const response = await login(data.email, data.password); // Now returns AxiosResponse
+      const newAccessToken = response.headers['authorization']?.split('Bearer ')[1];
+      if (newAccessToken) {
+        localStorage.setItem('accessToken', newAccessToken);
+      } else {
+        throw new Error('No access token received');
+      }
+      navigate('/dashboard', { replace: true });
+    } catch (error) {
+      // Errors handled by api.ts
+    }
   };
 
   return (

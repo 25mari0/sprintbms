@@ -2,7 +2,7 @@ import { Router } from 'express';
 import serviceController from '../controllers/service.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
 import businessMiddleware from '../middlewares/business.middleware';
-import premiumMiddleware from '../middlewares/premium.middleware';
+import { premiumMiddleware } from '../middlewares/premium.middleware';
 
 const router = Router();
 

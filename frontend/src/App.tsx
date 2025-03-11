@@ -7,6 +7,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyAccount from './pages/VerifyAccount';
 import 'react-toastify/dist/ReactToastify.css';
+import { Success } from './pages/Success';
+import { BusinessCreate } from './pages/BusinessCreate';
+import { Dashboard } from './pages/Dashboard';
+import { AuthProvider } from './contexts/AuthContext';
 
 const theme = createTheme({
   palette: {
@@ -27,12 +31,17 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh' }}>
+      <AuthProvider>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/verify-account" element={<VerifyAccount />} />
+          <Route path="/success" element={<Success />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/business/create" element={<BusinessCreate />} />
         </Routes>
+        </AuthProvider>
       </Box>
       <ToastContainer
         position="top-right"

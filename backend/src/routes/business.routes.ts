@@ -17,7 +17,6 @@ const router = Router();
 
 router.post(
     '/create-checkout-session',
-
     tokenMiddleware.authenticate,
     businessMiddleware.isOwner,
     businessController.createCheckoutSession

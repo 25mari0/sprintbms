@@ -2,12 +2,15 @@ import { Router } from 'express';
 import workerController from '../controllers/worker.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
 import businessMiddleware from '../middlewares/business.middleware';
+import { premiumMiddleware } from '../middlewares/premium.middleware';
+
 
 const router = Router();
 
 router.post(
     '/createWorker',
     tokenMiddleware.authenticate,
+    premiumMiddleware.isPremium,
     businessMiddleware.isBusinessOwner,
     workerController.createWorker,
 );

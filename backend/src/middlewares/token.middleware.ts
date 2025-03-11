@@ -37,6 +37,14 @@ export const tokenMiddleware = {
         throw new AppError(401, 'Session expired. Please log in again');
       }
 
+      const hasBusinessInDb = !!user.business;
+      const hasBusinessInToken = !!decoded.business;
+
+      //prevents outdated token info after creating business
+      if (hasBusinessInDb !== hasBusinessInToken) {
+        throw new jwt.TokenExpiredError('Token business information outdated', new Date());
+      }
+
       req.user = decoded;
       next();
     } catch (error) {

@@ -106,14 +106,14 @@ const authController = {
 
       const responseData = {
         userId,
-        email: user?.email,  // Assuming email is in token payload
+        email: user?.email,  // email is not in the token payload
         role: user?.role,
         hasBusiness: !!business, // True if business exists
         isPremium: business ? business.licenseExpirationDate > new Date() : false, // True if not expired
         licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
       };
 
-      res.json({ status: 'success', data: responseData });
+      res.status(200).json({ status: 'success', data: responseData });
     } catch (error) {
       next(error);
     }

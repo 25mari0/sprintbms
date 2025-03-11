@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import bookingController from '../controllers/booking.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
-import premiumMiddleware from '../middlewares/premium.middleware';
 import businessMiddleware from '../middlewares/business.middleware';
+import { premiumMiddleware } from '../middlewares/premium.middleware';
 
 const router = Router();
 

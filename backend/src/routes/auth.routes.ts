@@ -7,7 +7,6 @@ import {
 import { body } from 'express-validator';
 import authController from '../controllers/auth.controller';
 import tokenMiddleware from '../middlewares/token.middleware';
-//import premiumMiddleware from '../middlewares/premium.middleware';
 
 const router = Router();
 

@@ -30,11 +30,9 @@ router.post(
   authController.login,
 );
 
-router.get('/protected', 
+router.get('/me', 
   tokenMiddleware.authenticate,
-  (req, res) => {
-    res.json({ message: `Access granted & is Premium!` });
-  },
+  authController.getUserData,
 );
 
 router.post(

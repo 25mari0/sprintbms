@@ -206,10 +206,8 @@ class AuthService {
         },
       });
       return validTokens.length > 0;
-    } catch (error) {
-      const err = error as Error;
-      err.message = `Error checking for valid refresh tokens: ${err.message}`;
-      throw err;
+    } catch {
+      throw new AppError(400, 'Error checking for valid refresh tokens')
     }
   }
 
@@ -219,10 +217,8 @@ class AuthService {
         where: { id: userId },
         relations: ['business'],
       });
-    } catch (error) {
-      const err = error as Error;
-      err.message = `Error fetching user by ID: ${err.message}`;
-      throw err;
+    } catch  {
+      throw new AppError(400, 'Error trying to grab user')
     }
   }
 

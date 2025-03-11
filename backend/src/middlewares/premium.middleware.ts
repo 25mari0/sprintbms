@@ -20,7 +20,7 @@ export const premiumMiddleware = {
         next(); // User is premium, proceed
         
         } else {
-        throw new AppError(400, 'Premium access required' );
+        throw new AppError(401, 'Premium access required' );
         }
     } catch (error) {
         next(error);

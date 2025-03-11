@@ -53,8 +53,8 @@ const businessController = {
               price: 'price_1QucKT7GwWoprFHLDjUGMIJE', // stripe Price ID
               quantity: 1,
             }],
-            success_url: 'http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url: 'http://localhost:5173/business/create',
+            success_url: 'http://localhost:4174/success',
+            cancel_url: `http://localhost:4174/business/create?mode=${hasBusiness ? 'renew' : 'create'}`, // Preserve mode
             metadata: { 
                 userId,
                 ...(businessName && { businessName }), // add businessName if provided

@@ -5,6 +5,7 @@ import authService from '../services/auth.service';
 import { JwtPayload } from '../types/authTypes';
 import { VerificationToken } from '../entities/VerificationToken';
 import { AppError } from '../utils/error';
+import businessService from '../services/business.service';
 
 const userRepository = AppDataSource.getRepository(User);
 const verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
@@ -54,9 +55,18 @@ const authController = {
 
       res.setHeader('Authorization', `Bearer ${accessToken}`);
 
-      res.status(200).json({ 
-        status: 'success', 
-        data: { accessToken },
+      const business = await businessService.getBusinessByUserId(user.id);
+      let redirect = '/dashboard';
+      if (!business) {
+        redirect = '/business/create?mode=create';
+      } else if (business.licenseExpirationDate < new Date()) {
+        redirect = '/business/create?mode=renew';
+      }
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Logged in successfully',
+        data: { accessToken, redirect },
       });
     } catch (error) {
       next(error);
@@ -82,6 +92,31 @@ const authController = {
       } catch (error) {
         next(error);
       }
+  },
+
+  getUserData: async (
+    req: Request & { user?: JwtPayload },
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const userId = req.user!.userId;
+      const business = await businessService.getBusinessByUserId(userId);
+      const user = await authService.getUserById(userId)
+
+      const responseData = {
+        userId,
+        email: user?.email,  // Assuming email is in token payload
+        role: user?.role,
+        hasBusiness: !!business, // True if business exists
+        isPremium: business ? business.licenseExpirationDate > new Date() : false, // True if not expired
+        licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
+      };
+
+      res.json({ status: 'success', data: responseData });
+    } catch (error) {
+      next(error);
+    }
   },
 
   //sets password when using a verification token link

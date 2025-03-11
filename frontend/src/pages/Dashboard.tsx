@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthContext } from '../contexts/AuthContext'; // Rename to avoid conflict
+import { useAuth } from '../hooks/useAuth'; // Import the hook
 import {
   Box,
   Button,
@@ -12,7 +13,8 @@ import {
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { userData, loading } = useAuth();
+  const { userData, loading } = useAuthContext(); // Use renamed context hook
+  const { logout } = useAuth(); // Get logout from useAuth hook
 
   if (loading) {
     return (
@@ -75,10 +77,7 @@ export function Dashboard() {
         </Button>
         <Button
           variant="outlined"
-          onClick={() => {
-            localStorage.removeItem('accessToken');
-            navigate('/login');
-          }}
+          onClick={logout} 
         >
           Logout
         </Button>
@@ -86,3 +85,5 @@ export function Dashboard() {
     </Box>
   );
 }
+
+export default Dashboard;

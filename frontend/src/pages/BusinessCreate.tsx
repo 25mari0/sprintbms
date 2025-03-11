@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { post } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthContext } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -18,7 +18,7 @@ const stripePromise = loadStripe('pk_test_51QubPo7GwWoprFHLbGyPkvCuZUFMMmQhUiIQr
 export function BusinessCreate() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loading } = useAuth();
+  const { loading } = useAuthContext();
   const mode = searchParams.get('mode') || 'create';
   const [businessName, setBusinessName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -106,3 +106,5 @@ export function BusinessCreate() {
     </Box>
   );
 }
+
+export default BusinessCreate;

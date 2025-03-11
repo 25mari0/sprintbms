@@ -2,12 +2,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuthContext } from '../contexts/AuthContext'; // Fixed import
 import { Box, Typography, CircularProgress } from '@mui/material';
 
 export function Success() {
   const navigate = useNavigate();
-  const { loading } = useAuth();
+  const { loading } = useAuthContext();
 
   useEffect(() => {
     if (!loading) {
@@ -32,3 +32,5 @@ export function Success() {
     </Box>
   );
 }
+
+export default Success;

@@ -53,8 +53,8 @@ const businessController = {
               price: 'price_1QucKT7GwWoprFHLDjUGMIJE', // stripe Price ID
               quantity: 1,
             }],
-            success_url: 'http://localhost:4174/success',
-            cancel_url: `http://localhost:4174/business/create?mode=${hasBusiness ? 'renew' : 'create'}`, // Preserve mode
+            success_url: `${process.env.FRONTEND_URL}/success`,
+            cancel_url: `${process.env.FRONTEND_URL}/business/create?mode=${hasBusiness ? 'renew' : 'create'}`, // Preserve mode
             metadata: { 
                 userId,
                 ...(businessName && { businessName }), // add businessName if provided

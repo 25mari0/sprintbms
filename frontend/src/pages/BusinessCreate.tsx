@@ -1,10 +1,8 @@
-// frontend/src/pages/BusinessCreate.tsx
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { post } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'react-toastify';
-import { useAuthContext } from '../contexts/AuthContext';
 import {
   Box,
   Button,
@@ -18,7 +16,6 @@ const stripePromise = loadStripe('pk_test_51QubPo7GwWoprFHLbGyPkvCuZUFMMmQhUiIQr
 export function BusinessCreate() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { loading } = useAuthContext();
   const mode = searchParams.get('mode') || 'create';
   const [businessName, setBusinessName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -52,14 +49,6 @@ export function BusinessCreate() {
       setSubmitting(false);
     }
   };
-
-  if (loading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4, p: 2 }}>

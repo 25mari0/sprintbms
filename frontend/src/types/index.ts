@@ -14,8 +14,7 @@ export interface ApiResponse<T> {
   }
   
   export interface AuthContextType {
-    userData: UserData | null;
-    loading: boolean;
+    userData: UserData | null; 
   }
   
   export interface AuthResponse {

@@ -68,7 +68,7 @@ class AuthService {
     return jwt.sign(
       { userId, role, business: businessId ? { id: businessId, licenseExpirationDate  } : undefined },
       process.env.JWT_SECRET!,
-      { expiresIn: '1m' },
+      { expiresIn: '15m' },
     );
   }
 
@@ -100,7 +100,7 @@ class AuthService {
     }
   }
 
-  private async validateRefreshToken(
+  async validateRefreshToken(
     refreshToken: string,
   ): Promise<{ userId: string; valid: boolean }> {
     try {
@@ -117,7 +117,6 @@ class AuthService {
       for (const token of tokens) {
         if (await bcrypt.compare(refreshToken, token.token)) {
           if (token.expiresAt < new Date()) {
-            await this.tokenRepository.remove(token);
             return { userId: '', valid: false };
           }
           return { userId, valid: true };
@@ -182,17 +181,6 @@ class AuthService {
       }
     } catch {
       throw new AppError(400, 'Failed to revoke refresh token');
-    }
-  }
-
-  async revokeAccessTokens(userId: string): Promise<void> {
-    try {
-      const user = await this.userRepository.findOne({ where: { id: userId } });
-      // Update last password change date to invalidate existing access tokens
-      user!.lastPasswordChange = new Date();
-      await this.userRepository.save(user!);
-    } catch {
-      throw new AppError(400, 'Failed to revoke access token');
     }
   }
 

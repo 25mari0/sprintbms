@@ -18,21 +18,24 @@ import multer from 'multer';
 import cors from 'cors';
 
 
-
 dotenv.config();
 
 const app = express();
+
 // Apply express.json() globally, but skip /business/webhook
 app.use((req, res, next) => {
   if (req.path === '/business/webhook') {
     return next(); // Skip JSON parsing for webhook
   }
   express.json()(req, res, next); // Parse JSON for other routes
-});app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+});
+app.use(bodyParser.urlencoded({ extended: true, limit: '10kb' })); // for parsing application/x-www-form-urlencoded
 
 // for multipart/form-data, multer can be used
 const upload = multer(); // for parsing multipart/form-data
 app.use(upload.none()); // file upload's are not expected
+app.use(express.json({ limit: '10kb' }));
+
 const PORT = process.env.PORT;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

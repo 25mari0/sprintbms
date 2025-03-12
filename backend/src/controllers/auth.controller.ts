@@ -53,7 +53,12 @@ const authController = {
         maxAge: 30 * 24 * 60 * 60 * 1000,
       });
 
-      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 4 * 60 * 1000, // 4 minutes for testing
+      });
 
       const business = await businessService.getBusinessByUserId(user.id);
       let redirect = '/dashboard';
@@ -66,7 +71,7 @@ const authController = {
       res.status(200).json({
         status: 'success',
         message: 'Logged in successfully',
-        data: { accessToken, redirect },
+        data: { redirect },
       });
     } catch (error) {
       next(error);
@@ -80,9 +85,14 @@ const authController = {
   ): Promise<void> => {
       try {
         authService.revokeAllRefreshTokens(req.user!.userId!)
-        authService.revokeAccessTokens(req.user!.userId!)
 
         res.clearCookie('refreshToken', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+        });
+
+        res.clearCookie('accessToken', {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
@@ -135,7 +145,7 @@ const authController = {
         throw new AppError(400, 'User not found');
   
       user.password = await user.hashPassword(newPassword);
-      user.lastPasswordChange = new Date(); // Invalidate existing access tokens
+      user.lastPasswordChange = new Date();
       if (user.verificationToken) {
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
       }
@@ -256,7 +266,7 @@ const authController = {
       const user = await userRepository.findOne({ where: { id: userId } });
 
       user!.password = await user!.hashPassword(newPassword);
-      user!.lastPasswordChange = new Date(); // invalidates access tokens
+      user!.lastPasswordChange = new Date();
 
       await userRepository.save(user!);
       await authService.revokeAllRefreshTokens(user!.id);

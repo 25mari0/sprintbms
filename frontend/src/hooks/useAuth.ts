@@ -42,11 +42,9 @@ export const useAuth = () => {
   const logout = useCallback(async () => {
     try {
       await post('/client/logout');
-      localStorage.removeItem('accessToken');
       navigateWithToast('/login', LOGOUT_SUCCESS_MESSAGE, { replace: true });
     } catch (error) {
       handleApiError(error, 'Logout failed');
-      localStorage.removeItem('accessToken');
       navigateWithToast('/login', LOGOUT_FAILURE_MESSAGE, { replace: true });
     }
   }, [navigateWithToast]);

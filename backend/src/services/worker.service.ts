@@ -35,7 +35,6 @@ class WorkerService {
       business: business,
       role: 'worker'
     });
-
     await this.userRepository.save(worker);
 
     const token = await authService.generateVerificationToken(worker.id);
@@ -64,7 +63,6 @@ class WorkerService {
 
     // Invalidate existing tokens
     await authService.revokeAllRefreshTokens(workerId);
-    await authService.revokeAccessTokens(workerId);
 
     // Generate a new verification token for password reset
     const verificationToken = await authService.generateVerificationToken(workerId);
@@ -123,7 +121,6 @@ class WorkerService {
 
     // Invalidate existing tokens
     await authService.revokeAllRefreshTokens(workerId);
-    await authService.revokeAccessTokens(workerId);
 
     // Send suspension email
     await emailService.sendWorkerSuspended(user.email);

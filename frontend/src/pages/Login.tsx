@@ -11,46 +11,31 @@ import { emailValidation, passwordValidation } from '../utils/formValidations';
 import { useNavigation } from '../hooks/useNavigation';
 
 const Login = () => {
- const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ mode: 'onSubmit' });
- const { login } = useAuth();
- const { navigate } = useNavigation();
- const location = useLocation();
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ mode: 'onSubmit' });
+  const { login } = useAuth();
+  const { navigate } = useNavigation();
+  const location = useLocation();
 
- useEffect(() => {
- if (localStorage.getItem('accessToken')) {
- navigate('/dashboard');
- }
- if (location.state?.toast) {
- toast.error(location.state.toast); // Session expiration uses error
- }
- }, [navigate, location.state]);
+  useEffect(() => {
+    if (location.state?.toast) toast.error(location.state.toast);
+  }, [location.state]);
 
- const onSubmit = async (data: LoginFormData) => {
- try {
- const response = await login(data.email, data.password);
- const newAccessToken = response.headers.authorization?.split('Bearer ')[1];
- if (newAccessToken) {
- localStorage.setItem('accessToken', newAccessToken);
- } else {
- throw new Error('No access token received');
- }
- navigate('/dashboard', { replace: true });
- } catch (error) {
- // Handled by api.ts
- }
- };
+  const onSubmit = async (data: LoginFormData) => {
+    await login(data.email, data.password);
+    navigate('/dashboard', { replace: true });
+  };
 
- return (
- <FormContainer title="Login">
- <form onSubmit={handleSubmit(onSubmit)}>
- <FormField register={register('email', emailValidation)} error={errors.email} label="Email" type="email" />
- <FormField register={register('password', passwordValidation)} error={errors.password} label="Password" type="password" />
- <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
- Login
- </Button>
- </form>
- </FormContainer>
- );
+  return (
+    <FormContainer title="Login">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <FormField register={register('email', emailValidation)} error={errors.email} label="Email" type="email" />
+        <FormField register={register('password', passwordValidation)} error={errors.password} label="Password" type="password" />
+        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+          Login
+        </Button>
+      </form>
+    </FormContainer>
+  );
 };
 
 export default Login;

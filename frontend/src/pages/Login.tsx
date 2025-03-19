@@ -1,9 +1,13 @@
 import { useForm } from 'react-hook-form';
-import { emailValidation, passwordValidation } from '../utils/formValidations';
+import { Button, Box } from '@mui/material';
 import { FormContainer } from '../components/FormContainer';
+import { FormField } from '../components/FormField';
 import { post } from '../services/api';
-import { Button, TextField } from '@mui/material';
 import { useAuthStore, UserData } from '../stores/authStore';
+import { emailValidation, passwordValidation } from '../utils/formValidations';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useState, useEffect } from 'react';
 
 interface LoginFormData {
   email: string;
@@ -12,7 +16,22 @@ interface LoginFormData {
 
 export default function Login() {
   const { setUser, setIsAuthenticated } = useAuthStore();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expiredToken, setExpiredToken] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({ mode: 'onBlur' });
+
+  // Check route state for expired token
+  useEffect(() => {
+    if (location.state?.verification === 'expired' && location.state?.token) {
+      setExpiredToken(location.state.token);
+    }
+  }, [location.state]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -21,35 +40,67 @@ export default function Login() {
         setUser(response.data!.responseData);
         setIsAuthenticated(true);
       }
-    } catch (error) {
-      // api.ts handles it
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Login failed');
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!expiredToken) return;
+    try {
+      await post(`/client/account-verification/resend?token=${expiredToken}`);
+      setExpiredToken(null); // Clear token after successful resend
+    } catch {
+      toast.error('Failed to resend verification email.');
     }
   };
 
   return (
     <FormContainer title="Login">
+      {expiredToken && (
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={handleResendVerification}
+            disabled={isSubmitting}
+          >
+            Resend Verification Email
+          </Button>
+        </Box>
+      )}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <TextField
+        <FormField
+          register={register('email', emailValidation)}
+          error={errors.email}
           label="Email"
-          {...register('email', emailValidation)}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-          fullWidth
-          margin="normal"
           disabled={isSubmitting}
         />
-        <TextField
+        <FormField
+          register={register('password', passwordValidation)}
+          error={errors.password}
           label="Password"
           type="password"
-          {...register('password', passwordValidation)}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-          fullWidth
-          margin="normal"
           disabled={isSubmitting}
         />
-        <Button type="submit" variant="contained" fullWidth disabled={isSubmitting}>
+        <Button
+          type="submit"
+          variant="contained"
+          fullWidth
+          disabled={isSubmitting}
+          sx={{ mt: 2 }}
+        >
           Login
+        </Button>
+        <Button
+          variant="text"
+          fullWidth
+          onClick={() => navigate('/register')}
+          disabled={isSubmitting}
+          sx={{ mt: 1 }}
+        >
+          Need an account? Register
         </Button>
       </form>
     </FormContainer>

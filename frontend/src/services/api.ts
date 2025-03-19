@@ -7,6 +7,13 @@ export interface ApiResponse<T> {
   data?: T & { redirect?: string };
 }
 
+// Options for customizing API behavior
+interface ApiOptions {
+  toastMessage?: string;        // Override the toast message
+  disableToast?: boolean;       // Disable the toast entirely
+  onRedirect?: (redirect: string) => void; // Custom redirect handler
+}
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_MAIN_API_URL,
   withCredentials: true,
@@ -15,41 +22,124 @@ const api = axios.create({
 type NavigateFn = (path: string) => void;
 
 const createApiClient = (navigate?: NavigateFn) => ({
-  get: async <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  get: async <T>(
+    url: string,
+    config?: AxiosRequestConfig,
+    options?: ApiOptions
+  ): Promise<ApiResponse<T>> => {
     try {
       const response = await api.get<ApiResponse<T>>(url, config);
-      if (navigate && response.data?.data?.redirect) {
-        navigate(response.data.data.redirect);
+      const { status, message, data } = response.data;
+      const redirect = data?.redirect;
+
+      // Handle toast
+      if (!options?.disableToast && url !== '/client/me') {
+        const toastMsg = options?.toastMessage || message;
+        if (toastMsg) {
+          toast[status === 'success' ? 'success' : 'error'](toastMsg);
+        }
       }
+
+      // Handle redirect
+      if (redirect && navigate) {
+        if (options?.onRedirect) {
+          options.onRedirect(redirect);
+        } else {
+          navigate(redirect);
+        }
+      }
+
       return response.data;
     } catch (error: any) {
-      if (url !== '/client/me') {
-        toast.error(error.response?.data?.message || 'An unexpected error occurred');
+      const apiResponse = error.response?.data as ApiResponse<T>;
+      const redirect = apiResponse?.data?.redirect;
+
+      // Handle toast for errors
+      if (url !== '/client/me' && !options?.disableToast) {
+        const toastMsg = options?.toastMessage || apiResponse?.message || 'An unexpected error occurred';
+        toast.error(toastMsg);
       }
+
+      // Handle redirect for errors
+      if (redirect && navigate) {
+        if (options?.onRedirect) {
+          options.onRedirect(redirect);
+        } else {
+          navigate(redirect);
+        }
+      }
+
       throw error;
     }
   },
-
-  post: async <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  post: async <T>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+    options?: ApiOptions
+  ): Promise<ApiResponse<T>> => {
     try {
       const response = await api.post<ApiResponse<T>>(url, data, config);
-      if (navigate && response.data?.data?.redirect) {
-        navigate(response.data.data.redirect);
+      const { status, message, data: responseData } = response.data;
+      const redirect = responseData?.redirect;
+
+      // Handle toast
+      if (!options?.disableToast && url !== '/client/me') {
+        const toastMsg = options?.toastMessage || message;
+        if (toastMsg) {
+          toast[status === 'success' ? 'success' : 'error'](toastMsg);
+        }
       }
+
+      // Handle redirect
+      if (redirect && navigate) {
+        if (options?.onRedirect) {
+          options.onRedirect(redirect);
+        } else {
+          navigate(redirect);
+        }
+      }
+
       return response.data;
     } catch (error: any) {
-      if (url !== '/client/me') {
-        toast.error(error.response?.data?.message || 'An unexpected error occurred');
+      const apiResponse = error.response?.data as ApiResponse<T>;
+      const redirect = apiResponse?.data?.redirect;
+
+      // Handle toast for errors
+      if (url !== '/client/me' && !options?.disableToast) {
+        const toastMsg = options?.toastMessage || apiResponse?.message || 'An unexpected error occurred';
+        toast.error(toastMsg);
       }
+
+      // Handle redirect for errors
+      if (redirect && navigate) {
+        if (options?.onRedirect) {
+          options.onRedirect(redirect);
+        } else {
+          navigate(redirect);
+        }
+      }
+
       throw error;
     }
   },
 });
 
-// Singleton instance with setter
 let apiClient = createApiClient();
+
 export const setNavigate = (navFn: NavigateFn) => {
   apiClient = createApiClient(navFn);
 };
 
-export const { get, post } = apiClient;
+export const get = <T>(
+  url: string,
+  config?: AxiosRequestConfig,
+  options?: ApiOptions
+) => apiClient.get<T>(url, config, options);
+
+export const post = <T>(
+  url: string,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+  options?: ApiOptions
+) => apiClient.post<T>(url, data, config, options);

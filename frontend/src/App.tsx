@@ -1,5 +1,5 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import { ThemeProvider, createTheme, CssBaseline, Box, CircularProgress } from '@mui/material';
+import { ThemeProvider, CssBaseline, Box, createTheme } from '@mui/material';
 import { ToastContainer } from 'react-toastify';
 import { setNavigate } from './services/api';
 import { AuthProvider } from './contexts/AuthContext';
@@ -11,8 +11,11 @@ import VerifyAccount from './pages/VerifyAccount';
 import Success from './pages/Success';
 import BusinessCreate from './pages/BusinessCreate';
 import Dashboard from './pages/Dashboard';
+import BusinessRenew from './pages/BusinessRenew';
 import 'react-toastify/dist/ReactToastify.css';
-import { Suspense, useEffect } from 'react';
+import { Suspense } from 'react';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import { useEffect } from 'react';
 
 const theme = createTheme({
   palette: {
@@ -24,6 +27,7 @@ const theme = createTheme({
 
 const App = () => {
   const navigate = useNavigate();
+  
   useEffect(() => {
     setNavigate(navigate);
   }, [navigate]);
@@ -32,7 +36,7 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh' }}>
-        <Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>}>
+        <Suspense fallback={<LoadingSpinner />}>
           <AuthProvider>
             <Routes>
               <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
@@ -42,11 +46,19 @@ const App = () => {
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/business/create" element={<ProtectedRoute><BusinessCreate /></ProtectedRoute>} />
+              <Route path="/business/renew" element={<ProtectedRoute><BusinessRenew /></ProtectedRoute>} />
             </Routes>
           </AuthProvider>
         </Suspense>
       </Box>
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar closeOnClick pauseOnHover theme="dark" />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar
+        closeOnClick
+        pauseOnHover
+        theme="dark"
+      />
     </ThemeProvider>
   );
 };

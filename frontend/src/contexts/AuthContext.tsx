@@ -1,51 +1,50 @@
 import { useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom'; // Add this
 import { useAuthStore, UserData } from '../stores/authStore';
 import { get } from '../services/api';
-import { includesRoute } from '../utils/typeUtils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-const PROTECTED_REDIRECT_ROUTES = ['/login', '/register'] as const;
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
   const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore();
+  const location = useLocation(); // Get current route
+
 
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await get<{ responseData: UserData }>('/client/me');
-      if (response.status !== 'success') throw new Error('Auth failed');
-
-      const userData = response.data!.responseData;
-      setUser(userData);
-      setIsAuthenticated(true);
-
-      const { hasBusiness, isPremium } = userData;
-      if (!hasBusiness) {
-        navigate('/business/create?mode=create', { replace: true });
-      } else if (!isPremium) {
-        navigate('/business/create?mode=renew', { replace: true });
-      } else if (includesRoute(PROTECTED_REDIRECT_ROUTES, pathname)) {
-        navigate('/dashboard', { replace: true });
+      if (response.status === 'success') {
+        setUser(response.data!.responseData);
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
       }
     } catch {
       setIsAuthenticated(false);
-      if (!includesRoute(PROTECTED_REDIRECT_ROUTES, pathname)) {
-        navigate('/login', { replace: true });
-      }
     } finally {
       setIsLoading(false);
     }
-  }, [navigate, pathname, setUser, setIsAuthenticated, setIsLoading]);
+  }, [setUser, setIsAuthenticated, setIsLoading]);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    // Skip checkAuth on /verify-account
+    if (location.pathname !== '/verify-account') {
+      checkAuth();
+    } else {
+    }
+    return () => {
+    };
+  }, [checkAuth, location.pathname]); // Depend on pathname
+
+  const { isLoading } = useAuthStore();
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return <>{children}</>;
 };

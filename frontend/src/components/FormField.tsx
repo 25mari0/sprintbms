@@ -1,11 +1,12 @@
 import { FieldError, UseFormRegisterReturn } from 'react-hook-form';
-import { TextField } from '@mui/material';
+import { TextField, TextFieldProps } from '@mui/material';
 
-interface FormFieldProps {
+interface FormFieldProps extends Omit<TextFieldProps, 'error' | 'helperText'> {
   register: UseFormRegisterReturn;
   error?: FieldError;
   label: string;
   type?: string;
+  disabled?: boolean;
 }
 
 export const FormField = ({
@@ -13,6 +14,8 @@ export const FormField = ({
   error,
   label,
   type = 'text',
+  disabled,
+  ...textFieldProps
 }: FormFieldProps) => (
   <TextField
     {...register}
@@ -22,5 +25,7 @@ export const FormField = ({
     helperText={error?.message}
     fullWidth
     margin="normal"
+    disabled={disabled}
+    {...textFieldProps}
   />
 );

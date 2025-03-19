@@ -1,9 +1,10 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
+import { Button, Box } from '@mui/material';
 import { FormContainer } from '../components/FormContainer';
-import { TextField, Button, Box } from '@mui/material';
+import { FormField } from '../components/FormField'; 
 import { post } from '../services/api';
+import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
 
 interface RegisterFormData {
   name: string;
@@ -13,50 +14,45 @@ interface RegisterFormData {
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<RegisterFormData>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({ mode: 'onBlur' });
 
   const onSubmit = async (data: RegisterFormData) => {
-    try {
-      await post('/client/register', data);
-      // Assuming api.ts handles redirects if provided in the response
-    } catch (error) {
-      // api.ts is expected to show toast errors
-    }
+    await post('/client/register', data);
   };
 
   return (
     <FormContainer title="Register">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <TextField
+        <FormField
+          register={register('name', nameValidation)}
+          error={errors.name}
           label="Name"
-          {...register('name', nameValidation)}
-          error={!!errors.name}
-          helperText={errors.name?.message}
-          fullWidth
-          margin="normal"
           disabled={isSubmitting}
         />
-        <TextField
+        <FormField
+          register={register('email', emailValidation)}
+          error={errors.email}
           label="Email"
-          {...register('email', emailValidation)}
-          error={!!errors.email}
-          helperText={errors.email?.message}
-          fullWidth
-          margin="normal"
           disabled={isSubmitting}
         />
-        <TextField
+        <FormField
+          register={register('password', passwordValidation)}
+          error={errors.password}
           label="Password"
           type="password"
-          {...register('password', passwordValidation)}
-          error={!!errors.password}
-          helperText={errors.password?.message}
-          fullWidth
-          margin="normal"
           disabled={isSubmitting}
         />
         <Box sx={{ mt: 2 }}>
-          <Button type="submit" variant="contained" fullWidth disabled={isSubmitting}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={isSubmitting}
+          >
             Register
           </Button>
           <Button

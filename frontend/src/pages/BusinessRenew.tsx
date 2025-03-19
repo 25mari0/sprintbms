@@ -1,12 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { post } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import { Box, Button, Typography, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-export default function BusinessCreate() {
-  const [businessName, setBusinessName] = useState('');
+export default function BusinessRenew() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(
@@ -14,7 +13,7 @@ export default function BusinessCreate() {
       e.preventDefault();
       setIsSubmitting(true);
       try {
-        const response = await post<{ sessionId: string }>('/business/create-checkout-session', { businessName });
+        const response = await post<{ sessionId: string }>('/business/create-checkout-session');
         const stripe = await stripePromise;
         if (!stripe) throw new Error('Stripe failed to load');
 
@@ -24,24 +23,18 @@ export default function BusinessCreate() {
         setIsSubmitting(false);
       }
     },
-    [businessName]
+    []
   );
 
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4, p: 2 }}>
       <Typography variant="h4" gutterBottom>
-        Create Your Business
+        Renew Your Subscription
+      </Typography>
+      <Typography variant="body1" sx={{ mb: 2 }}>
+        Your subscription has expired. Renew it now.
       </Typography>
       <form onSubmit={handleSubmit}>
-        <TextField
-          label="Business Name"
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          fullWidth
-          required
-          disabled={isSubmitting}
-          sx={{ mb: 2 }}
-        />
         <Button
           type="submit"
           variant="contained"
@@ -51,7 +44,7 @@ export default function BusinessCreate() {
           startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
           sx={{ mb: 2 }}
         >
-          Proceed to Payment
+          Renew Now
         </Button>
       </form>
     </Box>

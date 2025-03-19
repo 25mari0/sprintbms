@@ -1,7 +1,7 @@
 export interface ApiResponse<T> {
     status: 'success' | 'error';
     message?: string;
-    data?: T & { redirect?: string; clearAccessToken?: boolean };
+    data?: T & { redirect?: string; };
   }
   
   export interface UserData {
@@ -11,10 +11,6 @@ export interface ApiResponse<T> {
     hasBusiness: boolean;
     isPremium: boolean;
     licenseExpirationDate: string | null;
-  }
-  
-  export interface AuthContextType {
-    userData: UserData | null; 
   }
   
   export interface AuthResponse {
@@ -36,4 +32,3 @@ export interface ApiResponse<T> {
   export interface NavigationState {
     toast?: string;
   }
-  

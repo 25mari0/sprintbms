@@ -1,46 +1,55 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
 
 export interface ApiResponse<T> {
-    status: 'success' | 'error';
-    message?: string;
-    data?: T & { redirect?: string };
-  }
-
-let navigate: (path: string) => void;
-
-export const setNavigate = (navFn: (path: string) => void) => {
-  navigate = navFn;
-};
+  status: 'success' | 'error';
+  message?: string;
+  data?: T & { redirect?: string };
+}
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_MAIN_API_URL,
-    withCredentials: true,
+  baseURL: import.meta.env.VITE_MAIN_API_URL,
+  withCredentials: true,
 });
 
-export const get = async <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-  try {
-    const response: AxiosResponse<ApiResponse<T>> = await api.get(url, config);
-    if (response.data?.data?.redirect) navigate(response.data?.data?.redirect);
-    return response.data;
-  } catch (error: any) {
-    if (url !== '/client/me') {
-      toast.error(error.response?.data?.message);
+type NavigateFn = (path: string) => void;
+
+const createApiClient = (navigate?: NavigateFn) => ({
+  get: async <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+    try {
+      const response = await api.get<ApiResponse<T>>(url, config);
+      if (navigate && response.data?.data?.redirect) {
+        navigate(response.data.data.redirect);
+      }
+      return response.data;
+    } catch (error: any) {
+      if (url !== '/client/me') {
+        toast.error(error.response?.data?.message || 'An unexpected error occurred');
+      }
+      throw error;
     }
-    throw error;
-  }
+  },
+
+  post: async <T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+    try {
+      const response = await api.post<ApiResponse<T>>(url, data, config);
+      if (navigate && response.data?.data?.redirect) {
+        navigate(response.data.data.redirect);
+      }
+      return response.data;
+    } catch (error: any) {
+      if (url !== '/client/me') {
+        toast.error(error.response?.data?.message || 'An unexpected error occurred');
+      }
+      throw error;
+    }
+  },
+});
+
+// Singleton instance with setter
+let apiClient = createApiClient();
+export const setNavigate = (navFn: NavigateFn) => {
+  apiClient = createApiClient(navFn);
 };
 
-export const post = async <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-  try {
-    const response: AxiosResponse<ApiResponse<T>> = await api.post(url, data, config);
-    console.log(response.data?.data?.redirect);
-    if (response.data?.data?.redirect) navigate(response.data?.data?.redirect);
-    return response.data;
-  } catch (error: any) {
-    if (url !== '/client/me') {
-      toast.error(error.response?.data?.message);
-    }
-    throw error;
-  }
-};
+export const { get, post } = apiClient;

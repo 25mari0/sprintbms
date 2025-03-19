@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { createJSONStorage, persist, StateStorage } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export interface UserData {
   userId: string;
@@ -37,7 +37,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage as StateStorage), // Explicitly cast to StateStorage
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

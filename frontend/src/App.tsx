@@ -12,7 +12,7 @@ import Success from './pages/Success';
 import BusinessCreate from './pages/BusinessCreate';
 import Dashboard from './pages/Dashboard';
 import 'react-toastify/dist/ReactToastify.css';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 
 const theme = createTheme({
   palette: {
@@ -24,7 +24,9 @@ const theme = createTheme({
 
 const App = () => {
   const navigate = useNavigate();
-  setNavigate(navigate);
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
 
   return (
     <ThemeProvider theme={theme}>

@@ -1,35 +1,20 @@
-import { ReactNode } from 'react';
-import { useAuthContext } from '../contexts/AuthContext';
-import { UserData } from '../types';
-import React from 'react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../stores/authStore';
+import { CircularProgress, Box } from '@mui/material';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-// Type helper to ensure children only render with non-null userData
-type ProtectedContext = { userData: UserData };
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuthStore();
 
-const ProtectedContext = React.createContext<ProtectedContext | undefined>(undefined);
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) navigate('/login');
+  }, [isAuthenticated, isLoading, navigate]);
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { userData } = useAuthContext();
-
-  if (!userData) {
-    return null; // useAuthCheck redirects, this is a fallback
-  }
-
-  return (
-    <ProtectedContext.Provider value={{ userData }}>
-      {children}
-    </ProtectedContext.Provider>
-  );
-}
-
-export function useProtectedAuthContext() {
-  const context = React.useContext(ProtectedContext);
-  if (context === undefined) {
-    throw new Error('useProtectedAuthContext must be used within a ProtectedRoute');
-  }
-  return context;
-}
+  if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}><CircularProgress /></Box>;
+  return isAuthenticated ? <>{children}</> : null;
+};

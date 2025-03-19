@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JwtPayload } from '../types/authTypes'; // Adjust path as needed
-import authService from '../services/auth.service'; // Adjust path as needed
-import { getRefreshTokenFromCookie, getAccessTokenFromCookie } from '../utils/auth'; // Adjust path as needed
-import { AppError } from '../utils/error'; // Adjust path as needed
+import { JwtPayload } from '../types/authTypes';
+import authService from '../services/auth.service';
+import { getRefreshTokenFromCookie, getAccessTokenFromCookie } from '../utils/auth';
+import { AppError } from '../utils/error';
 
-/** Token middleware object with authenticate method */
 export const tokenMiddleware = {
   authenticate: async (
     req: Request & { user?: JwtPayload },
@@ -33,51 +32,61 @@ export const tokenMiddleware = {
       refreshTokenValid = true;
     }
 
-    // Case 3: No access token, but valid refresh token—refresh, block
-    // can be considered the same as a manipulated token
-    if (!accessToken && refreshTokenValid) {
-      res.clearCookie('refreshToken');
-      throw new AppError(401, 'Missing an access token, please log-in again');
-    }
+    // Case 3 removed: No access token but valid refresh token is now allowed
+    // If no access token but refresh token is valid, we'll refresh it below
 
-    // Case 4: Validate access token
-    let decoded: JwtPayload;
-    try {
-      decoded = jwt.verify(accessToken!, process.env.JWT_SECRET!) as JwtPayload;
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError && refreshTokenValid) {
-        // Expired access token with valid refresh token—refresh it
-        await refreshAccessToken(req, res, refreshToken!);
+    // Case 4: Validate access token *only if it exists*
+    if (accessToken) {
+      try {
+        const decoded = jwt.verify(accessToken, process.env.JWT_SECRET!) as JwtPayload;
+
+        // Access token valid—verify user and business info
+        const user = await authService.getUserById(decoded.userId);
+        if (!user) {
+          res.clearCookie('accessToken');
+          res.clearCookie('refreshToken');
+          throw new AppError(404, 'User not found');
+        }
+
+        const hasBusinessInDb = !!user.business;
+        const hasBusinessInToken = !!decoded.business;
+        const businessInfoOutdated = hasBusinessInDb !== hasBusinessInToken;
+
+        if (businessInfoOutdated) {
+          if (!refreshTokenValid) {
+            res.clearCookie('accessToken');
+            res.clearCookie('refreshToken');
+            throw new AppError(401, 'Business info outdated—no valid refresh token to update');
+          }
+          // Refresh to update business info
+          await refreshAccessToken(req, res, refreshToken!);
+          return next();
+        }
+
+        // All checks passed—set user and proceed
+        req.user = decoded;
         return next();
+      } catch (error) {
+        if (error instanceof jwt.TokenExpiredError && refreshTokenValid) {
+          // Expired access token with valid refresh token—refresh it
+          await refreshAccessToken(req, res, refreshToken!);
+          return next();
+        }
+        // Invalid access token (e.g., tampered)—fail
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        throw new AppError(401, 'Access token invalid—possible manipulation attempt');
       }
-      // Invalid access token (e.g., tampered)—fail
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
-      throw new AppError(401, 'Access token invalid—possible manipulation attempt');
     }
 
-    // Case 5: Access token valid—verify user and business info
-    const user = await authService.getUserById(decoded.userId);
-    if (!user) {
-      throw new AppError(404, 'User not found');
-    }
-
-    const hasBusinessInDb = !!user.business;
-    const hasBusinessInToken = !!decoded.business;
-    const businessInfoOutdated = hasBusinessInDb !== hasBusinessInToken;
-
-    if (businessInfoOutdated) {
-      if (!refreshTokenValid) {
-        throw new AppError(401, 'Business info outdated—no valid refresh token to update');
-      }
-      // Refresh to update business info
+    // If we get here: no access token, but valid refresh token exists
+    if (refreshTokenValid) {
       await refreshAccessToken(req, res, refreshToken!);
       return next();
     }
 
-    // All checks passed—set user and proceed
-    req.user = decoded;
-    next();
+    // Fallback: Shouldn’t hit this with current logic, but for safety
+    throw new AppError(401, 'Authentication failed—unexpected state');
   },
 };
 
@@ -93,7 +102,6 @@ async function refreshAccessToken(
   refreshToken: string,
 ): Promise<void> {
   try {
-    // Generate new access token
     const { accessToken: newAccessToken } = await authService.refreshAccessToken(refreshToken);
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
@@ -102,10 +110,7 @@ async function refreshAccessToken(
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
-    // Verify the new token
     const newDecoded = jwt.verify(newAccessToken, process.env.JWT_SECRET!) as JwtPayload;
-
-    // Set the new decoded user data
     req.user = newDecoded;
   } catch (error) {
     res.clearCookie('accessToken');

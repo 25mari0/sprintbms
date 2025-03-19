@@ -1,41 +1,57 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useLocation } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { useAuth } from '../hooks/useAuth';
-import { LoginFormData } from '../types';
-import { Button } from '@mui/material';
-import { FormField } from '../components/FormField';
-import { FormContainer } from '../components/FormContainer';
 import { emailValidation, passwordValidation } from '../utils/formValidations';
-import { useNavigation } from '../hooks/useNavigation';
+import { FormContainer } from '../components/FormContainer';
+import { post } from '../services/api';
+import { Button, TextField } from '@mui/material';
+import { useAuthStore, UserData } from '../stores/authStore';
 
-const Login = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({ mode: 'onSubmit' });
-  const { login } = useAuth();
-  const { navigate } = useNavigation();
-  const location = useLocation();
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
-  useEffect(() => {
-    if (location.state?.toast) toast.error(location.state.toast);
-  }, [location.state]);
+export default function Login() {
+  const { setUser, setIsAuthenticated } = useAuthStore();
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>();
 
   const onSubmit = async (data: LoginFormData) => {
-    await login(data.email, data.password);
-    navigate('/dashboard', { replace: true });
+    try {
+      const response = await post<{ responseData: UserData }>('/client/login', data);
+      if (response.status === 'success') {
+        setUser(response.data!.responseData);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      // api.ts handles it
+    }
   };
 
   return (
     <FormContainer title="Login">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <FormField register={register('email', emailValidation)} error={errors.email} label="Email" type="email" />
-        <FormField register={register('password', passwordValidation)} error={errors.password} label="Password" type="password" />
-        <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+        <TextField
+          label="Email"
+          {...register('email', emailValidation)}
+          error={!!errors.email}
+          helperText={errors.email?.message}
+          fullWidth
+          margin="normal"
+          disabled={isSubmitting}
+        />
+        <TextField
+          label="Password"
+          type="password"
+          {...register('password', passwordValidation)}
+          error={!!errors.password}
+          helperText={errors.password?.message}
+          fullWidth
+          margin="normal"
+          disabled={isSubmitting}
+        />
+        <Button type="submit" variant="contained" fullWidth disabled={isSubmitting}>
           Login
         </Button>
       </form>
     </FormContainer>
   );
-};
-
-export default Login;
+}

@@ -1,15 +1,10 @@
+
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { post } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
 import { toast } from 'react-toastify';
-import {
-  Box,
-  Button,
-  TextField,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Button, TextField, Typography, CircularProgress } from '@mui/material';
 
 const stripePromise = loadStripe('pk_test_51QubPo7GwWoprFHLbGyPkvCuZUFMMmQhUiIQrOWILqrdeRI7PM87pHiBr71IRmLrLEztejzZmmeIAuiPEOGMTXRn007EThIOvB');
 
@@ -29,22 +24,14 @@ export function BusinessCreate() {
       const response = await post<{ sessionId: string }>('/business/create-checkout-session', body);
       const stripe = await stripePromise;
 
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
-      }
-
-      const sessionId = response.data?.data?.sessionId;
-      if (!sessionId) {
-        throw new Error('No session ID returned from server');
-      }
+      if (!stripe) throw new Error('Stripe fucked up loading');
+      const sessionId = response.data?.sessionId;
+      if (!sessionId) throw new Error('No session ID');
 
       const { error } = await stripe.redirectToCheckout({ sessionId });
-
-      if (error) {
-        toast.error(error.message || 'Failed to initiate checkout');
-      }
+      if (error) toast.error(error.message || 'Checkout’s fucked');
     } catch (error) {
-      // Handled by api.ts
+      // api.ts handles toasts
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +56,7 @@ export function BusinessCreate() {
         )}
         {mode === 'renew' && (
           <Typography variant="body1" sx={{ mb: 2 }}>
-            Your subscription has expired. Renew now to regain access.
+            Your subscription’s dead. Renew it.
           </Typography>
         )}
         <Button
@@ -81,7 +68,7 @@ export function BusinessCreate() {
           startIcon={submitting ? <CircularProgress size={20} /> : null}
           sx={{ mb: 2 }}
         >
-          {mode === 'create' ? 'Proceed to Payment' : 'Renew Now'}
+          {mode === 'create' ? 'Pay Up' : 'Renew Now'}
         </Button>
         <Button
           variant="outlined"
@@ -89,7 +76,7 @@ export function BusinessCreate() {
           onClick={() => navigate('/dashboard')}
           disabled={submitting}
         >
-          Back to Dashboard
+          Fuck Off to Dashboard
         </Button>
       </form>
     </Box>

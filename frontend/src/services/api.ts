@@ -1,44 +1,46 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
-import { NavigateFunction } from 'react-router-dom';
-import { ApiResponse } from '../types';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_MAIN_API_URL,
-  withCredentials: true, // Sends cookies automatically
-});
+export interface ApiResponse<T> {
+    status: 'success' | 'error';
+    message?: string;
+    data?: T & { redirect?: string };
+  }
 
-let navigate: NavigateFunction | null = null;
-export const setNavigate = (nav: NavigateFunction) => {
-  navigate = nav;
+let navigate: (path: string) => void;
+
+export const setNavigate = (navFn: (path: string) => void) => {
+  navigate = navFn;
 };
 
-api.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse<any>>) => {
-    const { data } = response;
-    if (data.status === 'success') {
-      if (data.message) toast.success(data.message);
-      if (data.data?.redirect && navigate) navigate(data.data.redirect);
-    }
-    return response;
-  },
-  (error: AxiosError<ApiResponse<any>>) => {
-    const message = error.response?.data?.message || 'Something went wrong';
-    const status = error.response?.status ?? 0;
+const api = axios.create({
+    baseURL: import.meta.env.VITE_MAIN_API_URL,
+    withCredentials: true,
+});
 
-    if (status === 401) {
-      if (navigate) navigate('/login', { state: { toast: 'Session expired. Please log in again.' } });
-    } else if (status >= 400 && status < 600) {
-      toast.error(message);
-    } else if (status === 0) {
-      toast.error('Network error—check your connection');
+export const get = async <T>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response: AxiosResponse<ApiResponse<T>> = await api.get(url, config);
+    if (response.data?.data?.redirect) navigate(response.data?.data?.redirect);
+    return response.data;
+  } catch (error: any) {
+    if (url !== '/client/me') {
+      toast.error(error.response?.data?.message);
     }
-
-    return Promise.reject({ status, message });
+    throw error;
   }
-);
+};
 
-export const get = <T>(url: string) => api.get<ApiResponse<T>>(url).then((res) => res.data);
-export const post = <T>(url: string, body?: any) => api.post<ApiResponse<T>>(url, body);
-
-export default api;
+export const post = async <T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  try {
+    const response: AxiosResponse<ApiResponse<T>> = await api.post(url, data, config);
+    console.log(response.data?.data?.redirect);
+    if (response.data?.data?.redirect) navigate(response.data?.data?.redirect);
+    return response.data;
+  } catch (error: any) {
+    if (url !== '/client/me') {
+      toast.error(error.response?.data?.message);
+    }
+    throw error;
+  }
+};

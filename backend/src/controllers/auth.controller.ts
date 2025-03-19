@@ -98,7 +98,9 @@ const authController = {
           sameSite: 'strict',
         });
         
-        res.status(200).json({ status: 'success'});
+        res.status(200).json({ 
+          status: 'success', 
+          data: { redirect: '/login' }});
       } catch (error) {
         next(error);
       }
@@ -123,7 +125,14 @@ const authController = {
         licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
       };
 
-      res.status(200).json({ status: 'success', data: responseData });
+      let redirect = '/dashboard';
+      if (!responseData.hasBusiness) {
+        redirect = '/business/create?mode=create';
+      } else if (!responseData.isPremium) {
+        redirect = '/business/create?mode=renew';
+      }
+
+      res.status(200).json({ status: 'success', data: {responseData}, redirect });
     } catch (error) {
       next(error);
     }

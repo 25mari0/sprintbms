@@ -27,7 +27,7 @@ export const emailValidation = [
 // password validation
 export const passwordValidation = [
   body('password')
-    .isLength({ min: 8 })
+    .isLength({ min: 8, max: 30 })
     .withMessage('Password must be at least 8 characters long')
     .matches(/[A-Z]/)
     .withMessage('Password must contain at least one uppercase letter')

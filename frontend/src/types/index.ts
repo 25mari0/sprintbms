@@ -36,3 +36,4 @@ export interface ApiResponse<T> {
   export interface NavigationState {
     toast?: string;
   }
+  

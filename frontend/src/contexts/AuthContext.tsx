@@ -1,27 +1,48 @@
-import { createContext, useContext, ReactNode } from 'react';
-import { AuthContextType } from '../types';
-import { useAuthCheck } from '../hooks/useAuthCheck';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuthStore, UserData } from '../stores/authStore';
+import { get } from '../services/api';
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const { userData } = useAuthCheck();
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser, setIsAuthenticated, setIsLoading } = useAuthStore();
 
-  return (
-    <AuthContext.Provider value={{ userData }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  useEffect(() => {
 
-export function useAuthContext() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
-}
+    const checkAuth = async () => {
+      setIsLoading(true);
+      try {
+        const response = await get<{ responseData: UserData }>('/client/me');
+        if (response.status === 'success') {
+          setUser(response.data!.responseData);
+          setIsAuthenticated(true);
+          const { hasBusiness, isPremium } = response.data!.responseData;
+
+          if (!hasBusiness) {
+            navigate('/business/create?mode=create', { replace: true });
+          } else if (!isPremium) {
+            navigate('/business/create?mode=renew', { replace: true });
+          } else if (['/login', '/register'].includes(location.pathname)) {
+            navigate('/dashboard', { replace: true });
+          }
+        }
+      } catch (error) {
+        setIsAuthenticated(false);
+        if (!['/login', '/register'].includes(location.pathname)) {
+          navigate('/login', { replace: true });
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [navigate, location.pathname, setUser, setIsAuthenticated, setIsLoading]);
+
+  return <>{children}</>;
+};

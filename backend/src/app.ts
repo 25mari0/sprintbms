@@ -13,7 +13,6 @@ import customerRoutes from './routes/customer.routes';
 import businessRoutes from './routes/business.routes';
 import serviceRoutes from './routes/service.routes';
 import workerRoutes from './routes/worker.routes';
-import bodyParser from 'body-parser';
 import multer from 'multer';
 import cors from 'cors';
 
@@ -29,12 +28,10 @@ app.use((req, res, next) => {
   }
   express.json()(req, res, next); // Parse JSON for other routes
 });
-app.use(bodyParser.urlencoded({ extended: true, limit: '10kb' })); // for parsing application/x-www-form-urlencoded
 
 // for multipart/form-data, multer can be used
 const upload = multer(); // for parsing multipart/form-data
 app.use(upload.none()); // file upload's are not expected
-app.use(express.json({ limit: '10kb' }));
 
 const PORT = process.env.PORT;
 const limiter = rateLimit({

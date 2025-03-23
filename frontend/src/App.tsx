@@ -5,6 +5,7 @@ import { setNavigate } from './services/api';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
+import ProtectedLayout from './components/ProtectedLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyAccount from './pages/VerifyAccount';
@@ -16,12 +17,18 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Suspense } from 'react';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { useEffect } from 'react';
+import Home from './pages/Home';
+import './App.css';
 
 const theme = createTheme({
   palette: {
     mode: 'dark',
-    primary: { main: '#90caf9' },
-    background: { default: '#121212', paper: '#1d1d1d' },
+    primary: { main: '#5d87ff' },
+    secondary: { main: '#49beff' },
+    background: { default: '#0a0a0a', paper: '#1d1d1d' },
+  },
+  typography: {
+    fontFamily: 'Roboto, sans-serif',
   },
 });
 
@@ -35,18 +42,20 @@ const App = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: '100vh' }}>
+      <Box sx={{ minHeight: '100vh', marginLeft: '0px' }}>
         <Suspense fallback={<LoadingSpinner />}>
           <AuthProvider>
             <Routes>
-              <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/business/create" element={<ProtectedRoute><BusinessCreate /></ProtectedRoute>} />
-              <Route path="/business/renew" element={<ProtectedRoute><BusinessRenew /></ProtectedRoute>} />
+              
+              <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout children={undefined} /><Dashboard /></ProtectedRoute>} />
+              <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout children={undefined} /><BusinessCreate /></ProtectedRoute>} />
+              <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout children={undefined} /><BusinessRenew /></ProtectedRoute>} />
+              
             </Routes>
           </AuthProvider>
         </Suspense>

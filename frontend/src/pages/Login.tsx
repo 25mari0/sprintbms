@@ -58,7 +58,7 @@ export default function Login() {
   return (
     <FormContainer title="Login">
       {expiredToken && (
-        <Box sx={{ mb: 2 }}>
+        <Box   sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
           <Button
             variant="contained"
             color="primary"
@@ -89,8 +89,8 @@ export default function Login() {
           variant="contained"
           fullWidth
           disabled={isSubmitting}
-          sx={{ mt: 2 }}
-        >
+          sx={{ mt: 2, borderRadius: 2, boxShadow: 2 }}
+          >
           Login
         </Button>
         <Button
@@ -98,8 +98,8 @@ export default function Login() {
           fullWidth
           onClick={() => navigate('/register')}
           disabled={isSubmitting}
-          sx={{ mt: 1 }}
-        >
+          sx={{ mt: 1, borderRadius: 2, boxShadow: 2 }}
+          >
           Need an account? Register
         </Button>
       </form>

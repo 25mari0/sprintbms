@@ -25,7 +25,7 @@ const theme = createTheme({
     mode: 'dark',
     primary: { main: '#5d87ff' },
     secondary: { main: '#49beff' },
-    background: { default: '#0a0a0a', paper: '#1d1d1d' },
+    background: { default: '#30475E', paper: '#1d1d1d' },
   },
   typography: {
     fontFamily: 'Roboto, sans-serif',

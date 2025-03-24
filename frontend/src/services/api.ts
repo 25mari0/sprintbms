@@ -11,6 +11,7 @@ export interface ApiResponse<T> {
 interface ApiOptions {
   toastMessage?: string;        // Override the toast message
   disableToast?: boolean;       // Disable the toast entirely
+  toastType?: 'success' | 'error' | 'info' | 'warning'; // Optional toast type to override default
   onRedirect?: (redirect: string) => void; // Custom redirect handler
 }
 
@@ -36,7 +37,8 @@ const createApiClient = (navigate?: NavigateFn) => ({
       if (!options?.disableToast && url !== '/client/me') {
         const toastMsg = options?.toastMessage || message;
         if (toastMsg) {
-          toast[status === 'success' ? 'success' : 'error'](toastMsg);
+          const toastType = options?.toastType || (status === 'success' ? 'success' : 'error');
+          toast[toastType](toastMsg);
         }
       }
 
@@ -57,7 +59,8 @@ const createApiClient = (navigate?: NavigateFn) => ({
       // Handle toast for errors
       if (url !== '/client/me' && !options?.disableToast) {
         const toastMsg = options?.toastMessage || apiResponse?.message || 'An unexpected error occurred';
-        toast.error(toastMsg);
+        const toastType = options?.toastType || 'error'; // Default to 'error' in catch block
+        toast[toastType](toastMsg);
       }
 
       // Handle redirect for errors
@@ -87,7 +90,8 @@ const createApiClient = (navigate?: NavigateFn) => ({
       if (!options?.disableToast && url !== '/client/me') {
         const toastMsg = options?.toastMessage || message;
         if (toastMsg) {
-          toast[status === 'success' ? 'success' : 'error'](toastMsg);
+          const toastType = options?.toastType || (status === 'success' ? 'success' : 'error');
+          toast[toastType](toastMsg);
         }
       }
 
@@ -108,7 +112,8 @@ const createApiClient = (navigate?: NavigateFn) => ({
       // Handle toast for errors
       if (url !== '/client/me' && !options?.disableToast) {
         const toastMsg = options?.toastMessage || apiResponse?.message || 'An unexpected error occurred';
-        toast.error(toastMsg);
+        const toastType = options?.toastType || 'error'; // Default to 'error' in catch block
+        toast[toastType](toastMsg);
       }
 
       // Handle redirect for errors

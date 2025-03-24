@@ -7,80 +7,95 @@ import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBullete
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import TroubleshootRoundedIcon from '@mui/icons-material/TroubleshootRounded';
 import ExitToAppRoundedIcon from '@mui/icons-material/ExitToAppRounded';
-import { useNavigate } from 'react-router-dom';
+import { data, useNavigate } from 'react-router-dom';
 import { post } from '../services/api'; // Adjust path to your API service
-import AppLogo from '../assets/logo.png'; // Adjust the path to your logo file
+import AppLogo from '../assets/trace.svg';
+
 
 const SidebarComponent = () => {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(true); // Start collapsed
 
   const handleLogout = async () => {
-    await post('/client/logout');
+    await post('/client/logout', data, undefined, { toastMessage: 'Logged out sucessfully', toastType: 'info' });
   };
 
   return (
     <Sidebar
-    className="custom-sidebar"
+      className="custom-sidebar"
       collapsed={collapsed}
       collapsedWidth="80px"
       width="240px"
       transitionDuration={300}
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
-      style={{ borderRight: 'none' }}
+      style={{
+        position: 'absolute', // Ensure the sidebar stays in the document flow
+        borderRight: 'none',
+        top: 0,
+        left: 0,
+        height: '100vh',
+        zIndex: 1000, // Ensure it’s above the main content
+      }}
       rootStyles={{
         [`.${sidebarClasses.container}`]: {
-        backgroundColor: '#222831',
-        height: '100vh',
+          backgroundColor: '#1E1E1E',
+          height: '100vh',
         },
       }}
     >
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Logo and Navigation */}
-      <div>
-        {/* Logo Container */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            height: '60px',
-            paddingTop: '20px',
-            paddingLeft: '20px',
-            marginBottom: '20px',
-            overflow: 'hidden',
-          }}
-        >
-          <img
-            src={AppLogo}
-            alt="App Logo"
-            style={{ width: '40px', height: '40px' }}
-          />
-          {!collapsed && (
-            <span style={{ color: '#ffffff', marginLeft: '10px', fontFamily: 'Roboto, sans-serif' }}>
-              <span style={{ fontWeight: '400' }}>sprint</span>
-              <span style={{ fontWeight: '600' }}>BMS</span>
-            </span>
-          )}
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Logo and Navigation */}
+        <div>
+          {/* Logo Container */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '60px',
+              paddingTop: '20px',
+              paddingLeft: '20px',
+              marginBottom: '20px',
+              overflow: 'hidden',
+            }}
+          >
+            <img
+              src={AppLogo}
+              alt="App Logo"
+              style={{ 
+                width: '40px', 
+                height: '40px',
+               }}
+            />
+            {!collapsed && (
+              <span style={{ color: '#ffffff', marginLeft: '10px', fontFamily: 'Roboto, sans-serif' }}>
+                <span style={{ fontWeight: '400' }}>sprint</span>
+                <span style={{ fontWeight: '600' }}>BMS</span>
+              </span>
+            )}
+          </div>
 
           {/* Main Navigation Items */}
           <Menu
             menuItemStyles={{
               button: {
+                '--icon-color': '#abb4c8', // Default icon color via CSS variable
+                color: '#abb4c8', // Default text color
                 padding: '10px 20px',
                 margin: '0 10px',
-                borderRadius: '10px',
+                borderRadius: '8px',
                 '&:hover': {
-                  backgroundColor: '#F05454',
+                  backgroundColor: '#1E4B9E',
+                  color: '#fff', // Text color on hover
+                  '--icon-color': '#e3f2fd', // Icon color on hover via CSS variable
                 },
                 display: 'flex',
-                justifyContent: collapsed ? 'center' : 'flex-start', // Center icons when collapsed
-                transition: 'all 300ms ease', // Smooth transition for alignment change
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                transition: 'all 300ms ease',
               },
               icon: {
-                marginRight: collapsed ? '0' : '10px', // Remove margin when collapsed to avoid extra spacing
-                transition: 'margin-right 300ms ease', // Smooth transition for icon spacing
+                marginRight: collapsed ? '0' : '10px',
+                transition: 'margin-right 300ms ease',
               },
               label: {
                 fontFamily: 'Roboto, sans-serif',
@@ -105,25 +120,25 @@ const SidebarComponent = () => {
               </MenuItem>
             )}
             <MenuItem
-              icon={<SpaceDashboardRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<SpaceDashboardRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/dashboard')}
             >
               Bookings
             </MenuItem>
             <MenuItem
-              icon={<GroupsRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<GroupsRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/users')}
             >
               Customers
             </MenuItem>
             <MenuItem
-              icon={<BadgeRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<BadgeRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/orders')}
             >
               Workers
             </MenuItem>
             <MenuItem
-              icon={<FormatListBulletedRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<FormatListBulletedRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/orders')}
             >
               Services
@@ -146,7 +161,7 @@ const SidebarComponent = () => {
               </MenuItem>
             )}
             <MenuItem
-              icon={<TroubleshootRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<TroubleshootRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/analytics')}
             >
               Insights
@@ -169,7 +184,7 @@ const SidebarComponent = () => {
               </MenuItem>
             )}
             <MenuItem
-              icon={<SettingsRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<SettingsRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={() => navigate('/settings')}
             >
               Settings
@@ -182,19 +197,23 @@ const SidebarComponent = () => {
           <Menu
             menuItemStyles={{
               button: {
+                '--icon-color': '#abb4c8', // Default icon color via CSS variable
+                color: '#abb4c8', // Default text color
                 padding: '10px 20px',
                 margin: '0 10px',
                 borderRadius: '8px',
                 '&:hover': {
-                  backgroundColor: '#F05454',
+                  backgroundColor: '#3c4257',
+                  color: '#e3f2fd', // Text color on hover
+                  '--icon-color': '#e3f2fd', // Icon color on hover via CSS variable
                 },
                 display: 'flex',
-                justifyContent: collapsed ? 'center' : 'flex-start', // Center icon when collapsed
-                transition: 'all 300ms ease', // Smooth transition for alignment change
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                transition: 'all 300ms ease',
               },
               icon: {
-                marginRight: collapsed ? '0' : '10px', // Remove margin when collapsed
-                transition: 'margin-right 300ms ease', // Smooth transition for icon spacing
+                marginRight: collapsed ? '0' : '10px',
+                transition: 'margin-right 300ms ease',
               },
               label: {
                 fontFamily: 'Roboto, sans-serif',
@@ -204,7 +223,7 @@ const SidebarComponent = () => {
           >
             <MenuItem
               style={{ marginBottom: '10px' }}
-              icon={<ExitToAppRoundedIcon style={{ fontSize: '20px' }} />}
+              icon={<ExitToAppRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
               onClick={handleLogout}
             >
               Logout

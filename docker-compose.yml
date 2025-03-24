@@ -58,7 +58,7 @@ services:
     container_name: stripe_cli_sprintbms
     environment:
       STRIPE_API_KEY: ${STRIPE_API_KEY}
-    command: ["listen", "--forward-to", "http://localhost:5000/business/webhook"]
+    command: ["listen", "--forward-to", "http://host.docker.internal:5000/business/webhook"]
     ports:
       - '4242:4242'
     depends_on:

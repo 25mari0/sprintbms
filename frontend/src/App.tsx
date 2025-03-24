@@ -22,13 +22,62 @@ import './App.css';
 
 const theme = createTheme({
   palette: {
-    mode: 'dark',
-    primary: { main: '#5d87ff' },
-    secondary: { main: '#49beff' },
-    background: { default: '#30475E', paper: '#1d1d1d' },
+    mode: "dark",
+    primary: {
+      main: "#4A90E2", // Vibrant blue for highlights
+      light: "#74B3FF",
+      dark: "#1E4B9E",
+      contrastText: "#fff",
+    },
+    secondary: {
+      main: "#64B5F6", // Softer blue for accents
+      light: "#A6D4FA",
+      dark: "#2286C3",
+      contrastText: "#000",
+    },
+    background: {
+      default: "#121212", // Dark background
+      paper: "#1E1E1E", // Slightly lighter panels
+    },
+    text: {
+      primary: "#E3F2FD", // Light blueish text
+      secondary: "#A8C7E2", // Muted blue for secondary text
+    },
+    error: {
+      main: "#FF5252",
+    },
+    warning: {
+      main: "#FFC107",
+    },
+    success: {
+      main: "#4CAF50",
+    },
+    info: {
+      main: "#29B6F6",
+    },
   },
   typography: {
-    fontFamily: 'Roboto, sans-serif',
+    fontFamily: "Roboto, sans-serif",
+    fontSize: 14,
+    button: {
+      textTransform: "none", // Prevents uppercase transformation
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "8px",
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#1E1E1E",
+        },
+      },
+    },
   },
 });
 
@@ -52,10 +101,9 @@ const App = () => {
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
               
-              <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout children={undefined} /><Dashboard /></ProtectedRoute>} />
-              <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout children={undefined} /><BusinessCreate /></ProtectedRoute>} />
-              <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout children={undefined} /><BusinessRenew /></ProtectedRoute>} />
-              
+              <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout><Dashboard /></ProtectedLayout></ProtectedRoute>} />
+              <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout><BusinessCreate /></ProtectedLayout></ProtectedRoute>} />              
+              <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout><BusinessRenew /></ProtectedLayout></ProtectedRoute>} />   
             </Routes>
           </AuthProvider>
         </Suspense>
@@ -63,10 +111,10 @@ const App = () => {
       <ToastContainer
         position="top-right"
         autoClose={5000}
-        hideProgressBar
         closeOnClick
         pauseOnHover
         theme="dark"
+        toastStyle={{ backgroundColor: "#1E1E1E"}} // Apply background
       />
     </ThemeProvider>
   );

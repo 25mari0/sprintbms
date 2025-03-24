@@ -100,6 +100,7 @@ const authController = {
         
         res.status(200).json({ 
           status: 'success', 
+          message: 'Logged out successfully',
           data: { redirect: '/login' }});
       } catch (error) {
         next(error);

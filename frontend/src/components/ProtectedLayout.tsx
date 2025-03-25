@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
 import { ReactNode } from 'react';
-import SidebarComponent from './Sidebar';
+import SidebarComponent from './Sidebar/Sidebar';
 
 // Define an interface for the props
 interface ProtectedLayoutProps {

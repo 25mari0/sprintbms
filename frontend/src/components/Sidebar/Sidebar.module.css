@@ -1,0 +1,45 @@
+/* src/components/Sidebar/Sidebar.module.css */
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .logoContainer {
+    display: flex;
+    align-items: center;
+    height: 60px;
+    padding-top: 20px;
+    padding-left: 20px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  
+  .logoImage {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .logoText {
+    margin-left: 10px;
+  }
+  
+  .logoTextLight {
+    font-weight: 400;
+  }
+  
+  .logoTextBold {
+    font-weight: 600;
+  }
+  
+  .sectionTitle {
+    font-size: 12px;
+    font-weight: bold;
+    padding: 10px 20px;
+    cursor: default;
+  }
+  
+  .logoutContainer {
+    margin-top: auto;
+    margin-bottom: 10px;
+  }

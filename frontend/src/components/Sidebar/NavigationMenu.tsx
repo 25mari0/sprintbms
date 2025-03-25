@@ -1,0 +1,104 @@
+// src/components/Sidebar/NavigationMenu.tsx
+import React from 'react';
+import { Menu, MenuItem } from 'react-pro-sidebar';
+import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
+import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
+import BadgeRoundedIcon from '@mui/icons-material/BadgeRounded';
+import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import TroubleshootRoundedIcon from '@mui/icons-material/TroubleshootRounded';
+import { useTheme } from '@mui/material';
+import styles from './Sidebar.module.css';
+
+interface NavigationMenuProps {
+  collapsed: boolean;
+  navigate: (path: string) => void;
+}
+
+const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) => {
+  const theme = useTheme();
+
+  const menuItemStyles = {
+    button: {
+      '--icon-color': theme.palette.text.secondary,
+      color: '#A8C7E2',
+      padding: '10px 20px',
+      margin: '0 10px',
+      borderRadius: '8px',
+      '&:hover': {
+        backgroundColor: theme.palette.primary.dark,
+        color: theme.palette.primary.contrastText,
+        '--icon-color': '#fff',
+      },
+      display: 'flex',
+      justifyContent: collapsed ? 'center' : 'flex-start',
+      transition: 'all 300ms ease',
+    },
+    icon: {
+      marginRight: collapsed ? '0' : '10px',
+      transition: 'margin-right 300ms ease',
+    },
+    label: {
+      fontFamily: 'Roboto, sans-serif',
+      fontWeight: '500',
+    },
+  };
+
+  return (
+    <Menu menuItemStyles={menuItemStyles}>
+      {!collapsed && (
+        <MenuItem disabled className={styles.sectionTitle} style={{ color: theme.palette.text.disabled }}>
+          WORKSPACE
+        </MenuItem>
+      )}
+      <MenuItem
+        icon={<SpaceDashboardRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/dashboard')}
+      >
+        Bookings
+      </MenuItem>
+      <MenuItem
+        icon={<GroupsRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/users')}
+      >
+        Customers
+      </MenuItem>
+      <MenuItem
+        icon={<BadgeRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/orders')}
+      >
+        Workers
+      </MenuItem>
+      <MenuItem
+        icon={<FormatListBulletedRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/orders')}
+      >
+        Services
+      </MenuItem>
+      {!collapsed && (
+        <MenuItem disabled className={styles.sectionTitle} style={{ color: theme.palette.text.disabled }}>
+          ANALYTICS
+        </MenuItem>
+      )}
+      <MenuItem
+        icon={<TroubleshootRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/analytics')}
+      >
+        Insights
+      </MenuItem>
+      {!collapsed && (
+        <MenuItem disabled className={styles.sectionTitle} style={{ color: theme.palette.text.disabled }}>
+          SETTINGS
+        </MenuItem>
+      )}
+      <MenuItem
+        icon={<SettingsRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+        onClick={() => navigate('/settings')}
+      >
+        Settings
+      </MenuItem>
+    </Menu>
+  );
+};
+
+export default NavigationMenu;

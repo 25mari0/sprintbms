@@ -24,7 +24,8 @@ const authController = {
       res.status(201).json({
         status: 'success',
         message: 'User registered successfully, please check your email for the verification link',
-        data: { userId: user.id, redirect: '/login' },
+        data: { userId: user.id },
+        redirect: '/login'
 
       });
     } catch (error) {
@@ -71,7 +72,7 @@ const authController = {
       res.status(200).json({
         status: 'success',
         message: 'Logged in successfully',
-        data: { redirect },
+        redirect,
       });
     } catch (error) {
       next(error);
@@ -101,7 +102,7 @@ const authController = {
         res.status(200).json({ 
           status: 'success', 
           message: 'Logged out successfully',
-          data: { redirect: '/login' }});
+          redirect: '/login' });
       } catch (error) {
         next(error);
       }
@@ -128,12 +129,12 @@ const authController = {
 
       let redirect = '/bookings';
       if (!responseData.hasBusiness) {
-        redirect = '/business/create?mode=create';
+        redirect = '/business/create';
       } else if (!responseData.isPremium) {
-        redirect = '/business/create?mode=renew';
+        redirect = '/business/renew';
       }
 
-      res.status(200).json({ status: 'success', data: {responseData}, redirect });
+      res.status(200).json({ status: 'success', data: responseData, redirect });
     } catch (error) {
       next(error);
     }
@@ -166,7 +167,7 @@ const authController = {
       res.json({ 
         status: 'success', 
         message: 'Password set successfully. Please log in with your new password.', 
-        data: { redirect: '/login' },
+        redirect: '/login',
       });
     } catch (error) {
       next(error);
@@ -227,7 +228,7 @@ const authController = {
       res.status(200).json({ 
         status: 'success', 
         message: 'Account verified successfully. Please log in with your password.', 
-        data: { redirect: '/login' },
+        redirect: '/login',
       });
     } catch (error) {
       next(error);

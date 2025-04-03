@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import { get } from '../services/api'; // Import post for delete
 import { Booking, Meta, BookingsResponse } from '../types/bookingTypes';
 import BookingTable from '../components/Bookings/BookingTable';
-import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box } from '@mui/material';
+import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, CircularProgress } from '@mui/material';
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 20, totalPages: 1 });
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [loading, setLoading] = useState(true);
 
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -17,45 +18,50 @@ const BookingsPage = () => {
   const [pickupDateStart, setPickupDateStart] = useState<string>('');
   const [pickupDateEnd, setPickupDateEnd] = useState<string>('');
 
-  useEffect(() => {
-    const loadBookings = async () => {
-      try {
-        // Build query parameters for filters
-        const queryParams = new URLSearchParams({
-          page: page.toString(),
-          limit: rowsPerPage.toString(),
-          ...(statusFilter && { status: statusFilter }),
-          ...(customerNameFilter && { customerName: customerNameFilter }),
-          ...(pickupDateStart && { startDate: pickupDateStart }),
-          ...(pickupDateEnd && { endDate: pickupDateEnd }),
-        });
+  const loadBookings = async (targetPage: number) => {
+    setLoading(true);
+    try {
+      const queryParams = new URLSearchParams({
+        page: targetPage.toString(),
+        limit: rowsPerPage.toString(),
+        ...(statusFilter && { status: statusFilter }),
+        ...(customerNameFilter && { customerName: customerNameFilter }),
+        ...(pickupDateStart && { startDate: pickupDateStart }),
+        ...(pickupDateEnd && { endDate: pickupDateEnd }),
+      });
 
-        const response = await get<BookingsResponse>(
-          `/bookings?${queryParams.toString()}`,
-          {},
-          { disableToast: true }
-        );
-        console.log('API Response:', response);
-        if (response.status === 'success') {
-          console.log('Bookings data:', response.data);
-          setBookings(response.data || []);
-          console.log('Meta data:', response.meta);
-          setMeta(response.meta || { total: 0, page: 1, limit: 20, totalPages: 1 });
-        } else {
-          setBookings([]);
-          setMeta({ total: 0, page: 1, limit: 20, totalPages: 1 });
-        }
-      } catch (error) {
-        console.error('Failed to fetch bookings:', error);
+      const response = await get<BookingsResponse>(
+        `/bookings?${queryParams.toString()}`,
+        {},
+        { disableToast: true }
+      );
+      if (response.status === 'success' && response.data) {
+        setBookings(response.data.data || []);
+        setMeta(response.data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 });
+      } else {
         setBookings([]);
         setMeta({ total: 0, page: 1, limit: 20, totalPages: 1 });
       }
-    };
-    loadBookings();
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      setBookings([]);
+      setMeta({ total: 0, page: 1, limit: 20, totalPages: 1 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBookings(page);
   }, [page, rowsPerPage, statusFilter, customerNameFilter, pickupDateStart, pickupDateEnd]);
 
   const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+    if (newPage === page) {
+      // If the page hasn't changed, directly call loadBookings
+      loadBookings(newPage);
+    } else {
+      setPage(newPage);
+    }
   };
 
   const handleRowsPerPageChange = (newRowsPerPage: number) => {
@@ -88,7 +94,6 @@ const BookingsPage = () => {
             <MenuItem value="Pending">Pending</MenuItem>
             <MenuItem value="Completed">Completed</MenuItem>
             <MenuItem value="Cancelled">Cancelled</MenuItem>
-            {/* Add more statuses as needed */}
           </Select>
         </FormControl>
         <TextField
@@ -114,13 +119,31 @@ const BookingsPage = () => {
           Clear Filters
         </Button>
       </Box>
-      <div>Debug: {bookings.length} bookings loaded</div>
-      <BookingTable
-        bookings={bookings}
-        meta={meta}
-        onPageChange={handlePageChange}
-        onRowsPerPageChange={handleRowsPerPageChange}
-      />
+      <Box sx={{ position: 'relative' }}>
+        {loading && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1,
+            }}
+          >
+            <CircularProgress />
+          </Box>
+        )}
+        <BookingTable
+          bookings={bookings}
+          meta={meta}
+          onPageChange={handlePageChange}
+          onRowsPerPageChange={handleRowsPerPageChange}
+        />
+      </Box>
     </div>
   );
 };

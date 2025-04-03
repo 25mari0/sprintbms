@@ -16,9 +16,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await get<{ responseData: UserData }>('/client/me');
-      if (response.status === 'success') {
-        setUser(response.data!.responseData);
+      const response = await get<UserData>('/client/me');
+      if (response.status === 'success' && response.data) {
+        setUser(response.data!);
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);

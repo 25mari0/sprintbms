@@ -1,11 +1,7 @@
+// src/services/api.ts
 import axios, { AxiosRequestConfig } from 'axios';
 import { toast } from 'react-toastify';
-
-export interface ApiResponse<T> {
-  status: 'success' | 'error';
-  message?: string;
-  data?: T & { redirect?: string };
-}
+import { ApiResponse } from '../types'; // Import the ApiResponse type
 
 // Options for customizing API behavior
 interface ApiOptions {
@@ -27,17 +23,16 @@ const createApiClient = (navigate?: NavigateFn) => ({
     url: string,
     config?: AxiosRequestConfig,
     options?: ApiOptions
-  ): Promise<T> => { // Change return type to T
+  ): Promise<ApiResponse<T>> => { // Change return type to ApiResponse<T>
     try {
-      const response = await api.get<T>(url, config); // Change to T
-      const data = response.data as T & { redirect?: string }; // Cast to T with optional redirect
-      const redirect = (data as any).redirect;
+      const response = await api.get<ApiResponse<T>>(url, config); // Update to ApiResponse<T>      
+      const { status, message, redirect } = response.data; // Destructure with a renamed data variable
 
       // Handle toast
       if (!options?.disableToast && url !== '/client/me') {
-        const toastMsg = options?.toastMessage || (data as any).message;
+        const toastMsg = options?.toastMessage || message;
         if (toastMsg) {
-          const toastType = options?.toastType || ((data as any).status === 'success' ? 'success' : 'error');
+          const toastType = options?.toastType || (status === 'success' ? 'success' : 'error');
           toast[toastType](toastMsg);
         }
       }
@@ -51,10 +46,10 @@ const createApiClient = (navigate?: NavigateFn) => ({
         }
       }
 
-      return response.data; // Return T directly
+      return response.data; // Return ApiResponse<T>
     } catch (error: any) {
       const apiResponse = error.response?.data as ApiResponse<T>;
-      const redirect = apiResponse?.data?.redirect;
+      const redirect = apiResponse?.redirect;
 
       // Handle toast for errors
       if (url !== '/client/me' && !options?.disableToast) {
@@ -82,9 +77,13 @@ const createApiClient = (navigate?: NavigateFn) => ({
     options?: ApiOptions
   ): Promise<ApiResponse<T>> => {
     try {
-      const response = await api.post<ApiResponse<T>>(url, data, config);
-      const { status, message, data: responseData } = response.data;
-      const redirect = responseData?.redirect;
+      const response = await api.request<ApiResponse<T>>({
+        url,
+        data,
+        method: 'POST', // Default to POST if no method is specified
+        ...config, // Spread config to allow method override
+      });
+      const { status, message, redirect} = response.data;
 
       // Handle toast
       if (!options?.disableToast && url !== '/client/me') {
@@ -107,7 +106,7 @@ const createApiClient = (navigate?: NavigateFn) => ({
       return response.data;
     } catch (error: any) {
       const apiResponse = error.response?.data as ApiResponse<T>;
-      const redirect = apiResponse?.data?.redirect;
+      const redirect = apiResponse?.redirect;
 
       // Handle toast for errors
       if (url !== '/client/me' && !options?.disableToast) {

@@ -24,6 +24,7 @@ export interface Business {
     pickup_at: string;
     status: string;
     vehicle_license_plate: string;
+    charged_price: number;
     business: Business;
     customer: Customer;
     bookingServices: BookingService[];
@@ -38,6 +39,6 @@ export interface Business {
   
   export interface BookingsResponse {
     status: string;
-    data: Booking[];
+    data?: Booking[];
     meta: Meta;
   }

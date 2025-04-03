@@ -1,5 +1,8 @@
-import { Table, TableBody, TableCell, TableHead, TableRow, TablePagination } from '@mui/material';
+import { Table, TableBody, TableCell, TableHead, TableRow, TablePagination, IconButton } from '@mui/material';
 import { Booking, Meta } from '../../types/bookingTypes';
+import { post } from '../../services/api';
+import { toast } from 'react-toastify';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 
 interface BookingTableProps {
   bookings: Booking[];
@@ -9,34 +12,60 @@ interface BookingTableProps {
 }
 
 const BookingTable = ({ bookings, meta, onPageChange, onRowsPerPageChange }: BookingTableProps) => {
-  console.log('Bookings in table:', bookings); // Debug the bookings prop
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this booking?')) {
+
+      try {
+        console.log('Deleting booking with ID:', id);
+
+        await post<unknown>(`/bookings/${id}`, null, { method: 'DELETE' });
+        console.log('Booking deleted successfully, calling onPageChange with page:', meta.page);
+
+        toast.success('Booking deleted successfully');
+        onPageChange(meta.page); // Trigger a re-fetch
+      } catch (error) {
+        toast.error('Failed to delete booking');
+      }
+    }
+  };
+    
+  const calculateTotalChargedPrice = (bookingServices: any[]) => {
+    return bookingServices.reduce((total, service) => total + Number(service.charged_price), 0);
+  };
 
   return (
     <div>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>ID</TableCell>
             <TableCell>Customer</TableCell>
-            <TableCell>Business</TableCell>
             <TableCell>Pickup At</TableCell>
+            <TableCell>Charged Price</TableCell>
+            <TableCell>License Plate</TableCell>
             <TableCell>Status</TableCell>
+            <TableCell></TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {bookings.length > 0 ? (
             bookings.map((booking) => (
               <TableRow key={booking.id}>
-                <TableCell>{booking.id}</TableCell>
                 <TableCell>{booking.customer.name}</TableCell>
-                <TableCell>{booking.business.name}</TableCell>
-                <TableCell>{booking.pickup_at}</TableCell>
+                <TableCell>{new Date(booking.pickup_at).toLocaleString()}</TableCell>
+                <TableCell>{'€' + calculateTotalChargedPrice(booking.bookingServices).toFixed(2)}</TableCell>
+                <TableCell>{booking.vehicle_license_plate}</TableCell>
                 <TableCell>{booking.status}</TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleDelete(booking.id)} color="error">
+                    <DeleteOutlineRoundedIcon />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5}>No bookings available</TableCell>
+              <TableCell colSpan={6}>No bookings available</TableCell>
             </TableRow>
           )}
         </TableBody>

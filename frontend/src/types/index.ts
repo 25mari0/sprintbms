@@ -1,8 +1,9 @@
 export interface ApiResponse<T> {
-    status: 'success' | 'error';
-    message?: string;
-    data?: T & { redirect?: string; };
-  }
+  status: 'success' | 'error';
+  message?: string;
+  data?: T; // Remove the { redirect?: string } from here
+  redirect?: string; // Add redirect at the top level
+}
   
   export interface UserData {
     userId: string;

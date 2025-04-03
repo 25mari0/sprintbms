@@ -27,17 +27,17 @@ const createApiClient = (navigate?: NavigateFn) => ({
     url: string,
     config?: AxiosRequestConfig,
     options?: ApiOptions
-  ): Promise<ApiResponse<T>> => {
+  ): Promise<T> => { // Change return type to T
     try {
-      const response = await api.get<ApiResponse<T>>(url, config);
-      const { status, message, data } = response.data;
-      const redirect = data?.redirect;
+      const response = await api.get<T>(url, config); // Change to T
+      const data = response.data as T & { redirect?: string }; // Cast to T with optional redirect
+      const redirect = (data as any).redirect;
 
       // Handle toast
       if (!options?.disableToast && url !== '/client/me') {
-        const toastMsg = options?.toastMessage || message;
+        const toastMsg = options?.toastMessage || (data as any).message;
         if (toastMsg) {
-          const toastType = options?.toastType || (status === 'success' ? 'success' : 'error');
+          const toastType = options?.toastType || ((data as any).status === 'success' ? 'success' : 'error');
           toast[toastType](toastMsg);
         }
       }
@@ -51,7 +51,7 @@ const createApiClient = (navigate?: NavigateFn) => ({
         }
       }
 
-      return response.data;
+      return response.data; // Return T directly
     } catch (error: any) {
       const apiResponse = error.response?.data as ApiResponse<T>;
       const redirect = apiResponse?.data?.redirect;

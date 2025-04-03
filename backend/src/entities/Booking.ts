@@ -29,7 +29,7 @@ export class Booking {
   created_at!: Date;
 
   //expected completion date and time, informed to the customer
-  @Column({ type: 'timestamp' })
+  @Column()
   pickup_at!: Date;
 
   @Column({

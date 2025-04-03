@@ -13,7 +13,7 @@ export const PublicRoute = ({ children }: PublicRouteProps) => {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate('/bookings', { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 

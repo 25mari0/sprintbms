@@ -61,7 +61,7 @@ const authController = {
       });
 
       const business = await businessService.getBusinessByUserId(user.id);
-      let redirect = '/dashboard';
+      let redirect = '/bookings';
       if (!business) {
         redirect = '/business/create?mode=create';
       } else if (business.licenseExpirationDate < new Date()) {
@@ -126,7 +126,7 @@ const authController = {
         licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
       };
 
-      let redirect = '/dashboard';
+      let redirect = '/bookings';
       if (!responseData.hasBusiness) {
         redirect = '/business/create?mode=create';
       } else if (!responseData.isPremium) {

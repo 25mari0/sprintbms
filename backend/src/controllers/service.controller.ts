@@ -11,6 +11,7 @@ const serviceController = {
   ): Promise<void> => {
     try {
       const { name, price, estimated_time_minutes } = req.body;
+      
       const service = await serviceService.createService(
         req.user?.business?.id || '',
         name,

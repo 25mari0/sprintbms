@@ -35,7 +35,7 @@ router.get(
   tokenMiddleware.authenticate,
   businessMiddleware.hasBusiness,
   premiumMiddleware.isPremium,
-  bookingController.getBookingsWithFilter,
+  bookingController.getBookings,
 );
 
 export default router;

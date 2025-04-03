@@ -11,7 +11,6 @@ import Register from './pages/Register';
 import VerifyAccount from './pages/VerifyAccount';
 import Success from './pages/Success';
 import BusinessCreate from './pages/BusinessCreate';
-import Dashboard from './pages/Dashboard';
 import BusinessRenew from './pages/BusinessRenew';
 import 'react-toastify/dist/ReactToastify.css';
 import { Suspense } from 'react';
@@ -19,6 +18,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { useEffect } from 'react';
 import Home from './pages/Home';
 import './App.css';
+import BookingsPage from './pages/Bookings';
 
 const theme = createTheme({
   palette: {
@@ -100,8 +100,7 @@ const App = () => {
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
-              
-              <Route path="/dashboard" element={<ProtectedRoute><ProtectedLayout><Dashboard /></ProtectedLayout></ProtectedRoute>} />
+              <Route path="/bookings" element={<ProtectedRoute><ProtectedLayout><BookingsPage /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout><BusinessCreate /></ProtectedLayout></ProtectedRoute>} />              
               <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout><BusinessRenew /></ProtectedLayout></ProtectedRoute>} />   
             </Routes>

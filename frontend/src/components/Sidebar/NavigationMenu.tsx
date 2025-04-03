@@ -53,7 +53,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
       )}
       <MenuItem
         icon={<SpaceDashboardRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
-        onClick={() => navigate('/dashboard')}
+        onClick={() => navigate('/bookings')}
       >
         Bookings
       </MenuItem>

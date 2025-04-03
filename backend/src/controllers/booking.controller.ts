@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import bookingService from '../services/booking.service';
-import { BookingFilter } from '../types/bookingTypes';
 import { JwtPayload } from '../types/authTypes';
 
 const bookingController = {
@@ -81,48 +80,32 @@ const bookingController = {
     }
   },
 
-  getBookingsWithFilter: async (
-    req: Request & { user?: JwtPayload },
+  getBookings: async (
+    req: Request,
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const filters: BookingFilter = {
-        status: req.query.status as string | undefined,
-        vehicle_license_plate: req.query.vehicle_license_plate as
-          | string
-          | undefined,
-        pickup_at: req.query.pickup_at
-          ? new Date(req.query.pickup_at as string)
-          : undefined,
-        created_at: req.query.created_at
-          ? new Date(req.query.created_at as string)
-          : undefined,
+      // Extract query parameters and convert types as needed
+      const filters = {
+        page: parseInt(req.query.page as string) || 1,
+        limit: parseInt(req.query.limit as string) || 20,
+        status: req.query.status as string,
+        startDate: req.query.startDate as string,
+        endDate: req.query.endDate as string,
+        customerId: req.query.customerId as string,
+        search: req.query.search as string,
       };
-
-      const page = parseInt(req.query.page as string, 10) || 1;
-      const pageSize = parseInt(req.query.pageSize as string, 10) || 10; // default to 10 if not provided
-
-      const { bookings, total } = await bookingService.getBookingsWithFilter(
-        req.user!.business!.id,
-        filters,
-        { page, pageSize }, // backend will apply maxPageSize internally
-      );
-
-      res.json({
-        status: 'success',
-        data: {
-          bookings,
-          meta: {
-            total,
-            page,
-            pageSize,
-            totalPages: Math.ceil(total / pageSize),
-          },
-        },
-      });
+  
+      // Call the service with filters
+      const response = await bookingService.getBookings(filters);
+  
+      // Return the response
+      res.json({ status: 'success', ...response });
     } catch (error) {
-      next(error);
+      const err = error as Error;
+      err.message = `Error getting bookings: ${err.message}`;
+      next(err);
     }
   },
 

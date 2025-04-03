@@ -8,7 +8,7 @@ export function Success() {
 
   useEffect(() => {
     toast.success('Purchase successful! Enjoy your premium features.');
-    const timer = setTimeout(() => navigate('/dashboard'), 3000);
+    const timer = setTimeout(() => navigate('/bookings'), 3000);
     return () => clearTimeout(timer);
   }, [navigate]);
 

@@ -28,11 +28,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
       // Extra: Has business, tries to access create? Go to dashboard.
       else if (user?.hasBusiness && pathname === '/business/create') {
-        navigate('/dashboard', { replace: true });
+        navigate('/bookings', { replace: true });
       }
       // Extra: Has business, license valid, tries to access renew? Go to dashboard.
       else if (user?.hasBusiness && user?.isPremium && pathname === '/business/renew') {
-        navigate('/dashboard', { replace: true });
+        navigate('/bookings', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, user, navigate, pathname]);

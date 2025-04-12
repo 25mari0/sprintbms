@@ -61,4 +61,29 @@ export class User {
   async validatePassword(password: string): Promise<boolean> {
     return await bcrypt.compare(password, this.password);
   }
+
+  async getWorkerStatus(): Promise<string> {
+    console.log('Worker status:', this.email, this.role, this.verificationToken, this.lastPasswordChange.getTime(), this.createdAt.getTime());
+    if (this.role === 'suspended') {
+      return 'suspended';
+    } else if (this.verificationToken && this.lastPasswordChange.getTime() === this.createdAt.getTime()) {
+      return 'unverified';
+    } else if (this.verificationToken && this.lastPasswordChange.getTime() !== this.createdAt.getTime()) {
+      return 'password-reset';
+    } else {
+      return 'active';
+    }
+  }
+
+  async getOwnerStatus(): Promise<string> {
+    if (this.role === 'suspended') {
+      return 'suspended';
+    } else if (this.verificationToken && this.lastPasswordChange.getTime() === this.createdAt.getTime()) {
+      return 'unverified';
+    } else {
+      return 'active';
+    }
+  }
+  
+
 }

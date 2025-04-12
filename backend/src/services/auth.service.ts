@@ -32,14 +32,14 @@ class AuthService {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['verificationToken', 'business'],
-      select: ['id', 'email', 'password', 'role', 'business'],
-    });
+      });
 
     if (!user) throw new AppError(400, 'User does not exist');
-    if (!(await user.validatePassword(password))) throw new AppError(400, 'Invalid credentials');
     if (user.role === 'suspended') throw new AppError(400, 'User account is suspended');
-    if (user.verificationToken && user.role == 'worker') throw new AppError(400, 'Password reset required. Please use the reset link sent to your email.');
-    if (user.verificationToken && user.role == 'owner') throw new AppError(400, 'Account is not verified. Please use the verification link sent to your email')
+    if (user.role === 'worker' && await user.getWorkerStatus() === 'unverified') throw new AppError(400, 'Worker account is not active, check your email for the verification link');
+    if (user.role === 'worker' && await user.getWorkerStatus() === 'password-reset') throw new AppError(400, 'Worker account has a pending password reset, check your email for the reset link');
+    if (user.role == 'owner' && await user.getOwnerStatus() === 'unverified') throw new AppError(400, 'Account is not verified. Please use the verification link sent to your email');
+    if (!(await user.validatePassword(password))) throw new AppError(400, 'Invalid credentials');
 
     return user;
   }
@@ -184,6 +184,17 @@ class AuthService {
     }
   }
 
+  public async forgotPassword(email: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) throw new AppError(400, 'User not found');
+
+    if (user.role != 'owner') throw new AppError(400, 'Request the password reset from the business owner');
+
+    const token = await this.generateVerificationToken(user.id);
+    const verificationLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    emailService.sendPasswordReset(email, verificationLink);
+  }
+
   public async hasValidRefreshTokens(userId: string): Promise<boolean> {
     try {
       const currentDate = new Date();
@@ -208,6 +219,31 @@ class AuthService {
     } catch  {
       throw new AppError(400, 'Error trying to grab user')
     }
+  }
+
+  public async setPassword(newPassword: string, token: string): Promise<void> {
+    const verificationToken = await this.verificationTokenRepository.findOne({ where: { token }, relations: ['user'] });
+    if (!verificationToken) throw new AppError(400, 'Invalid token');
+
+    // Check if the token is expired
+    if (verificationToken.expiresAt < new Date()) {
+      throw new AppError(400, 'Expired token');
+    }
+
+    // Check if the user is suspended
+    if (verificationToken.user.role === 'suspended') 
+      throw new AppError(400, 'User account is suspended');
+    
+
+    if (verificationToken.user.role !== 'owner') 
+      throw new AppError(400, 'Worker account is not active, check your email for the verification link');
+
+    const user = verificationToken.user;
+    user.password = await user.hashPassword(newPassword);
+    user.lastPasswordChange = new Date();
+
+    await this.userRepository.save(user);
+    await this.verificationTokenRepository.remove(verificationToken);
   }
 
   //generates AND stores
@@ -246,7 +282,7 @@ class AuthService {
     }
     // now check if the token is expired
     if (verificationToken.expiresAt < new Date()) {
-      throw new AppError(400, 'Expired token');
+      throw new AppError(400, 'Expired token, please request a new one');
     }
     return { userId: verificationToken.user.id };
   }

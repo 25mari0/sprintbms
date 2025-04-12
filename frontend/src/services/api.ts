@@ -23,9 +23,9 @@ const createApiClient = (navigate?: NavigateFn) => ({
     url: string,
     config?: AxiosRequestConfig,
     options?: ApiOptions
-  ): Promise<ApiResponse<T>> => { // Change return type to ApiResponse<T>
+  ): Promise<ApiResponse<T>> => { 
     try {
-      const response = await api.get<ApiResponse<T>>(url, config); // Update to ApiResponse<T>      
+      const response = await api.get<ApiResponse<T>>(url, config); 
       const { status, message, redirect } = response.data; // Destructure with a renamed data variable
 
       // Handle toast
@@ -46,7 +46,7 @@ const createApiClient = (navigate?: NavigateFn) => ({
         }
       }
 
-      return response.data; // Return ApiResponse<T>
+      return response.data; 
     } catch (error: any) {
       const apiResponse = error.response?.data as ApiResponse<T>;
       const redirect = apiResponse?.redirect;

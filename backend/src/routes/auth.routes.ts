@@ -40,17 +40,26 @@ router.post(
   authController.logout,
 )
 
+// ------------ OWNER SPECIFIC PASSWORD RESET -------------------
 router.get(
-  '/password-reset/token',
+  '/password-reset/verify-token',
   authController.validateVerificationToken
 );
 
 router.post(
-  '/password-reset/confirm',
+  '/password-reset/set',
   ...passwordValidation,
   authController.setPasswordToken
 );
 
+router.post(
+  '/password-reset/forgot',
+  ...emailValidation,
+  validate,
+  authController.forgotPassword
+)
+
+// ------------ ACCOUNT VERIFICATION -------------------
 // PRESENT & EXPIRED ? respond with, EXPIRED!, show small notification under the log in form, 
 // with the option to to a function which resends a new link (route /account-verification/resend)
 router.post(

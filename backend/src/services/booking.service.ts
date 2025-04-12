@@ -7,6 +7,7 @@ import { Customer } from '../entities/Customer';
 import { BookingWorker } from '../entities/BookingWorker';
 import { AppError } from '../utils/error';
 import { BookingFilters, PaginatedResponse } from '../types/bookingTypes';
+import { User } from '../entities/User';
 
 class BookingManagementService {
   private bookingRepository = AppDataSource.getRepository(Booking);
@@ -14,41 +15,68 @@ class BookingManagementService {
   private bookingWorkerRepository = AppDataSource.getRepository(BookingWorker);
   private serviceRepository = AppDataSource.getRepository(Service);
   private customerRepository = AppDataSource.getRepository(Customer);
+  private userRepository = AppDataSource.getRepository(User);
 
   async createBooking(
     businessId: string,
     customerId: string,
     licensePlate: string,
     pickupDate: Date,
-    services: { serviceId: number; price: number }[]
+    services: { serviceId: number; price: number }[],
+    workers: { workerId: string }[],
   ): Promise<Booking> {
-    const customer = await this.customerRepository.findOneBy({ id: customerId });
-    if (!customer) throw new AppError(400, 'Customer not found');
-
-    const booking = this.bookingRepository.create({
-      business: { id: businessId },
-      customer: customer,
-      vehicle_license_plate: licensePlate,
-      pickup_at: pickupDate,
-      status: 'Pending',
-    });
-
-    await this.bookingRepository.save(booking);
-
-    for (const service of services) {
-      const serviceEntity = await this.serviceRepository.findOneBy({ id: service.serviceId });
-      if (!serviceEntity) throw new AppError(400, 'Service not found');
-      
-      await this.bookingServiceRepository.save({
-        booking: booking,
-        service: serviceEntity,
-        base_price: serviceEntity.price,
-        charged_price: service.price,
-        service_name_at_booking: serviceEntity.name
+    // Start a transaction
+    return await this.bookingRepository.manager.transaction(async (transactionalEntityManager) => {
+      // Validate customer
+      const customer = await transactionalEntityManager.findOneBy(this.customerRepository.target, { id: customerId });
+      if (!customer) throw new AppError(400, 'Customer not found');
+  
+      // Create booking entity
+      const booking = this.bookingRepository.create({
+        business: { id: businessId },
+        customer: customer,
+        vehicle_license_plate: licensePlate,
+        pickup_at: pickupDate,
+        status: 'Pending',
       });
-    }
-
-    return booking;
+  
+      // Save booking
+      await transactionalEntityManager.save(booking);
+  
+      // Process services
+      for (const service of services) {
+        const serviceEntity = await transactionalEntityManager.findOneBy(this.serviceRepository.target, { 
+          id: service.serviceId 
+        });
+        if (!serviceEntity) throw new AppError(400, 'Service not found');
+  
+        await transactionalEntityManager.save(this.bookingServiceRepository.target, {
+          booking: booking,
+          service: serviceEntity,
+          base_price: serviceEntity.price,
+          charged_price: service.price,
+          service_name_at_booking: serviceEntity.name,
+        });
+      }
+  
+      // Process workers
+      for (const worker of workers) {
+        const workerEntity = await transactionalEntityManager.findOneBy(this.userRepository.target, { 
+          id: worker.workerId 
+        });
+        if (!workerEntity) throw new AppError(400, 'Worker not found');
+        if (workerEntity.business?.id !== businessId) {
+          throw new AppError(400, 'Worker does not belong to this business');
+        }
+  
+        await transactionalEntityManager.save(this.bookingWorkerRepository.target, {
+          booking: booking,
+          worker: workerEntity,
+        });
+      }
+  
+      return booking;
+    });
   }
 
   async getBookingById(bookingId: string): Promise<Booking> {
@@ -103,6 +131,7 @@ class BookingManagementService {
       endDate,
       customerId,
       search,
+      businessId,
     } = filters;
 
     console.log('Filters:', filters); // Debugging line
@@ -119,7 +148,7 @@ class BookingManagementService {
     .leftJoinAndSelect('booking.bookingServices', 'bookingServices')
     .skip(skip)                                               // Apply pagination
     .take(limit)
-    .orderBy('booking.pickup_at', 'DESC');                   // Sort by creation date
+    .orderBy('booking.pickup_at', 'DESC')                   // Sort by creation date
 
     // Apply filters only if they are provided
     if (status) {
@@ -147,6 +176,8 @@ class BookingManagementService {
         { search: `%${search}%` }
       );
     }
+
+    queryBuilder.andWhere('booking.business_id = :businessId', { businessId });
 
     try {
       // Execute the query and get bookings + total count

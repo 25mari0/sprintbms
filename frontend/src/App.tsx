@@ -19,6 +19,7 @@ import { useEffect } from 'react';
 import Home from './pages/Home';
 import './App.css';
 import BookingsPage from './pages/Bookings';
+import WorkerManagement from './pages/WorkerManagement';
 
 const theme = createTheme({
   palette: {
@@ -100,6 +101,7 @@ const App = () => {
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
+              <Route path="/workers" element={<ProtectedRoute><ProtectedLayout><WorkerManagement /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/bookings" element={<ProtectedRoute><ProtectedLayout><BookingsPage /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout><BusinessCreate /></ProtectedLayout></ProtectedRoute>} />              
               <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout><BusinessRenew /></ProtectedLayout></ProtectedRoute>} />   

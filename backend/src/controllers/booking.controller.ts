@@ -9,7 +9,7 @@ const bookingController = {
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const { customerId, licensePlate, pickupDate, services } = req.body;
+      const { customerId, licensePlate, pickupDate, services, workers } = req.body;
 
       const booking = await bookingService.createBooking(
         req.user!.business!.id, // assuming business ID is available in req.user due to route middleware
@@ -17,6 +17,7 @@ const bookingController = {
         licensePlate,
         new Date(pickupDate),
         services,
+        workers,
       );
 
       res.status(201).json({
@@ -81,7 +82,7 @@ const bookingController = {
   },
 
   getBookings: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
@@ -95,13 +96,14 @@ const bookingController = {
         endDate: req.query.endDate as string,
         customerId: req.query.customerId as string,
         search: req.query.search as string,
+        businessId: req.user!.business!.id
       };
   
       // Call the service with filters
       const response = await bookingService.getBookings(filters);
   
       // Return the response
-      res.json({ status: 'success', ...response });
+      res.json({ status: 'success', data: response });
     } catch (error) {
       const err = error as Error;
       err.message = `Error getting bookings: ${err.message}`;

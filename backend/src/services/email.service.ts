@@ -21,13 +21,13 @@ export class EmailService {
     });
   }
 
-  async sendWorkerWelcome(email: string, resetLink: string): Promise<void> {
+  async sendWorkerWelcome(email: string, verificationLink: string): Promise<void> {
     await this.transporter.sendMail({
       from: '"Your App Name" <noreply@yourdomain.com>',
       to: email,
       subject: "Welcome to SprintBMS - Set Your Password",
-      text: `Welcome! Please set your password by clicking this link: ${resetLink}`,
-      html: `<b>Welcome!</b> Please set your password by clicking this link: <a href="${resetLink}">Set Password</a>`,
+      text: `Welcome! Please set your password by clicking this link: ${verificationLink}`,
+      html: `<b>Welcome!</b> Please set your password by clicking this link: <a href="${verificationLink}">Set Password</a>`,
     });
   }
 

@@ -18,6 +18,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       if (!isAuthenticated) {
         navigate('/login', { replace: true });
       }
+      // Rule 2: Restrict /workers to owners only
+      else if (pathname === '/workers' && user?.role !== 'owner') {
+        navigate('/bookings', { replace: true });
+      }
       // Rule 2: Authenticated, no business? Go to create, unless already there.
       else if (!user?.hasBusiness && pathname !== '/business/create') {
         navigate('/business/create?mode=create', { replace: true });

@@ -127,7 +127,7 @@ const authController = {
         licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
       };
 
-      let redirect = '/bookings';
+      let redirect;
       if (!responseData.hasBusiness) {
         redirect = '/business/create';
       } else if (!responseData.isPremium) {
@@ -140,7 +140,29 @@ const authController = {
     }
   },
 
-  //sets password when using a verification token link
+  forgotPassword: async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    const { email } = req.body;
+    try {
+      await authService.forgotPassword(email);
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Password reset link sent to your email',
+      });
+    }
+    catch (error) {
+      next(error);
+    }
+  },
+
+  //used for:
+  // - password reset (can only be requested by the owner for himself or for workers)
+  // - account verification for workers
+  //if the worker has a valid token, it means that the owner has sent it
   setPasswordToken: async (
     req: Request, 
     res: Response, 
@@ -149,19 +171,7 @@ const authController = {
     const { password: newPassword, token } = req.body;
 
     try {
-      const verificationToken = await authService.validateVerificationToken(token);
-      
-      const user = await userRepository.findOne({ where: { id: verificationToken!.userId } });
-      if (!user) 
-        throw new AppError(400, 'User not found');
-  
-      user.password = await user.hashPassword(newPassword);
-      user.lastPasswordChange = new Date();
-      if (user.verificationToken) {
-        await verificationTokenRepository.remove(user.verificationToken); // Delete the token
-      }
-  
-      await userRepository.save(user);
+      await authService.setPassword(newPassword, token);
   
       // Redirect or respond with success, depending on your frontend needs
       res.json({ 
@@ -169,10 +179,12 @@ const authController = {
         message: 'Password set successfully. Please log in with your new password.', 
         redirect: '/login',
       });
+
     } catch (error) {
       next(error);
     }
   },
+
 
   validateVerificationToken: async (
     req: Request, 
@@ -217,12 +229,13 @@ const authController = {
         relations: ['verificationToken'], // Load the relation
       });
       
-      if (!user) 
-        throw new AppError(401, 'User not found');
+      if (!user) throw new AppError(401, 'User not found');
 
       if (user.verificationToken && verificationToken) {
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token
       }    
+
+      user.lastPasswordChange = new Date();
 
       // Redirect or respond with success, depending on your frontend needs
       res.status(200).json({ 

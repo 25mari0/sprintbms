@@ -36,6 +36,8 @@ const BookingsPage = () => {
         { disableToast: true }
       );
       if (response.status === 'success' && response.data) {
+        console.log('Bookings response:', response.data.data); // Log the response data for debugging
+        // Check if response.data is an array and has the correct structure
         setBookings(response.data.data || []);
         setMeta(response.data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 });
       } else {

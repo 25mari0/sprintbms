@@ -24,6 +24,7 @@ import {
   ReplayRounded as ResendResetIcon,
   VerifiedUserRounded as ResendVerificationIcon,
   SortRounded as SortIcon,
+  Add,
 } from '@mui/icons-material';
 
 const WorkerManagement = () => {
@@ -176,11 +177,11 @@ const WorkerManagement = () => {
       </Typography>
       <Button
         variant="contained"
-        color="primary"
+        startIcon={<Add />}
         onClick={() => setOpenCreateModal(true)}
         sx={{ mb: 3, borderRadius: '20px' }}
       >
-        Create Worker
+        Add Worker
       </Button>
       <Fade in={!loading && !error}>
         <Table sx={{ backgroundColor: '#1E1E1E', borderRadius: '8px' }}>

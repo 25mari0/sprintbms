@@ -77,7 +77,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
       )}
       <MenuItem
         icon={<FormatListBulletedRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
-        onClick={() => navigate('/orders')}
+        onClick={() => navigate('/services')}
       >
         Services
       </MenuItem>

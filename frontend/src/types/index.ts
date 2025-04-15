@@ -13,6 +13,14 @@ export interface UserData {
   isPremium: boolean;
   licenseExpirationDate: string | null;
 }
+
+export interface Service {
+  id: string;
+  name: string;
+  price: number;
+  estimated_time_minutes: number;
+}
+
 export interface WorkerUser {
   id: string;
   name: string;

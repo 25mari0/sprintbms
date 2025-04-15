@@ -1,4 +1,3 @@
-// src/pages/BookingsPage.tsx
 import { useState, useEffect } from 'react';
 import { get } from '../services/api'; // Import post for delete
 import { Booking, Meta, BookingsResponse } from '../types/bookingTypes';

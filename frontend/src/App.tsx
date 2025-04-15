@@ -20,6 +20,7 @@ import Home from './pages/Home';
 import './App.css';
 import BookingsPage from './pages/Bookings';
 import WorkerManagement from './pages/WorkerManagement';
+import WorkerSetPassword from './pages/WorkerSetPassword';
 
 const theme = createTheme({
   palette: {
@@ -100,6 +101,7 @@ const App = () => {
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
               <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
               <Route path="/verify-account" element={<VerifyAccount />} />
+              <Route path="/set-password" element={<WorkerSetPassword />} />
               <Route path="/success" element={<ProtectedRoute><Success /></ProtectedRoute>} />
               <Route path="/workers" element={<ProtectedRoute><ProtectedLayout><WorkerManagement /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/bookings" element={<ProtectedRoute><ProtectedLayout><BookingsPage /></ProtectedLayout></ProtectedRoute>} />

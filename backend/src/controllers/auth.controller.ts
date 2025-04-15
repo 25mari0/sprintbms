@@ -230,6 +230,7 @@ const authController = {
       });
       
       if (!user) throw new AppError(401, 'User not found');
+      if (user.role !== 'owner') throw new AppError(403, 'Only owners can verify accounts with this route');
 
       if (user.verificationToken && verificationToken) {
         await verificationTokenRepository.remove(user.verificationToken); // Delete the token

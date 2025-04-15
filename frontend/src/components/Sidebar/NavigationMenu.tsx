@@ -1,4 +1,3 @@
-// src/components/Sidebar/NavigationMenu.tsx
 import React from 'react';
 import { Menu, MenuItem } from 'react-pro-sidebar';
 import SpaceDashboardRoundedIcon from '@mui/icons-material/SpaceDashboardRounded';
@@ -9,6 +8,7 @@ import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import TroubleshootRoundedIcon from '@mui/icons-material/TroubleshootRounded';
 import { useTheme } from '@mui/material';
 import styles from './Sidebar.module.css';
+import { useAuthStore } from '../../stores/authStore'; // Import the auth store
 
 interface NavigationMenuProps {
   collapsed: boolean;
@@ -17,6 +17,7 @@ interface NavigationMenuProps {
 
 const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) => {
   const theme = useTheme();
+  const { user } = useAuthStore(); // Get user from auth store
 
   const menuItemStyles = {
     button: {
@@ -44,6 +45,9 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
     },
   };
 
+  // Determine if the user can see the Workers menu item
+  const canSeeWorkers = user?.role === 'owner';
+
   return (
     <Menu menuItemStyles={menuItemStyles}>
       {!collapsed && (
@@ -63,12 +67,14 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
       >
         Customers
       </MenuItem>
-      <MenuItem
-        icon={<BadgeRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
-        onClick={() => navigate('/workers')}
-      >
-        Workers
-      </MenuItem>
+      {canSeeWorkers && (
+        <MenuItem
+          icon={<BadgeRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
+          onClick={() => navigate('/workers')}
+        >
+          Workers
+        </MenuItem>
+      )}
       <MenuItem
         icon={<FormatListBulletedRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
         onClick={() => navigate('/orders')}

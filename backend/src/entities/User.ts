@@ -32,7 +32,7 @@ export class User {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   lastPasswordChange!: Date;
 
-  @OneToOne(() => VerificationToken, token => token.user, { cascade: true })
+  @OneToOne(() => VerificationToken, token => token.user, { nullable: true, cascade: true })
   verificationToken?: VerificationToken;
 
   @OneToMany(() => Token, (token) => token.user)

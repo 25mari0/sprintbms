@@ -21,6 +21,7 @@ const workerController = {
     
             res.status(200).json({ 
                 status: 'success', 
+                message: 'Worker created successfully',
                 data: worker 
             });
         } catch (error) {

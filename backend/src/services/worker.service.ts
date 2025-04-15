@@ -108,30 +108,41 @@ class WorkerService {
   }
 
   async setPassword(token: string, password: string): Promise<void> {
-    const verificationToken = await authService.validateVerificationToken(token);
-
-    const user = await this.userRepository.findOne({ 
-      where: { id: verificationToken!.userId },
-      relations: ['verificationToken'], // Load the relation
-    });   
-   if (!user) throw new AppError(400, 'User not found');
-    if (user.role === 'suspended') throw new AppError(400, 'User is suspended');
-
-    if (user.role !== 'worker') throw new AppError(400, 'User is not a worker');
-
-    if (user.verificationToken && verificationToken) {
-      await this.verificationTokenRepository.remove(user.verificationToken); // Delete the token
-    }    
-    
-    user.password = await user.hashPassword(password);
-    user.lastPasswordChange = new Date();
+    // Start a transaction to ensure atomicity
+    await this.userRepository.manager.transaction(async (transactionalEntityManager) => {
+      // Validate the token
+      const verificationToken = await authService.validateVerificationToken(token);
+  
+      // Fetch the user with the verificationToken relation
+      const user = await transactionalEntityManager.findOne(this.userRepository.target, {
+        where: { id: verificationToken!.userId },
+        relations: ['verificationToken'],
+      });
+  
+      if (!user) throw new AppError(400, 'User not found');
+      if (user.role === 'suspended') throw new AppError(400, 'User is suspended');
+      if (user.role !== 'worker') throw new AppError(400, 'User is not a worker');
+  
+      // Delete the verification token if it exists
+      if (user.verificationToken && verificationToken) {
+        await transactionalEntityManager.remove(this.verificationTokenRepository.target, user.verificationToken);
+        user.verificationToken = undefined; // Clear the relation in memory
+      }
+  
+      // Update the user's password and lastPasswordChange
+      user.password = await user.hashPassword(password);
+      user.lastPasswordChange = new Date();
+  
+      // Save the updated user
+      await transactionalEntityManager.save(this.userRepository.target, user);
+    });
   }
 
   //check if the owner belongs to the same business as the worker
   private async ownerManagesWorker(ownerId: string, workerId: string): Promise<boolean> {
     const owner = await this.userRepository.findOne({ where: { id: ownerId }, relations: ['business'] });
-    const worker = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' }, relations: ['business'] });
-    
+    const worker = await this.userRepository.findOne({ where: { id: workerId}, relations: ['business'] });
+
     return !!owner && !!worker && owner.business?.id === worker.business?.id;
   }
 
@@ -141,10 +152,14 @@ class WorkerService {
     }
 
     const user = await this.userRepository.findOne({ 
-      where: { id: workerId, role: 'worker' },
+      where: { id: workerId },
       relations: ['verificationToken']
     });
     if (!user) throw new AppError(400, 'Worker not found');
+
+    if (user.role === 'owner') {
+      throw new AppError(400, 'User is an owner and cannot receive a welcome email');
+    }
 
     if (await user.getWorkerStatus() == 'suspended') {
       throw new AppError(400, 'Worker is suspended');
@@ -196,8 +211,9 @@ class WorkerService {
       throw new AppError(400, 'Worker does not belong to your business');
     }
 
-    const user = await this.userRepository.findOne({ where: { id: workerId, role: 'worker' } });
+    const user = await this.userRepository.findOne({ where: { id: workerId} });
     if (!user) throw new AppError(400, 'Worker not found');
+    if (user.role == 'owner') throw new AppError(400, 'User is an owner and cannot be reactivated as a worker');
     if (user.role !== 'suspended') throw new AppError(400, 'Worker is not suspended');
 
     user.role = 'worker';

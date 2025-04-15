@@ -32,6 +32,7 @@ class AuthService {
     const user = await this.userRepository.findOne({
       where: { email },
       relations: ['verificationToken', 'business'],
+      select: ['id', 'email', 'password', 'role', 'verificationToken', 'business', 'lastPasswordChange', 'createdAt'],
       });
 
     if (!user) throw new AppError(400, 'User does not exist');

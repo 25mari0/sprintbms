@@ -37,6 +37,7 @@ class AuthService {
 
     if (!user) throw new AppError(400, 'User does not exist');
     if (user.role === 'suspended') throw new AppError(400, 'User account is suspended');
+    //check if the token 
     if (user.role === 'worker' && await user.getWorkerStatus() === 'unverified') throw new AppError(400, 'Worker account is not active, check your email for the verification link');
     if (user.role === 'worker' && await user.getWorkerStatus() === 'password-reset') throw new AppError(400, 'Worker account has a pending password reset, check your email for the reset link');
     if (user.role == 'owner' && await user.getOwnerStatus() === 'unverified') throw new AppError(400, 'Account is not verified. Please use the verification link sent to your email');

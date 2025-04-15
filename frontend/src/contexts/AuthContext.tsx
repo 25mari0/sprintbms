@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   useEffect(() => {
     // Skip checkAuth on /verify-account
-    if (location.pathname !== '/verify-account') {
+    if (location.pathname !== '/verify-account' && location.pathname !== '/set-password') {
       checkAuth();
     } else {
     }

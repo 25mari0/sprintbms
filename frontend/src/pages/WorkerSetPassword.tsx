@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { get, post } from '../services/api';
 import {
@@ -10,53 +10,63 @@ import {
   Alert,
 } from '@mui/material';
 import { LockRounded } from '@mui/icons-material';
-import { toast } from 'react-toastify'; // For manual toast in !token case
+import { toast } from 'react-toastify';
 
-const WorkerSetPassword = () => {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
-  const navigate = useNavigate();
-
+const useVerifyToken = (token: string) => {
   const [verifyingToken, setVerifyingToken] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [tokenValid, setTokenValid] = useState(false);
 
-  // Verify token on mount
-  useEffect(() => {
+  useMemo(() => {
     const verifyToken = async () => {
       if (!token) {
         toast.error('No token provided');
-        setTimeout(() => navigate('/login'), 1000); // Redirect after toast
-        return; // Keep verifyingToken true, spinner stays on
+        setVerifyingToken(false);
+        return;
       }
 
       try {
         const response = await get<{ token: string }>(
           `/worker/verify-reset-token?token=${token}`,
           undefined,
-          { disableToast: false } // Let api.ts handle toasts
+          { disableToast: false }
         );
-        console.log('Token verification response:', response);
         if (response.status === 'success') {
-          setVerifyingToken(false); // Stop spinner, show form
-        } else {
-          // Error case: api.ts will show the toast, keep spinner, then navigate
-          setTimeout(() => navigate('/login'), 1000); // Redirect after toast
+          setTokenValid(true);
         }
-      } catch (err: any) {
-        console.error('Token verification error:', err.response?.data || err.message);
-        // Error will be toasted by api.ts, keep spinner, then navigate
-        setTimeout(() => navigate('/login'), 1000);
+      } catch {
+        // Error toast is handled by api.ts (disableToast: false)
+      } finally {
+        setVerifyingToken(false);
       }
     };
 
     verifyToken();
-  }, [token, navigate]);
+  }, [token]);
 
-  // Handle form submission
+  return { verifyingToken, tokenValid };
+};
+
+const WorkerSetPassword = () => {
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
+  const navigate = useNavigate();
+
+  const { verifyingToken, tokenValid } = useVerifyToken(token);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [redirecting, setRedirecting] = useState(false); // New state for redirect loading
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Navigate to /login if token is invalid, with a 1-second delay for toast visibility
+  useEffect(() => {
+    if (!verifyingToken && !tokenValid) {
+      setRedirecting(true); // Show loading spinner during redirect
+      navigate('/login', { replace: true });
+    }
+  }, [verifyingToken, tokenValid, navigate]);
+
   const handleSubmit = async () => {
     setError(null);
     setSubmitting(true);
@@ -79,7 +89,6 @@ const WorkerSetPassword = () => {
         undefined,
         { disableToast: true }
       );
-      console.log('Set password response:', response);
       if (response.status === 'success') {
         setSuccess(true);
         setTimeout(() => navigate('/login'), 2000);
@@ -87,7 +96,6 @@ const WorkerSetPassword = () => {
         setError(response.message || 'Failed to set password');
       }
     } catch (err: any) {
-      console.error('Set password error:', err.response?.data || err.message);
       setError('An error occurred. Please try again.');
     } finally {
       setSubmitting(false);
@@ -96,7 +104,25 @@ const WorkerSetPassword = () => {
 
   const isFormInvalid = !password || !confirmPassword || password.length < 8 || password !== confirmPassword;
 
+  // Show loading spinner while verifying token
   if (verifyingToken) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          bgcolor: '#121212',
+        }}
+      >
+        <CircularProgress sx={{ color: '#4A90E2' }} />
+      </Box>
+    );
+  }
+
+  // Show loading spinner while redirecting to /login
+  if (!tokenValid || redirecting) {
     return (
       <Box
         sx={{
@@ -133,7 +159,6 @@ const WorkerSetPassword = () => {
     );
   }
 
-  // If we reach here, tokenValid is true and verifyingToken is false
   return (
     <Box
       sx={{

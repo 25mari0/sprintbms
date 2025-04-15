@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, [setUser, setIsAuthenticated, setIsLoading]);
 
+  // Prevents double mounts which cause 2 toasts
   useEffect(() => {
     // Skip checkAuth on /verify-account
     if (location.pathname !== '/verify-account' && location.pathname !== '/set-password') {

@@ -179,7 +179,7 @@ class WorkerService {
     }
 
     // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-account?token=${token}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
     await emailService.sendWorkerWelcome(user.email, verificationLink);
   }
 

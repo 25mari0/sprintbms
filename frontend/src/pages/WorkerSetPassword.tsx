@@ -1,16 +1,17 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { get, post } from '../services/api';
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  CircularProgress,
-  Alert,
-} from '@mui/material';
-import { LockRounded } from '@mui/icons-material';
+import { Box, CircularProgress, Alert, Button } from '@mui/material';
 import { toast } from 'react-toastify';
+import { FormContainer }  from '../components/FormContainer';
+import { FormField } from '../components/FormField';
+import { passwordValidation } from '../utils/formValidations';
+
+interface FormData {
+  password: string;
+  confirmPassword: string;
+}
 
 const useVerifyToken = (token: string) => {
   const [verifyingToken, setVerifyingToken] = useState(true);
@@ -53,39 +54,43 @@ const WorkerSetPassword = () => {
 
   const { verifyingToken, tokenValid } = useVerifyToken(token);
   const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [redirecting, setRedirecting] = useState(false); // New state for redirect loading
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Navigate to /login if token is invalid, with a 1-second delay for toast visibility
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormData>({
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+  // Navigate to /login if token is invalid
   useEffect(() => {
     if (!verifyingToken && !tokenValid) {
-      setRedirecting(true); // Show loading spinner during redirect
       navigate('/login', { replace: true });
     }
   }, [verifyingToken, tokenValid, navigate]);
 
-  const handleSubmit = async () => {
-    setError(null);
-    setSubmitting(true);
+  // Watch password to compare with confirmPassword
+  const password = watch('password');
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      setSubmitting(false);
-      return;
-    }
-    if (password !== confirmPassword) {
+  const onSubmit = async (data: FormData) => {
+    setError(null);
+
+    // Additional validation for confirmPassword
+    if (data.password !== data.confirmPassword) {
       setError('Passwords do not match');
-      setSubmitting(false);
       return;
     }
 
     try {
       const response = await post<void>(
         '/worker/set-password',
-        { password, token },
+        { password: data.password, token },
         undefined,
         { disableToast: true }
       );
@@ -95,34 +100,13 @@ const WorkerSetPassword = () => {
       } else {
         setError(response.message || 'Failed to set password');
       }
-    } catch (err: any) {
+    } catch {
       setError('An error occurred. Please try again.');
-    } finally {
-      setSubmitting(false);
     }
   };
 
-  const isFormInvalid = !password || !confirmPassword || password.length < 8 || password !== confirmPassword;
-
-  // Show loading spinner while verifying token
-  if (verifyingToken) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          minHeight: '100vh',
-          bgcolor: '#121212',
-        }}
-      >
-        <CircularProgress sx={{ color: '#4A90E2' }} />
-      </Box>
-    );
-  }
-
-  // Show loading spinner while redirecting to /login
-  if (!tokenValid || redirecting) {
+  // Show loading spinner while verifying token or redirecting
+  if (verifyingToken || !tokenValid) {
     return (
       <Box
         sx={{
@@ -160,90 +144,47 @@ const WorkerSetPassword = () => {
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        bgcolor: '#121212',
-        p: 3,
-      }}
-    >
-      <Box
-        sx={{
-          maxWidth: 400,
-          width: '100%',
-          bgcolor: '#1E1E1E',
-          p: 4,
-          borderRadius: '8px',
-          border: '1px solid #3A3A3A',
-          boxShadow: 3,
-        }}
-      >
-        <Typography
-          variant="h5"
-          sx={{ color: '#E3F2FD', mb: 3, textAlign: 'center' }}
-        >
-          Set Your Password
-        </Typography>
+    <FormContainer title="Set Your Password">
+      <form onSubmit={handleSubmit(onSubmit)}>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
           </Alert>
         )}
-        <TextField
+        <FormField
+          register={register('password', passwordValidation)}
+          error={errors.password}
           label="Password"
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          margin="normal"
-          InputLabelProps={{ style: { color: '#A8C7E2' } }}
-          sx={{
-            input: { color: '#E3F2FD' },
-            '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#3A3A3A' } },
-          }}
-          error={!!password && password.length < 8}
-          helperText={password && password.length < 8 ? 'Minimum 8 characters' : ''}
-          InputProps={{
-            startAdornment: <LockRounded sx={{ color: '#A8C7E2', mr: 1 }} />,
-          }}
-          aria-label="New password"
+          disabled={isSubmitting}
         />
-        <TextField
+        <FormField
+          register={register('confirmPassword', {
+            required: 'Confirm Password is required',
+            validate: (value) =>
+              value === password || 'Passwords do not match',
+          })}
+          error={errors.confirmPassword}
           label="Confirm Password"
           type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          fullWidth
-          margin="normal"
-          InputLabelProps={{ style: { color: '#A8C7E2' } }}
-          sx={{
-            input: { color: '#E3F2FD' },
-            '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#3A3A3A' } },
-          }}
-          error={!!confirmPassword && password !== confirmPassword}
-          helperText={confirmPassword && password !== confirmPassword ? 'Passwords do not match' : ''}
-          InputProps={{
-            startAdornment: <LockRounded sx={{ color: '#A8C7E2', mr: 1 }} />,
-          }}
-          aria-label="Confirm new password"
+          disabled={isSubmitting}
         />
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+        <Box sx={{ mt: 2 }}>
           <Button
+            type="submit"
             variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={submitting || isFormInvalid}
-            sx={{ borderRadius: '8px', minWidth: 120 }}
-            aria-label="Set password"
+            fullWidth
+            disabled={isSubmitting}
           >
-            {submitting ? <CircularProgress size={24} sx={{ color: '#A8C7E2' }} /> : 'Set Password'}
+            {isSubmitting ? (
+              <CircularProgress size={24} sx={{ color: '#A8C7E2' }} />
+            ) : (
+              'Set Password'
+            )}
           </Button>
         </Box>
-      </Box>
-    </Box>
+      </form>
+    </FormContainer>
   );
 };
 

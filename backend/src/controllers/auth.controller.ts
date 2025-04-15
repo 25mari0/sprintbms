@@ -202,7 +202,6 @@ const authController = {
       // For an API, send JSON to indicate the token is valid and the user can proceed
       res.status(200).json({ 
         status: 'success', 
-        message: 'Token is valid.',
         data: { token },
       });
   

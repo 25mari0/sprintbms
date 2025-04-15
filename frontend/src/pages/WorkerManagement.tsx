@@ -47,10 +47,10 @@ const WorkerManagement = () => {
 
   // Status background colors (light, translucent for dark theme)
   const statusBackgroundColors: Record<string, string> = {
-    active: '#4CAF5022', // Soft green
-    suspended: '#F4433622', // Pale red
-    'password-reset': '#FF980022', // Light orange
-    unverified: '#2196F322', // Soft blue
+    active: '#388E3C', // Soft green
+    suspended: '#e2504a', // Pale red
+    'password-reset': '#e29c4a', // Light orange
+    unverified: '#4A90E2', // Soft blue
   };
 
   // Sorted workers
@@ -231,7 +231,7 @@ const WorkerManagement = () => {
                       sx={{
                         color: '#E3F2FD',
                         bgcolor: statusBackgroundColors[worker.status] || '#3A3A3A',
-
+                        fontWeight: '500'
                       }}
                       variant="filled"
                     />

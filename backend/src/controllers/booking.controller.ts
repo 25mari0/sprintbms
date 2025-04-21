@@ -104,15 +104,11 @@ const bookingController = {
         businessId: req.user!.business!.id
       };
   
-      // Call the service with filters
-      const response = await bookingService.getBookings(filters);
+      const bookings = await bookingService.getBookings(filters);
   
-      // Return the response
-      res.json({ status: 'success', data: response });
+      res.json({ status: 'success', data: bookings });
     } catch (error) {
-      const err = error as Error;
-      err.message = `Error getting bookings: ${err.message}`;
-      next(err);
+      next(error);
     }
   },
 

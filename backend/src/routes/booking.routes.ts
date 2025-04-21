@@ -37,5 +37,12 @@ router.get(
   premiumMiddleware.isPremium,
   bookingController.getBookings,
 );
+router.patch(
+  '/:id',
+  tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness,
+  premiumMiddleware.isPremium,
+  bookingController.updateBooking,
+);
 
 export default router;

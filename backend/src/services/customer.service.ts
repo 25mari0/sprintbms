@@ -34,7 +34,7 @@ class CustomerService {
     return customer;
   }
 
-  async getCustomerById(customerId: string, businessId: string): Promise<Customer | null> {
+  async getCustomer(customerId: string, businessId: string): Promise<Customer | null> {
     const customer = await this.customerRepository.findOne({
       where: { id: customerId, business: { id: businessId } },
       relations: ['business'],

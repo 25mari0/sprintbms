@@ -7,11 +7,39 @@ import { premiumMiddleware } from '../middlewares/premium.middleware';
 const router = Router();
 
 router.post(
-    '/createCustomer',
+    '/',
     tokenMiddleware.authenticate,
     businessMiddleware.hasBusiness,
     premiumMiddleware.isPremium,
     customerController.createCustomer,
+);
+router.get(
+    '/:id',
+    tokenMiddleware.authenticate,
+    businessMiddleware.hasBusiness,
+    premiumMiddleware.isPremium,
+    customerController.getCustomer,
+);
+router.delete(
+    '/:id',
+    tokenMiddleware.authenticate,
+    businessMiddleware.hasBusiness,
+    premiumMiddleware.isPremium,
+    customerController.deleteCustomer,
+);
+router.get(
+    '/',
+    tokenMiddleware.authenticate,
+    businessMiddleware.hasBusiness,
+    premiumMiddleware.isPremium,
+    customerController.getCustomers,
+);
+router.patch(
+    '/:id',
+    tokenMiddleware.authenticate,
+    businessMiddleware.hasBusiness,
+    premiumMiddleware.isPremium,
+    customerController.updateCustomer,
 );
 
 export default router;

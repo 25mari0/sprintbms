@@ -4,7 +4,7 @@ import { Button, Box } from '@mui/material';
 import { FormContainer } from '../components/FormContainer';
 import { FormField } from '../components/FormField'; 
 import { post } from '../services/api';
-import { nameValidation, emailValidation, passwordValidation } from '../utils/formValidations';
+import { nameValidation, emailValidation, passwordValidation } from '../utils/userValidations';
 
 interface RegisterFormData {
   name: string;

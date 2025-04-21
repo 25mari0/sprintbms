@@ -6,6 +6,14 @@ type AnyFormData = Record<string, any>;
 // Reusable validation rules (typed generically)
 export const nameValidation = {
   required: 'Name is required',
+  minLength: {
+    value: 3,
+    message: 'Name must be at least 2 characters long',
+  },
+  maxLength: {
+    value: 50,
+    message: 'Name cannot exceed 50 characters',
+  }
 } as const satisfies RegisterOptions<AnyFormData, 'name'>;
 
 export const emailValidation = {

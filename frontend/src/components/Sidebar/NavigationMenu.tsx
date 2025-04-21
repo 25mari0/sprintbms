@@ -63,7 +63,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
       </MenuItem>
       <MenuItem
         icon={<GroupsRoundedIcon style={{ fontSize: '20px', color: 'var(--icon-color)' }} />}
-        onClick={() => navigate('/users')}
+        onClick={() => navigate('/customers')}
       >
         Customers
       </MenuItem>

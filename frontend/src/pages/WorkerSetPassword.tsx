@@ -6,7 +6,7 @@ import { Box, CircularProgress, Alert, Button } from '@mui/material';
 import { toast } from 'react-toastify';
 import { FormContainer }  from '../components/FormContainer';
 import { FormField } from '../components/FormField';
-import { passwordValidation } from '../utils/formValidations';
+import { passwordValidation } from '../utils/userValidations';
 
 interface FormData {
   password: string;
@@ -24,7 +24,6 @@ const useVerifyToken = (token: string) => {
         setVerifyingToken(false);
         return;
       }
-
       try {
         const response = await get<{ token: string }>(
           `/worker/verify-reset-token?token=${token}`,
@@ -34,8 +33,6 @@ const useVerifyToken = (token: string) => {
         if (response.status === 'success') {
           setTokenValid(true);
         }
-      } catch {
-        // Error toast is handled by api.ts (disableToast: false)
       } finally {
         setVerifyingToken(false);
       }

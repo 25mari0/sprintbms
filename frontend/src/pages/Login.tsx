@@ -4,7 +4,7 @@ import { FormContainer } from '../components/FormContainer';
 import { FormField } from '../components/FormField';
 import { post } from '../services/api';
 import { useAuthStore, UserData } from '../stores/authStore';
-import { emailValidation, passwordValidation } from '../utils/formValidations';
+import { emailValidation, passwordValidation } from '../utils/userValidations';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useState, useEffect } from 'react';

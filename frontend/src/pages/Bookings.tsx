@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { get } from '../services/api'; // Import post for delete
+import { get } from '../services/api'; 
 import { Booking, Meta, BookingsResponse } from '../types/bookingTypes';
 import BookingTable from '../components/Bookings/BookingTable';
 import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, CircularProgress } from '@mui/material';
@@ -35,8 +35,6 @@ const BookingsPage = () => {
         { disableToast: true }
       );
       if (response.status === 'success' && response.data) {
-        console.log('Bookings response:', response.data.data); // Log the response data for debugging
-        // Check if response.data is an array and has the correct structure
         setBookings(response.data.data || []);
         setMeta(response.data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 });
       } else {
@@ -77,8 +75,6 @@ const BookingsPage = () => {
     setPickupDateEnd('');
     setPage(1);
   };
-
-
 
   return (
     <div>

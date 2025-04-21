@@ -17,11 +17,7 @@ const BookingTable = ({ bookings, meta, onPageChange, onRowsPerPageChange }: Boo
     if (window.confirm('Are you sure you want to delete this booking?')) {
 
       try {
-        console.log('Deleting booking with ID:', id);
-
         await post<unknown>(`/bookings/${id}`, null, { method: 'DELETE' });
-        console.log('Booking deleted successfully, calling onPageChange with page:', meta.page);
-
         toast.success('Booking deleted successfully');
         onPageChange(meta.page); // Trigger a re-fetch
       } catch (error) {

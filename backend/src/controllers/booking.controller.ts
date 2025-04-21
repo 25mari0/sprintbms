@@ -12,7 +12,7 @@ const bookingController = {
       const { customerId, licensePlate, pickupDate, services, workers } = req.body;
 
       const booking = await bookingService.createBooking(
-        req.user!.business!.id, // assuming business ID is available in req.user due to route middleware
+        req.user!.business!.id, 
         customerId,
         licensePlate,
         new Date(pickupDate),
@@ -32,13 +32,15 @@ const bookingController = {
   // gets full booking information by ID
   // the id is passed as a URL parameter when clicking on a booking from the presented list
   getBooking: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
       const { id } = req.params;
-      const booking = await bookingService.getBookingById(id);
+      const businessId = req.user!.business!.id;
+
+      const booking = await bookingService.getBookingById(id, businessId);
 
       res.json({ status: 'success', data: booking });
     } catch (error) {
@@ -47,13 +49,15 @@ const bookingController = {
   },
 
   deleteBooking: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
       const { id } = req.params;
-      await bookingService.deleteBooking(id);
+      const businessId = req.user!.business!.id;
+
+      await bookingService.deleteBooking(id, businessId);
       res.status(204).send();
 
     } catch (error) {
@@ -65,15 +69,16 @@ const bookingController = {
 
   //update booking information (status, workers, charged_price, pickup_at)
   updateBooking: async (
-    req: Request,
+    req: Request & { user?: JwtPayload },
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
       const { id } = req.params;
       const updateData = req.body;
+      const businessId = req.user!.business!.id;
 
-      const booking = await bookingService.updateBooking(id, updateData);
+      const booking = await bookingService.updateBooking(id, updateData, businessId);
 
       res.json({ status: 'success', data: booking });
     } catch (error) {

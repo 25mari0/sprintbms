@@ -10,12 +10,3 @@ export interface BookingFilters {
   businessId?: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];              // Array of bookings
-  meta: {
-    total: number;        // Total number of bookings
-    page: number;         // Current page
-    limit: number;        // Items per page
-    totalPages: number;   // Total pages available
-  };
-}

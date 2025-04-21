@@ -6,7 +6,8 @@ import { Service } from '../entities/Service';
 import { Customer } from '../entities/Customer';
 import { BookingWorker } from '../entities/BookingWorker';
 import { AppError } from '../utils/error';
-import { BookingFilters, PaginatedResponse } from '../types/bookingTypes';
+import { BookingFilters } from '../types/bookingTypes';
+import { PaginatedResponse } from '../types/sharedTypes';
 import { User } from '../entities/User';
 
 class BookingManagementService {
@@ -79,19 +80,20 @@ class BookingManagementService {
     });
   }
 
-  async getBookingById(bookingId: string): Promise<Booking> {
+  async getBookingById(bookingId: string, businessId: string): Promise<Booking> {
     if (!bookingId) {
       throw new AppError(400, 'Booking ID is required');
     }
 
     const booking = await this.bookingRepository.findOne({
-      where: { id: bookingId },
+      where: { id: bookingId, business: { id: businessId } },
       relations: [
         'customer',
         'bookingServices',
         'bookingServices.service',
         'bookingWorkers',
         'bookingWorkers.worker',
+        'business',
       ],
     });
 
@@ -102,8 +104,8 @@ class BookingManagementService {
     return booking;
   }
 
-  async deleteBooking(bookingId: string): Promise<void> {
-    const booking = await this.bookingRepository.findOneBy({ id: bookingId });
+  async deleteBooking(bookingId: string, businessId: string): Promise<void> {
+    const booking = await this.bookingRepository.findOne({ where: { id: bookingId, business: { id: businessId } }, relations: ['business'] });
     if (!booking) throw new AppError(400, 'Booking not found');
     await this.bookingServiceRepository.delete({ booking: { id: bookingId } });
     await this.bookingWorkerRepository.delete({ booking: { id: bookingId } });
@@ -113,8 +115,9 @@ class BookingManagementService {
   async updateBooking(
     bookingId: string,
     updateData: Partial<Booking>,
+    businessId: string,
   ): Promise<Booking> {
-    const booking = await this.bookingRepository.findOneBy({ id: bookingId });
+    const booking = await this.bookingRepository.findOne({ where: { id: bookingId, business: { id: businessId } }, relations: ['business'] });
     if (!booking) throw new AppError(400, 'Booking not found');
     Object.assign(booking, updateData);
     return await this.bookingRepository.save(booking);
@@ -133,11 +136,6 @@ class BookingManagementService {
       search,
       businessId,
     } = filters;
-
-    console.log('Filters:', filters); // Debugging line
-    for (const key in filters) {
-      console.log(`${key}: ${typeof(key)}`); // Debugging line
-    }
 
     const skip = (page - 1) * limit;
 
@@ -172,7 +170,7 @@ class BookingManagementService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(booking.vehicle_license_plate LIKE :search OR customer.name LIKE :search)',
+        '(booking.vehicle_license_plate ILIKE :search OR customer.name ILIKE :search)',
         { search: `%${search}%` }
       );
     }

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { get } from '../services/api'; 
-import { Booking, Meta, BookingsResponse } from '../types/bookingTypes';
+import { get } from '../services/api';
+import { Booking, BookingsResponse } from '../types/bookingTypes';
+import { Meta } from '../types/index';
 import BookingTable from '../components/Bookings/BookingTable';
-import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, CircularProgress } from '@mui/material';
+import { TextField, Button, MenuItem, Select, InputLabel, FormControl, Box, CircularProgress, Typography } from '@mui/material';
+import { Search } from '@mui/icons-material';
 
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -10,23 +12,28 @@ const BookingsPage = () => {
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
-
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [customerNameFilter, setCustomerNameFilter] = useState<string>('');
+  const [search, setSearch] = useState<string>(''); 
   const [pickupDateStart, setPickupDateStart] = useState<string>('');
   const [pickupDateEnd, setPickupDateEnd] = useState<string>('');
 
-  const loadBookings = async (targetPage: number) => {
+  const loadBookings = async (
+    targetPage: number,
+    searchQuery: string = '',
+    status: string = '',
+    startDate: string = '',
+    endDate: string = ''
+  ) => {
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
         page: targetPage.toString(),
         limit: rowsPerPage.toString(),
-        ...(statusFilter && { status: statusFilter }),
-        ...(customerNameFilter && { customerName: customerNameFilter }),
-        ...(pickupDateStart && { startDate: pickupDateStart }),
-        ...(pickupDateEnd && { endDate: pickupDateEnd }),
+        ...(status && { status }),
+        ...(searchQuery && { bookingText: searchQuery }), 
+        ...(startDate && { startDate }),
+        ...(endDate && { endDate }),
       });
 
       const response = await get<BookingsResponse>(
@@ -51,13 +58,12 @@ const BookingsPage = () => {
   };
 
   useEffect(() => {
-    loadBookings(page);
-  }, [page, rowsPerPage, statusFilter, customerNameFilter, pickupDateStart, pickupDateEnd]);
+    loadBookings(page, search, statusFilter, pickupDateStart, pickupDateEnd);
+  }, [page, rowsPerPage]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage === page) {
-      // If the page hasn't changed, directly call loadBookings
-      loadBookings(newPage);
+      loadBookings(newPage, search, statusFilter, pickupDateStart, pickupDateEnd);
     } else {
       setPage(newPage);
     }
@@ -68,24 +74,33 @@ const BookingsPage = () => {
     setPage(1);
   };
 
+  const handleSearch = () => {
+    setPage(1); 
+    loadBookings(1, search, statusFilter, pickupDateStart, pickupDateEnd);
+  };
+
   const handleClearFilters = () => {
     setStatusFilter('');
-    setCustomerNameFilter('');
+    setSearch(''); 
     setPickupDateStart('');
     setPickupDateEnd('');
     setPage(1);
+    loadBookings(1); 
   };
 
   return (
-    <div>
-      <h1>Bookings</h1>
+    <Box sx={{ p: 4, minHeight: '100vh', bgcolor: '#121212', color: '#E3F2FD' }}>
+      <Typography variant="h4" gutterBottom>
+        Bookings
+      </Typography>
       <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
         <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>Status</InputLabel>
+          <InputLabel sx={{ color: '#A8C7E2' }}>Status</InputLabel>
           <Select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as string)}
             label="Status"
+            sx={{ color: '#E3F2FD', '& .MuiOutlinedInput-notchedOutline': { borderColor: '#3A3A3A' } }}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Pending">Pending</MenuItem>
@@ -94,16 +109,27 @@ const BookingsPage = () => {
           </Select>
         </FormControl>
         <TextField
-          label="Customer Name"
-          value={customerNameFilter}
-          onChange={(e) => setCustomerNameFilter(e.target.value)}
+          label="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          sx={{ input: { color: '#E3F2FD' }, '& .MuiInputLabel-root': { color: '#A8C7E2' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#3A3A3A' } } }}
         />
+        <Button
+          variant="contained"
+          startIcon={<Search />}
+          onClick={handleSearch}
+          sx={{ borderRadius: '20px' }}
+        >
+          Search
+        </Button>
         <TextField
           label="Pickup Date Start"
           type="date"
           value={pickupDateStart}
           onChange={(e) => setPickupDateStart(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          sx={{ input: { color: '#E3F2FD' }, '& .MuiInputLabel-root': { color: '#A8C7E2' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#3A3A3A' } } }}
         />
         <TextField
           label="Pickup Date End"
@@ -111,8 +137,9 @@ const BookingsPage = () => {
           value={pickupDateEnd}
           onChange={(e) => setPickupDateEnd(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          sx={{ input: { color: '#E3F2FD' }, '& .MuiInputLabel-root': { color: '#A8C7E2' }, '& .MuiOutlinedInput-root': { '& fieldset': { borderColor: '#3A3A3A' } } }}
         />
-        <Button variant="outlined" onClick={handleClearFilters}>
+        <Button variant="outlined" onClick={handleClearFilters} sx={{ color: '#A8C7E2', borderColor: '#3A3A3A' }}>
           Clear Filters
         </Button>
       </Box>
@@ -131,7 +158,7 @@ const BookingsPage = () => {
               zIndex: 1,
             }}
           >
-            <CircularProgress />
+            <CircularProgress sx={{ color: '#A8C7E2' }} />
           </Box>
         )}
         <BookingTable
@@ -141,7 +168,7 @@ const BookingsPage = () => {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </Box>
-    </div>
+    </Box>
   );
 };
 

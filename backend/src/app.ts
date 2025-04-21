@@ -50,7 +50,7 @@ const limiter = rateLimit({
 
 app.use(cors({
   origin: process.env.FRONTEND_URL, // allow only our frontend origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // specify allowed methods
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // specify allowed methods
   credentials: true, // allow cookies/credentials if needed (e.g., JWT in cookies)
   exposedHeaders: ['Authorization'], // Expose only what’s necessary
 }));

@@ -21,6 +21,7 @@ import './App.css';
 import BookingsPage from './pages/Bookings';
 import WorkerManagement from './pages/WorkerManagement';
 import WorkerSetPassword from './pages/WorkerSetPassword';
+import CustomerManagement from './pages/CustomerManagement';
 import Services from './pages/Services';
 
 const theme = createTheme({
@@ -107,6 +108,7 @@ const App = () => {
               <Route path="/services" element={<ProtectedRoute><ProtectedLayout><Services /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/workers" element={<ProtectedRoute><ProtectedLayout><WorkerManagement /></ProtectedLayout></ProtectedRoute>} />
               <Route path="/bookings" element={<ProtectedRoute><ProtectedLayout><BookingsPage /></ProtectedLayout></ProtectedRoute>} />
+              <Route path="/customers" element={<ProtectedRoute><ProtectedLayout><CustomerManagement/></ProtectedLayout></ProtectedRoute>} />
               <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout><BusinessCreate /></ProtectedLayout></ProtectedRoute>} />              
               <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout><BusinessRenew /></ProtectedLayout></ProtectedRoute>} />   
             </Routes>

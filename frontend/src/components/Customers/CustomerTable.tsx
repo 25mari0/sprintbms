@@ -22,33 +22,63 @@ const CustomerTable = ({
 }: CustomerTableProps) => {
   return (
     <div>
-      <Table sx={{ backgroundColor: '#1E1E1E', borderRadius: '8px' }}>
+      <Table
+        sx={{
+          backgroundColor: '#1E1E1E',
+          borderRadius: '12px',
+          '& th, & td': { borderColor: '#2A2A2A' },
+        }}
+      >
         <TableHead>
           <TableRow>
-            <TableCell sx={{ color: '#A8C7E2' }}>Name</TableCell>
-            <TableCell sx={{ color: '#A8C7E2' }}>Phone</TableCell>
-            <TableCell sx={{ color: '#A8C7E2' }}>Actions</TableCell>
+            <TableCell sx={{ color: '#78909C', fontSize: '0.875rem', fontWeight: 600, py: 1.5 }}>Name</TableCell>
+            <TableCell sx={{ color: '#78909C', fontSize: '0.875rem', fontWeight: 600, py: 1.5 }}>Phone</TableCell>
+            <TableCell sx={{ color: '#78909C', fontSize: '0.875rem', fontWeight: 600, py: 1.5 }}>Actions</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {customers.length > 0 ? (
-            customers.map((customer) => (
-              <TableRow key={customer.id} sx={{ '&:hover': { backgroundColor: '#2A2A2A' } }}>
-                <TableCell sx={{ color: '#E3F2FD' }}>{customer.name}</TableCell>
-                <TableCell sx={{ color: '#E3F2FD' }}>{customer.phone}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => onEdit(customer)} sx={{ color: '#4A90E2' }} aria-label="Edit customer">
-                    <Edit />
+            customers.map((customer, index) => (
+              <TableRow
+                key={customer.id}
+                sx={{
+                  backgroundColor: index % 2 === 0 ? '#1E1E1E' : '#202020',
+                  '&:hover': { backgroundColor: 'rgba(74, 144, 226, 0.1)' },
+                  transition: 'background-color 0.2s',
+                  py: 1,
+                }}
+              >
+                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>{customer.name}</TableCell>
+                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>{customer.phone}</TableCell>
+                <TableCell sx={{ py: 1 }}>
+                  <IconButton
+                    onClick={() => onEdit(customer)}
+                    sx={{
+                      color: '#4A90E2',
+                      fontSize: '0.875rem',
+                      '&:hover': { color: '#2196F3' },
+                    }}
+                    aria-label="Edit customer"
+                  >
+                    <Edit fontSize="small" />
                   </IconButton>
-                  <IconButton onClick={() => onDelete(customer.id)} sx={{ color: '#D32F2F' }} aria-label="Delete customer">
-                    <DeleteOutlineRounded />
+                  <IconButton
+                    onClick={() => onDelete(customer.id)}
+                    sx={{
+                      color: '#D81B60',
+                      fontSize: '0.875rem',
+                      '&:hover': { color: '#C2185B' },
+                    }}
+                    aria-label="Delete customer"
+                  >
+                    <DeleteOutlineRounded fontSize="small" />
                   </IconButton>
                 </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={3} sx={{ color: '#A8C7E2', textAlign: 'center' }}>
+              <TableCell colSpan={3} sx={{ color: '#78909C', fontSize: '0.875rem', textAlign: 'center', py: 2 }}>
                 No customers available
               </TableCell>
             </TableRow>
@@ -63,7 +93,11 @@ const CustomerTable = ({
         rowsPerPage={meta.limit}
         onRowsPerPageChange={(event) => onRowsPerPageChange(parseInt(event.target.value, 10))}
         rowsPerPageOptions={[10, 20, 50]}
-        sx={{ color: '#A8C7E2' }}
+        sx={{
+          color: '#78909C',
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': { fontSize: '0.875rem' },
+          '& .MuiTablePagination-actions button': { color: '#78909C', '&:hover': { color: '#4A90E2' } },
+        }}
       />
     </div>
   );

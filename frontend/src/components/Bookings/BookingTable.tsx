@@ -1,5 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableRow, TablePagination, IconButton } from '@mui/material';
-import { Booking, Meta } from '../../types/bookingTypes';
+import { Booking } from '../../types/bookingTypes';
+import { Meta } from '../../types/index';
 import { post } from '../../services/api';
 import { toast } from 'react-toastify';
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';

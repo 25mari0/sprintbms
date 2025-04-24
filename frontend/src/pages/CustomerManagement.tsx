@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Box, Typography, Fade, Button, CircularProgress, TextField } from '@mui/material';
+import { Box, Typography, Fade, CircularProgress } from '@mui/material';
 import { Add, Search } from '@mui/icons-material';
 import { get, post } from '../services/api';
 import { Customer, CustomersResponse } from '../types/customerTypes';
 import { Meta } from '../types/index';
 import CustomerTable from '../components/Customers/CustomerTable';
-import { CustomerFormModal } from '../components/Customers/CustomerFormModal';
-import { CustomerFormData } from '../utils/customerValidations';
+import { FormModal } from '../components/FormModal';
+import { PromptModal } from '../components/PromptModal';
+import { CustomButton } from '../components/CustomButton'; 
+import { SearchBox } from '../components/SearchBox'; 
+import { CustomerFormData, customerPhoneValidation } from '../utils/customerValidations';
+import { nameValidation as customerNameValidation } from '../utils/userValidations';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -20,6 +24,8 @@ const CustomerManagement = () => {
   const [search, setSearch] = useState<string>('');
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [deleteCustomer, setDeleteCustomer] = useState<{ id: string; name: string } | null>(null);
   const [editCustomerId, setEditCustomerId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,6 +37,12 @@ const CustomerManagement = () => {
   const editForm = useForm<CustomerFormData>({
     defaultValues: { name: '', phone: '' },
   });
+
+  // Define customer form fields for reuse in create and edit modals
+  const customerFields = [
+    { label: 'Name', name: 'name' as keyof CustomerFormData, validation: customerNameValidation },
+    { label: 'Phone', name: 'phone' as keyof CustomerFormData, validation: customerPhoneValidation },
+  ];
 
   const loadCustomers = async (targetPage: number, searchQuery: string = '') => {
     setLoading(true);
@@ -67,11 +79,11 @@ const CustomerManagement = () => {
 
   useEffect(() => {
     loadCustomers(page);
-  }, [page, rowsPerPage, search]);
+  }, [page, rowsPerPage]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage === page) {
-      loadCustomers(newPage);
+      loadCustomers(newPage, search);
     } else {
       setPage(newPage);
     }
@@ -83,7 +95,7 @@ const CustomerManagement = () => {
   };
 
   const handleSearch = () => {
-    setPage(1); 
+    setPage(1);
     loadCustomers(1, search);
   };
 
@@ -93,7 +105,7 @@ const CustomerManagement = () => {
     try {
       const response = await post<Customer>('/customer/', data);
       if (response.status === 'success' && response.data) {
-        await loadCustomers(page);
+        await loadCustomers(page, search);
         createForm.reset();
         setOpenCreateModal(false);
         toast.success('Customer created successfully');
@@ -121,7 +133,7 @@ const CustomerManagement = () => {
     try {
       const response = await post<Customer>(`/customer/${editCustomerId}`, data, { method: 'PATCH' });
       if (response.status === 'success' && response.data) {
-        await loadCustomers(page);
+        await loadCustomers(page, search);
         editForm.reset();
         setOpenEditModal(false);
         setEditCustomerId(null);
@@ -137,60 +149,76 @@ const CustomerManagement = () => {
     }
   };
 
-  const handleDeleteCustomer = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this customer?')) {
-      try {
-        await post<unknown>(`/customer/${id}`, null, { method: 'DELETE' });
-        await loadCustomers(page);
-        toast.success('Customer deleted successfully');
-      } catch (err: any) {
-        console.error('Error deleting customer:', err);
-        toast.error(err.response?.data?.message || err.message || 'Failed to delete customer');
-      }
+  const handleDeleteCustomer = (id: string, name: string) => {
+    setDeleteCustomer({ id, name });
+    setOpenDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteCustomer) return;
+    try {
+      await post<unknown>(`/customer/${deleteCustomer.id}`, null, { method: 'DELETE' });
+      await loadCustomers(page, search);
+      toast.success('Customer deleted successfully');
+    } catch (err: any) {
+      console.error('Error deleting customer:', err);
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete customer');
+    } finally {
+      setDeleteCustomer(null);
     }
   };
 
   const handleClearSearch = () => {
     setSearch('');
     setPage(1);
+    loadCustomers(1);
   };
 
   return (
-    <Box sx={{ p: 4, minHeight: '100vh', bgcolor: '#121212', color: '#E3F2FD' }}>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ p: 3, minHeight: '100vh', bgcolor: '#121212', color: '#E8ECEF' }}>
+      <Typography
+        variant="h4"
+        sx={{ fontSize: '1.75rem', fontWeight: 500, mb: 2, letterSpacing: '0.5px' }}
+      >
         Customer Management
       </Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <TextField
+      <Box
+        sx={{
+          display: 'flex',
+          gap: 1.5,
+          mb: 2,
+          alignItems: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
+        <SearchBox
           label="Search Customers"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          sx={{ input: { color: '#E3F2FD' }, '& .MuiInputLabel-root': { color: '#A8C7E2' } }}
         />
-        <Button
-          variant="contained"
+        <CustomButton
           startIcon={<Search />}
           onClick={handleSearch}
-          sx={{ borderRadius: '20px' }}
         >
           Search
-        </Button>
-        <Button variant="outlined" onClick={handleClearSearch} sx={{ color: '#A8C7E2', borderColor: '#3A3A3A' }}>
-          Clear Search
-        </Button>
-        <Button
-          variant="contained"
+        </CustomButton>
+        <CustomButton
+          customVariant="secondary"
+          onClick={handleClearSearch}
+        >
+          Clear
+        </CustomButton>
+        <CustomButton
           startIcon={<Add />}
           onClick={() => setOpenCreateModal(true)}
-          sx={{ borderRadius: '20px' }}
         >
           Add Customer
-        </Button>
+        </CustomButton>
       </Box>
       {error && (
         <Fade in>
-          <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>
+          <Typography sx={{ color: '#D81B60', fontSize: '0.875rem', textAlign: 'center', mt: 2 }}>
             {error}
           </Typography>
         </Fade>
@@ -210,7 +238,7 @@ const CustomerManagement = () => {
               zIndex: 1,
             }}
           >
-            <CircularProgress sx={{ color: '#A8C7E2' }} />
+            <CircularProgress sx={{ color: '#4A90E2' }} size={32} />
           </Box>
         )}
         <CustomerTable
@@ -219,22 +247,27 @@ const CustomerManagement = () => {
           onPageChange={handlePageChange}
           onRowsPerPageChange={handleRowsPerPageChange}
           onEdit={handleEditCustomer}
-          onDelete={handleDeleteCustomer}
+          onDelete={(id) => {
+            const customer = customers.find((c) => c.id === id);
+            if (customer) handleDeleteCustomer(id, customer.name);
+          }}
         />
       </Box>
-      <CustomerFormModal
+      <FormModal<CustomerFormData>
         open={openCreateModal}
         onClose={() => {
           setOpenCreateModal(false);
           createForm.reset();
         }}
         onSubmit={handleCreateCustomer}
-        modalError={modalError}
-        isSubmitting={isSubmitting}
         form={createForm}
         title="Create New Customer"
+        fields={customerFields}
+        modalError={modalError}
+        isSubmitting={isSubmitting}
+        submitLabel="Create"
       />
-      <CustomerFormModal
+      <FormModal<CustomerFormData>
         open={openEditModal}
         onClose={() => {
           setOpenEditModal(false);
@@ -242,10 +275,30 @@ const CustomerManagement = () => {
           setEditCustomerId(null);
         }}
         onSubmit={handleUpdateCustomer}
-        modalError={modalError}
-        isSubmitting={isSubmitting}
         form={editForm}
         title="Edit Customer"
+        fields={customerFields}
+        modalError={modalError}
+        isSubmitting={isSubmitting}
+        submitLabel="Update"
+      />
+      <PromptModal
+        open={openDeleteModal}
+        onClose={() => {
+          setOpenDeleteModal(false);
+          setDeleteCustomer(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Deletion"
+        message={
+          <span>
+            Are you sure you want to delete customer{' '}
+            <strong style={{ color: '#D81B60' }}>{deleteCustomer?.name || ''}</strong>? This action cannot be undone.
+          </span>
+        }
+        cancelLabel="Cancel"
+        confirmLabel="Delete"
+        confirmColor="#D81B60"
       />
     </Box>
   );

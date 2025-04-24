@@ -61,7 +61,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Roboto, sans-serif",
+    fontFamily: "Inter, sans-serif",
     fontSize: 14,
     button: {
       textTransform: "none", // Prevents uppercase transformation

@@ -40,7 +40,8 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
       transition: 'margin-right 300ms ease',
     },
     label: {
-      fontFamily: 'Roboto, sans-serif',
+      fontFamily: 'Inter, sans-serif',
+      fontSize: '0.875rem',
       fontWeight: '500',
     },
   };

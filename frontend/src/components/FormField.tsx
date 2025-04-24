@@ -24,6 +24,7 @@ export const FormField = ({
     error={!!error}
     helperText={error?.message}
     fullWidth
+    size="small"
     margin="normal"
     disabled={disabled}
     {...textFieldProps}

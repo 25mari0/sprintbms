@@ -34,7 +34,7 @@ const LogoutMenu: React.FC<LogoutMenuProps> = ({ collapsed, onLogout }) => {
       transition: 'margin-right 300ms ease',
     },
     label: {
-      fontFamily: 'Roboto, sans-serif',
+      fontFamily: 'Inter, sans-serif',
       fontWeight: '500',
     },
   };

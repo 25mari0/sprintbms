@@ -8,7 +8,7 @@ import { FormModal } from '../components/FormModal';
 import { ServiceTable } from '../components/Services/ServiceTable';
 import { validateServiceForm } from '../utils/serviceValidations';
 import { CustomButton } from '../components/CustomButton';
-import { PromptModal } from '../components/PromptModal'; // Import the new component
+import { PromptModal } from '../components/PromptModal'; 
 import {
   serviceNameValidation,
   priceValidation,
@@ -21,8 +21,8 @@ const Services = () => {
   const [error, setError] = useState<string | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [openDeleteModal, setOpenDeleteModal] = useState(false); // State for delete modal
-  const [deleteService, setDeleteService] = useState<{ id: string; name: string } | null>(null); // Service to delete
+  const [openDeleteModal, setOpenDeleteModal] = useState(false); 
+  const [deleteService, setDeleteService] = useState<{ id: string; name: string } | null>(null); 
   const [editServiceId, setEditServiceId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +129,7 @@ const Services = () => {
 
   const handleDelete = (id: string, name: string) => {
     setDeleteService({ id, name });
-    setOpenDeleteModal(true); // Open the confirmation modal
+    setOpenDeleteModal(true); 
   };
 
   const handleConfirmDelete = async () => {
@@ -144,7 +144,7 @@ const Services = () => {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'An error occurred while deleting the service');
     } finally {
-      setDeleteService(null); // Clear the service to delete
+      setDeleteService(null); 
     }
   };
 
@@ -250,7 +250,7 @@ const Services = () => {
         }
         cancelLabel="Cancel"
         confirmLabel="Delete"
-        confirmColor="#D81B60" // Red color for delete action
+        confirmColor="#D81B60" 
       />
     </Box>
   );

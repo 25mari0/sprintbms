@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Modal, Fade, Box, Typography, Button } from '@mui/material';
-import { FieldValues, Path, UseFormReturn } from 'react-hook-form';
+import { Modal, Fade, Box, Typography } from '@mui/material';
+import { UseFormReturn, FieldValues, Path } from 'react-hook-form';
 import { FormField } from './FormField';
+import { CustomButton } from './CustomButton';
 
 const modalStyle = {
   position: 'absolute' as const,
@@ -18,11 +19,11 @@ const modalStyle = {
   border: '1px solid #2A2A2A',
 };
 
-// Default styles for form fields, matching CustomerFormModal
 const defaultFormFieldStyles = {
-  InputLabelProps: { style: { color: '#78909C', fontSize: '0.875rem' } },
+  slotProps: {
+    inputLabel: { style: { color: '#78909C', fontSize: '0.875rem' } },
+  },
   sx: {
-    input: { color: '#E8ECEF', fontSize: '0.875rem', padding: '8px 12px' },
     '& .MuiInputBase-input': { color: '#E8ECEF', fontSize: '0.875rem', py: 1 },
     '& .MuiInputLabel-root': { top: '-2px' },
     '& .MuiOutlinedInput-root': {
@@ -34,13 +35,18 @@ const defaultFormFieldStyles = {
   },
 };
 
-type FormFieldConfig<T> = {
+type FormFieldConfig<T extends FieldValues> = {
   label: string;
-  name: keyof T;
-  validation?: any; // Validation rules for react-hook-form
-  type?: string; // e.g., 'text', 'number', 'date'
+  name: Path<T>;
+  validation?: any;
+  type?: string;
   disabled?: boolean;
-  formFieldStyles?: typeof defaultFormFieldStyles; // Allow overriding styles
+  formFieldStyles?: {
+    slotProps?: {
+      inputLabel?: { style: { color: string; fontSize: string } };
+    };
+    sx?: any;
+  };
 };
 
 type FormModalProps<T extends FieldValues> = {
@@ -56,7 +62,7 @@ type FormModalProps<T extends FieldValues> = {
   cancelLabel?: string;
 };
 
-export const FormModal = <T extends Record<string, any>>({
+export const FormModal = <T extends FieldValues>({
   open,
   onClose,
   onSubmit,
@@ -90,53 +96,41 @@ export const FormModal = <T extends Record<string, any>>({
             </Typography>
           )}
           <form onSubmit={handleSubmit(onSubmit)}>
-            {fields.map((field) => (
-              <FormField
-                key={String(field.name)}
-                label={field.label}
-                register={register(field.name as Path<T>, field.validation)}
-                error={(errors as any)[field.name]} // Type-safe access to errors
-                type={field.type || 'text'}
-                disabled={field.disabled || isSubmitting}
-                {...(field.formFieldStyles || defaultFormFieldStyles)}
-              />
-            ))}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={handleLocalClose}
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+              {fields.map((field) => (
+                <FormField
+                  key={String(field.name)}
+                  label={field.label}
+                  register={register(field.name, field.validation)}
+                  error={(errors as any)[field.name]}
+                  type={field.type || 'text'}
+                  disabled={field.disabled || isSubmitting}
+                  {...(field.formFieldStyles || defaultFormFieldStyles)}
+                />
+              ))}
+              <Box
                 sx={{
-                  color: '#78909C',
-                  borderColor: '#2A2A2A',
-                  borderRadius: '12px',
-                  fontSize: '0.875rem',
-                  px: 2,
-                  py: 0.5,
-                  mr: 1,
-                  transition: 'all 0.2s',
-                  '&:hover': { borderColor: '#4A90E2', bgcolor: 'rgba(74, 144, 226, 0.1)' },
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  gap: 1, // Small gap (~8px) between buttons
+                  mt: 2,
+                  width: '100%', // Ensure the buttons container matches the textboxes' width
                 }}
-                disabled={isSubmitting}
               >
-                {cancelLabel}
-              </Button>
-              <Button
-                variant="contained"
-                type="submit"
-                sx={{
-                  bgcolor: 'linear-gradient(45deg, #4A90E2, #42A5F5)',
-                  color: '#E8ECEF',
-                  borderRadius: '12px',
-                  fontSize: '0.875rem',
-                  px: 2,
-                  py: 0.5,
-                  transition: 'all 0.2s',
-                  '&:hover': { transform: 'scale(1.02)', bgcolor: 'linear-gradient(45deg, #357ABD, #2196F3)' },
-                }}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Submitting...' : submitLabel}
-              </Button>
+                <CustomButton
+                  customVariant="secondary"
+                  onClick={handleLocalClose}
+                  disabled={isSubmitting}
+                >
+                  {cancelLabel}
+                </CustomButton>
+                <CustomButton
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : submitLabel}
+                </CustomButton>
+              </Box>
             </Box>
           </form>
         </Box>

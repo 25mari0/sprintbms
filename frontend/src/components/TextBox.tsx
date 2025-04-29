@@ -1,19 +1,28 @@
 import { TextField, TextFieldProps } from '@mui/material';
+import { FieldError } from 'react-hook-form';
 
-type SearchBoxProps = Omit<TextFieldProps, 'variant' | 'size'> & {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size'> & {
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   label?: string;
+  register?: any;
+  error?: FieldError;
+  maxWidth?: string | number;
+  slotProps?: TextFieldProps['slotProps']; 
 };
 
-export const SearchBox = ({
+export const TextBox = ({
   value,
   onChange,
   onKeyDown,
   label = 'Search',
+  register,
+  error,
+  maxWidth,
+  slotProps,
   ...props
-}: SearchBoxProps) => {
+}: TextBoxProps) => {
   return (
     <TextField
       label={label}
@@ -22,8 +31,10 @@ export const SearchBox = ({
       onKeyDown={onKeyDown}
       variant="outlined"
       size="small"
+      error={!!error}
+      helperText={error ? error.message : undefined}
       sx={{
-        maxWidth: '300px',
+        maxWidth: maxWidth || '300px',
         '& .MuiInputBase-input': { color: '#E8ECEF', fontSize: '0.875rem', py: 1 },
         '& .MuiInputLabel-root': { color: '#78909C', fontSize: '0.875rem', top: '-2px' },
         '& .MuiOutlinedInput-root': {
@@ -31,7 +42,13 @@ export const SearchBox = ({
           '&:hover fieldset': { borderColor: '#4A90E2' },
           '&.Mui-focused fieldset': { borderColor: '#4A90E2', boxShadow: '0 0 8px rgba(74, 144, 226, 0.3)' },
         },
+        '& .MuiFormHelperText-root': { color: '#D81B60', fontSize: '0.75rem' },
       }}
+      slotProps={{
+        inputLabel: { style: { color: '#78909C', fontSize: '0.875rem' } }, // Default inputLabel styles
+        ...slotProps, 
+      }}
+      {...(register && register)}
       {...props}
     />
   );

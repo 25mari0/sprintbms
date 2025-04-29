@@ -1,32 +1,38 @@
-import { FieldError, UseFormRegisterReturn } from 'react-hook-form';
-import { TextField, TextFieldProps } from '@mui/material';
+import { TextBox } from './TextBox';
 
-interface FormFieldProps extends Omit<TextFieldProps, 'error' | 'helperText'> {
-  register: UseFormRegisterReturn;
-  error?: FieldError;
+type FormFieldProps = {
   label: string;
+  register: any;
+  error?: any;
   type?: string;
   disabled?: boolean;
-}
+  slotProps?: {
+    inputLabel?: { style: { color: string; fontSize: string } }; // Define specific slotProps needed
+  };
+  sx?: any;
+  maxWidth?: string | number;
+};
 
 export const FormField = ({
+  label,
   register,
   error,
-  label,
   type = 'text',
   disabled,
-  ...textFieldProps
-}: FormFieldProps) => (
-  <TextField
-    {...register}
-    label={label}
-    type={type}
-    error={!!error}
-    helperText={error?.message}
-    fullWidth
-    size="small"
-    margin="normal"
-    disabled={disabled}
-    {...textFieldProps}
-  />
-);
+  slotProps,
+  sx,
+  maxWidth,
+}: FormFieldProps) => {
+  return (
+    <TextBox
+      label={label}
+      type={type}
+      disabled={disabled}
+      register={register}
+      error={error}
+      slotProps={slotProps} // Pass slotProps instead of InputLabelProps
+      sx={sx}
+      maxWidth={maxWidth || '100%'}
+    />
+  );
+};

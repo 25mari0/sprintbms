@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Fade, Button, CircularProgress } from '@mui/material';
+import { Box, Typography, Fade, CircularProgress } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { get, post } from '../services/api';
 import { Worker, WorkerFormData } from '../types/workerTypes';
 import { WorkerTable } from '../components/Workers/WorkerTable';
-import { CreateWorkerModal } from '../components/Workers/CreateWorkerModal';
+import { FormModal } from '../components/FormModal'; // Use FormModal directly
 import { useForm } from 'react-hook-form';
+import { CustomButton } from '../components/CustomButton'; // Import CustomButton
+import { nameValidation, emailValidation } from '../utils/userValidations';
 
 const WorkerManagement = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -113,14 +115,13 @@ const WorkerManagement = () => {
       <Typography variant="h4" gutterBottom>
         Worker Management
       </Typography>
-      <Button
-        variant="contained"
+      <CustomButton
         startIcon={<Add />}
         onClick={() => setOpenCreateModal(true)}
         sx={{ mb: 3, borderRadius: '20px' }}
       >
         Add Worker
-      </Button>
+      </CustomButton>
       {error && (
         <Fade in>
           <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>
@@ -151,17 +152,22 @@ const WorkerManagement = () => {
           </Box>
         </Fade>
       )}
-      <CreateWorkerModal
+      <FormModal<WorkerFormData>
         open={openCreateModal}
         onClose={() => {
           setOpenCreateModal(false);
           createForm.reset();
         }}
         onSubmit={handleCreateWorker}
-        modalError={modalError}
-        isSubmitting={isSubmitting}
         form={createForm}
         title="Create New Worker"
+        fields={[
+          { label: 'Name', name: 'name' as 'name', validation: nameValidation },
+          { label: 'Email', name: 'email' as 'email', validation: emailValidation },
+        ]}
+        modalError={modalError}
+        isSubmitting={isSubmitting}
+        submitLabel="Create"
       />
     </Box>
   );

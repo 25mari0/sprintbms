@@ -7,8 +7,8 @@ import { Meta } from '../types/index';
 import CustomerTable from '../components/Customers/CustomerTable';
 import { FormModal } from '../components/FormModal';
 import { PromptModal } from '../components/PromptModal';
-import { CustomButton } from '../components/CustomButton'; 
-import { SearchBox } from '../components/SearchBox'; 
+import { CustomButton } from '../components/CustomButton';
+import { TextBox } from '../components/TextBox';
 import { CustomerFormData, customerPhoneValidation } from '../utils/customerValidations';
 import { nameValidation as customerNameValidation } from '../utils/userValidations';
 import { useForm } from 'react-hook-form';
@@ -21,7 +21,7 @@ const CustomerManagement = () => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState<string>('');
+  const [search, setSearch] = useState<string>(''); // Keep original variable name
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -38,10 +38,10 @@ const CustomerManagement = () => {
     defaultValues: { name: '', phone: '' },
   });
 
-  // Define customer form fields for reuse in create and edit modals
+  // Define customer form fields with explicit Path<CustomerFormData>
   const customerFields = [
-    { label: 'Name', name: 'name' as keyof CustomerFormData, validation: customerNameValidation },
-    { label: 'Phone', name: 'phone' as keyof CustomerFormData, validation: customerPhoneValidation },
+    { label: 'Name', name: 'name' as 'name', validation: customerNameValidation },
+    { label: 'Phone', name: 'phone' as 'phone', validation: customerPhoneValidation },
   ];
 
   const loadCustomers = async (targetPage: number, searchQuery: string = '') => {
@@ -191,7 +191,7 @@ const CustomerManagement = () => {
           flexWrap: 'wrap',
         }}
       >
-        <SearchBox
+        <TextBox
           label="Search Customers"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

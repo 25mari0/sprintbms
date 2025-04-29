@@ -7,7 +7,7 @@ type FormFieldProps = {
   type?: string;
   disabled?: boolean;
   slotProps?: {
-    inputLabel?: { style: { color: string; fontSize: string } }; // Define specific slotProps needed
+    inputLabel?: { style: { color: string; fontSize: string } }; 
   };
   sx?: any;
   maxWidth?: string | number;
@@ -30,7 +30,7 @@ export const FormField = ({
       disabled={disabled}
       register={register}
       error={error}
-      slotProps={slotProps} // Pass slotProps instead of InputLabelProps
+      slotProps={slotProps} 
       sx={sx}
       maxWidth={maxWidth || '100%'}
     />

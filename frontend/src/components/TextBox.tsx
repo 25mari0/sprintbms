@@ -1,7 +1,7 @@
 import { TextField, TextFieldProps } from '@mui/material';
 import { FieldError } from 'react-hook-form';
 
-type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size'> & {
+export type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size'> & {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
@@ -9,7 +9,7 @@ type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size'> & {
   register?: any;
   error?: FieldError;
   maxWidth?: string | number;
-  slotProps?: TextFieldProps['slotProps']; 
+  slotProps?: TextFieldProps['slotProps'];
 };
 
 export const TextBox = ({
@@ -36,17 +36,18 @@ export const TextBox = ({
       sx={{
         maxWidth: maxWidth || '300px',
         '& .MuiInputBase-input': { color: '#E8ECEF', fontSize: '0.875rem', py: 1 },
-        '& .MuiInputLabel-root': { color: '#78909C', fontSize: '0.875rem', top: '-2px' },
+        '& .MuiInputLabel-root': { color: '#78909C', fontSize: '0.875rem' }, 
         '& .MuiOutlinedInput-root': {
           '& fieldset': { borderColor: '#2A2A2A', borderWidth: '1px' },
           '&:hover fieldset': { borderColor: '#4A90E2' },
           '&.Mui-focused fieldset': { borderColor: '#4A90E2', boxShadow: '0 0 8px rgba(74, 144, 226, 0.3)' },
+          height: '40px', // Explicitly set height for consistency
         },
         '& .MuiFormHelperText-root': { color: '#D81B60', fontSize: '0.75rem' },
       }}
       slotProps={{
-        inputLabel: { style: { color: '#78909C', fontSize: '0.875rem' } }, // Default inputLabel styles
-        ...slotProps, 
+        inputLabel: { style: { color: '#78909C', fontSize: '0.875rem' } },
+        ...slotProps,
       }}
       {...(register && register)}
       {...props}

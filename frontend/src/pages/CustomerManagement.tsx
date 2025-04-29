@@ -21,7 +21,7 @@ const CustomerManagement = () => {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState<string>(''); // Keep original variable name
+  const [search, setSearch] = useState<string>(''); 
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -30,7 +30,6 @@ const CustomerManagement = () => {
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form hooks
   const createForm = useForm<CustomerFormData>({
     defaultValues: { name: '', phone: '' },
   });
@@ -38,7 +37,6 @@ const CustomerManagement = () => {
     defaultValues: { name: '', phone: '' },
   });
 
-  // Define customer form fields with explicit Path<CustomerFormData>
   const customerFields = [
     { label: 'Name', name: 'name' as 'name', validation: customerNameValidation },
     { label: 'Phone', name: 'phone' as 'phone', validation: customerPhoneValidation },

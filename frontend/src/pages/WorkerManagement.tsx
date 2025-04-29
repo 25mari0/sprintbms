@@ -4,9 +4,9 @@ import { Add } from '@mui/icons-material';
 import { get, post } from '../services/api';
 import { Worker, WorkerFormData } from '../types/workerTypes';
 import { WorkerTable } from '../components/Workers/WorkerTable';
-import { FormModal } from '../components/FormModal'; // Use FormModal directly
+import { FormModal } from '../components/FormModal';
 import { useForm } from 'react-hook-form';
-import { CustomButton } from '../components/CustomButton'; // Import CustomButton
+import { CustomButton } from '../components/CustomButton';
 import { nameValidation, emailValidation } from '../utils/userValidations';
 
 const WorkerManagement = () => {
@@ -118,7 +118,7 @@ const WorkerManagement = () => {
       <CustomButton
         startIcon={<Add />}
         onClick={() => setOpenCreateModal(true)}
-        sx={{ mb: 3, borderRadius: '20px' }}
+        sx={{ mb: 2 }}
       >
         Add Worker
       </CustomButton>

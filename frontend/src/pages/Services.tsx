@@ -156,7 +156,7 @@ const Services = () => {
       <CustomButton
         startIcon={<Add />}
         onClick={() => setOpenCreateModal(true)}
-        sx={{ mb: 3, borderRadius: '20px' }}
+        sx={{ mb: 2 }}
       >
         Add Service
       </CustomButton>

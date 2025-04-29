@@ -1,20 +1,49 @@
-import { Table, TableBody, TableCell, TableHead, TableRow, IconButton, Chip, Fade, Box, Typography, Button } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
-import { Service } from '../../types/serviceTypes'; 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  IconButton,
+  Chip,
+  Fade,
+  Box,
+  Typography,
+} from '@mui/material';
+import { Edit, Delete, Add } from '@mui/icons-material';
+import { Service } from '../../types/serviceTypes';
+import { CustomButton } from '../CustomButton'; // Import CustomButton
 
-type ServiceTableProps = {
+interface ServiceTableProps {
   services: Service[];
   onEdit: (service: Service) => void;
-  onDelete: (id: string) => void;
-};
+  onDelete: (id: string, name: string) => void; // Updated to accept name
+  onCreateClick: () => void;
+}
 
-export const ServiceTable = ({ services, onEdit, onDelete }: ServiceTableProps) => (
+export const ServiceTable = ({
+  services,
+  onEdit,
+  onDelete,
+  onCreateClick,
+}: ServiceTableProps) => (
   <Fade in={true}>
-    <Table sx={{ backgroundColor: '#1E1E1E', borderRadius: '8px' }}>
+    <Table
+      sx={{
+        backgroundColor: '#1E1E1E',
+        borderRadius: '12px',
+        '& th, & td': { borderColor: '#2A2A2A' },
+      }}
+    >
       <TableHead>
         <TableRow>
           {['Name', 'Price (€)', 'Estimated Time (min)', 'Actions'].map((header) => (
-            <TableCell key={header} sx={{ color: '#E3F2FD' }}>{header}</TableCell>
+            <TableCell
+              key={header}
+              sx={{ color: '#78909C', fontSize: '0.875rem', fontWeight: 600, py: 1.5 }}
+            >
+              {header}
+            </TableCell>
           ))}
         </TableRow>
       </TableHead>
@@ -28,23 +57,59 @@ export const ServiceTable = ({ services, onEdit, onDelete }: ServiceTableProps) 
                   <Typography variant="body2" sx={{ mb: 2 }}>
                     Get started by adding a new service.
                   </Typography>
-                  <Button variant="contained" color="primary" sx={{ borderRadius: '20px' }}>
+                  <CustomButton
+                    startIcon={<Add />}
+                    onClick={onCreateClick}
+                    sx={{ borderRadius: '20px' }}
+                  >
                     Create Service
-                  </Button>
+                  </CustomButton>
                 </Box>
               </Fade>
             </TableCell>
           </TableRow>
         ) : (
-          services.map((service) => (
-            <TableRow key={service.id} sx={{ '&:hover': { backgroundColor: '#2A2A2A' } }}>
-              <TableCell><Chip label={service.name} sx={{ bgcolor: '#4A90E2', color: '#E3F2FD', fontWeight: 'medium' }} /></TableCell>
-              <TableCell><Chip label={`€${service.price}`} sx={{ bgcolor: '#388E3C', color: '#E3F2FD', fontWeight: 'medium' }} /></TableCell>
-              <TableCell><Chip label={`${service.estimated_time_minutes} min`} sx={{ bgcolor: '#FBC02D', color: '#121212', fontWeight: 'medium' }} /></TableCell>
-              <TableCell>
-                <IconButton onClick={() => onEdit(service)} sx={{ color: '#4A90E2', mr: 1 }}><Edit /></IconButton>
-                <IconButton onClick={() => onDelete(service.id)} sx={{ color: '#D32F2F' }}><Delete /></IconButton>
+          services.map((service, index) => (
+            <TableRow
+              key={service.id}
+              sx={{
+                backgroundColor: index % 2 === 0 ? '#1E1E1E' : '#202020',
+                '&:hover': { backgroundColor: 'rgba(74, 144, 226, 0.1)' },
+                transition: 'background-color 0.2s',
+              }}
+            >
+              <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
+                <Chip
+                  label={service.name}
+                  sx={{ bgcolor: '#4A90E2', color: '#E3F2FD', fontWeight: 'medium' }}
+                />
               </TableCell>
+              <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
+                <Chip
+                  label={`€${service.price}`}
+                  sx={{ bgcolor: '#388E3C', color: '#E3F2FD', fontWeight: 'medium' }}
+                />
+              </TableCell>
+              <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
+                <Chip
+                  label={`${service.estimated_time_minutes} min`}
+                  sx={{ bgcolor: '#FBC02D', color: '#121212', fontWeight: 'medium' }}
+                />
+              </TableCell>
+<TableCell>
+  <IconButton
+    onClick={() => onEdit(service)}
+    sx={{ color: '#4A90E2', mr: 1 }}
+  >
+    <Edit />
+  </IconButton>
+  <IconButton
+    onClick={() => onDelete(service.id, service.name)} // Pass both id and name
+    sx={{ color: '#D32F2F' }}
+  >
+    <Delete />
+  </IconButton>
+</TableCell>
             </TableRow>
           ))
         )}

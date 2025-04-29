@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, CircularProgress, Typography, Fade } from '@mui/material';
+import { Box, CircularProgress, Typography, Fade } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { get, post, put, del } from '../services/api';
 import { Service } from '../types/serviceTypes';
 import { useForm } from 'react-hook-form';
-import { ServiceFormModal } from '../components/Services/ServiceFormModal';
+import { FormModal } from '../components/FormModal';
 import { ServiceTable } from '../components/Services/ServiceTable';
 import { validateServiceForm } from '../utils/serviceValidations';
+import { CustomButton } from '../components/CustomButton';
+import { PromptModal } from '../components/PromptModal'; // Import the new component
+import {
+  serviceNameValidation,
+  priceValidation,
+  estimatedTimeValidation,
+} from '../utils/serviceValidations';
 
 const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -14,12 +21,18 @@ const Services = () => {
   const [error, setError] = useState<string | null>(null);
   const [openCreateModal, setOpenCreateModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false); // State for delete modal
+  const [deleteService, setDeleteService] = useState<{ id: string; name: string } | null>(null); // Service to delete
   const [editServiceId, setEditServiceId] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const createForm = useForm<Service>({ defaultValues: { name: '', price: 0, estimated_time_minutes: 0 } });
-  const editForm = useForm<Service>({ defaultValues: { name: '', price: 0, estimated_time_minutes: 0 } });
+  const createForm = useForm<Service>({
+    defaultValues: { name: '', price: 0, estimated_time_minutes: 0 },
+  });
+  const editForm = useForm<Service>({
+    defaultValues: { name: '', price: 0, estimated_time_minutes: 0 },
+  });
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -39,44 +52,38 @@ const Services = () => {
     fetchServices();
   }, []);
 
-  const handleCreateService =  
-    async (data: Service, localClose: () => void) => {
-      setIsSubmitting(true);
-      setModalError(null);
-      const validationErrors = validateServiceForm(data);
-      if (Object.keys(validationErrors).length > 0) {
-        setModalError('Please fix the errors in the form');
-        createForm.setError('name', { message: validationErrors.name });
-        createForm.setError('price', { message: validationErrors.price });
-        createForm.setError('estimated_time_minutes', {
-          message: validationErrors.estimated_time_minutes,
-        });
-        setIsSubmitting(false);
-        return;
+  const handleCreateService = async (data: Service) => {
+    setIsSubmitting(true);
+    setModalError(null);
+    const validationErrors = validateServiceForm(data);
+    if (Object.keys(validationErrors).length > 0) {
+      setModalError('Please fix the errors in the form');
+      createForm.setError('name', { message: validationErrors.name });
+      createForm.setError('price', { message: validationErrors.price });
+      createForm.setError('estimated_time_minutes', {
+        message: validationErrors.estimated_time_minutes,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    try {
+      const response = await post<Service>('/services', data);
+      if (response.status === 'success' && response.data) {
+        setServices([...services, response.data]);
+        setOpenCreateModal(false);
+      } else {
+        setModalError(`Failed to create service: ${response.message || 'Unknown error'}`);
       }
-      try {
-        const response = await post<Service>('/services', data);
-        if (response.status === 'success' && response.data) {
-          setServices([...services, response.data]);
-          // Do not reset here—wait until after fade-out
-          setModalError(null);
-          // Trigger fade-out transition.
-          localClose();
-        } else {
-          setModalError(`Failed to create service: ${response.message || 'Unknown error'}`);
-        }
-      } catch (err: unknown) {
-        console.error('Error creating service:', err);
-        setModalError(
-          err instanceof Error ? err.message : 'An error occurred while creating the service'
-        );
-      } finally {
-        setIsSubmitting(false);
-      }
-    };
+    } catch (err: unknown) {
+      setModalError(
+        err instanceof Error ? err.message : 'An error occurred while creating the service'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-  const handleEdit = 
-  (service: Service) => {
+  const handleEdit = (service: Service) => {
     setEditServiceId(service.id);
     editForm.reset({
       name: service.name,
@@ -87,71 +94,91 @@ const Services = () => {
     setModalError(null);
   };
 
-  const handleUpdateService = 
-    async (data: Service, localClose: () => void) => {
-      if (!editServiceId) return;
-      setIsSubmitting(true);
-      setModalError(null);
-      const validationErrors = validateServiceForm(data);
-      if (Object.keys(validationErrors).length > 0) {
-        setModalError('Please fix the errors in the form');
-        editForm.setError('name', { message: validationErrors.name });
-        editForm.setError('price', { message: validationErrors.price });
-        editForm.setError('estimated_time_minutes', {
-          message: validationErrors.estimated_time_minutes,
-        });
-        setIsSubmitting(false);
-        return;
+  const handleUpdateService = async (data: Service) => {
+    if (!editServiceId) return;
+    setIsSubmitting(true);
+    setModalError(null);
+    const validationErrors = validateServiceForm(data);
+    if (Object.keys(validationErrors).length > 0) {
+      setModalError('Please fix the errors in the form');
+      editForm.setError('name', { message: validationErrors.name });
+      editForm.setError('price', { message: validationErrors.price });
+      editForm.setError('estimated_time_minutes', {
+        message: validationErrors.estimated_time_minutes,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    try {
+      const response = await put<Service>(`/services/${editServiceId}`, data);
+      if (response.status === 'success' && response.data) {
+        const updatedService = response.data;
+        setServices(services.map((s) => (s.id === editServiceId ? updatedService : s)));
+        setOpenEditModal(false);
+      } else {
+        setModalError(`Failed to update service: ${response.message || 'Unknown error'}`);
       }
+    } catch (err: unknown) {
+      setModalError(
+        err instanceof Error ? err.message : 'An error occurred while updating the service'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      try {
-        const response = await put<Service>(`/services/${editServiceId}`, data);
-        if (response.status === 'success' && response.data) {
-          const updatedService = response.data;
-          setServices(services.map((s) => (s.id === editServiceId ? updatedService : s)));
-          // Do not reset form values immediately; let them persist during fade-out.
-          setModalError(null);
-          // Trigger fade-out transition.
-          localClose();
-        } else {
-          setModalError(`Failed to update service: ${response.message || 'Unknown error'}`);
-        }
-      } catch (err: unknown) {
-        console.error('Error updating service:', err);
-        setModalError(
-          err instanceof Error ? err.message : 'An error occurred while updating the service'
-        );
-      } finally {
-        setIsSubmitting(false);
+  const handleDelete = (id: string, name: string) => {
+    setDeleteService({ id, name });
+    setOpenDeleteModal(true); // Open the confirmation modal
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteService) return;
+    try {
+      const response = await del(`/services/${deleteService.id}`);
+      if (response.status === 'success') {
+        setServices(services.filter((s) => s.id !== deleteService.id));
+      } else {
+        setError(`Failed to delete service: ${response.message || 'Unknown error'}`);
       }
-    };
-
-  const handleDelete = 
-    async (id: string) => {
-      if (!window.confirm('Are you sure you want to delete this service?')) return;
-
-      try {
-        const response = await del(`/services/${id}`);
-        if (response.status === 'success') {
-          setServices(services.filter((s) => s.id !== id));
-        } else {
-          setError(`Failed to delete service: ${response.message || 'Unknown error'}`);
-        }
-      } catch (err: unknown) {
-        console.error('Error deleting service:', err);
-        setError(err instanceof Error ? err.message : 'An error occurred while deleting the service');
-      }
-    };
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred while deleting the service');
+    } finally {
+      setDeleteService(null); // Clear the service to delete
+    }
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#121212', p: 3, color: '#E3F2FD' }}>
-      <Typography variant="h4" gutterBottom>Services</Typography>
-      <Button variant="contained" startIcon={<Add />} onClick={() => setOpenCreateModal(true)} sx={{ mb: 3, borderRadius: '20px' }}>
+      <Typography variant="h4" gutterBottom>
+        Services
+      </Typography>
+      <CustomButton
+        startIcon={<Add />}
+        onClick={() => setOpenCreateModal(true)}
+        sx={{ mb: 3, borderRadius: '20px' }}
+      >
         Add Service
-      </Button>
+      </CustomButton>
 
-      {error && <Fade in><Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>{error}</Typography></Fade>}
-      {!loading && !error && <ServiceTable services={services} onEdit={handleEdit} onDelete={handleDelete} />}
+      {error && (
+        <Fade in>
+          <Typography color="error" sx={{ textAlign: 'center', mt: 4 }}>
+            {error}
+          </Typography>
+        </Fade>
+      )}
+      {!loading && !error && (
+        <ServiceTable
+          services={services}
+          onEdit={handleEdit}
+          onDelete={(id) => {
+            const service = services.find((s) => s.id === id);
+            if (service) handleDelete(id, service.name);
+          }}
+          onCreateClick={() => setOpenCreateModal(true)}
+        />
+      )}
       {loading && (
         <Fade in>
           <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -161,8 +188,70 @@ const Services = () => {
         </Fade>
       )}
 
-      <ServiceFormModal open={openCreateModal} onClose={() => { setOpenCreateModal(false); createForm.reset(); }} onSubmit={handleCreateService} form={createForm} title="Create New Service" isSubmitting={isSubmitting} modalError={modalError} />
-      <ServiceFormModal open={openEditModal} onClose={() => { setOpenEditModal(false); editForm.reset(); }} onSubmit={handleUpdateService} form={editForm} title="Edit Service" isSubmitting={isSubmitting} modalError={modalError} />
+      <FormModal<Service>
+        open={openCreateModal}
+        onClose={() => {
+          setOpenCreateModal(false);
+          createForm.reset();
+        }}
+        onSubmit={handleCreateService}
+        form={createForm}
+        title="Create New Service"
+        fields={[
+          { label: 'Service Name', name: 'name' as 'name', validation: serviceNameValidation },
+          { label: 'Price (€)', name: 'price' as 'price', type: 'number', validation: priceValidation },
+          {
+            label: 'Estimated Time (minutes)',
+            name: 'estimated_time_minutes' as 'estimated_time_minutes',
+            type: 'number',
+            validation: estimatedTimeValidation,
+          },
+        ]}
+        modalError={modalError}
+        isSubmitting={isSubmitting}
+        submitLabel="Create"
+      />
+      <FormModal<Service>
+        open={openEditModal}
+        onClose={() => {
+          setOpenEditModal(false);
+          editForm.reset();
+        }}
+        onSubmit={handleUpdateService}
+        form={editForm}
+        title="Edit Service"
+        fields={[
+          { label: 'Service Name', name: 'name' as 'name', validation: serviceNameValidation },
+          { label: 'Price (€)', name: 'price' as 'price', type: 'number', validation: priceValidation },
+          {
+            label: 'Estimated Time (minutes)',
+            name: 'estimated_time_minutes' as 'estimated_time_minutes',
+            type: 'number',
+            validation: estimatedTimeValidation,
+          },
+        ]}
+        modalError={modalError}
+        isSubmitting={isSubmitting}
+        submitLabel="Update"
+      />
+      <PromptModal
+        open={openDeleteModal}
+        onClose={() => {
+          setOpenDeleteModal(false);
+          setDeleteService(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Confirm Deletion"
+        message={
+          <span>
+            Are you sure you want to delete service{' '}
+            <strong style={{ color: '#D81B60' }}>{deleteService?.name || ''}</strong>? This action cannot be undone.
+          </span>
+        }
+        cancelLabel="Cancel"
+        confirmLabel="Delete"
+        confirmColor="#D81B60" // Red color for delete action
+      />
     </Box>
   );
 };

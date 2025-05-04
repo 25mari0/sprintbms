@@ -112,12 +112,12 @@ const BookingsPage = () => {
         <DatePicker
           label="Pickup Date Start"
           value={pickupDateStart}
-          onChange={(e) => setPickupDateStart(e.target.value)}
+          onChange={(e: { target: { value: SetStateAction<string>; }; }) => setPickupDateStart(e.target.value)}
         />
         <DatePicker
           label="Pickup Date End"
           value={pickupDateEnd}
-          onChange={(e) => setPickupDateEnd(e.target.value)}
+          onChange={(e: { target: { value: SetStateAction<string>; }; }) => setPickupDateEnd(e.target.value)}
         />
         <CustomButton
           customVariant="secondary"

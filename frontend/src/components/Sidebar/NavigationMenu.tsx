@@ -8,7 +8,7 @@ import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import TroubleshootRoundedIcon from '@mui/icons-material/TroubleshootRounded';
 import { useTheme } from '@mui/material';
 import styles from './Sidebar.module.css';
-import { useAuthStore } from '../../stores/authStore'; // Import the auth store
+import { useAuthStore } from '../../stores/authStore'; 
 
 interface NavigationMenuProps {
   collapsed: boolean;
@@ -17,8 +17,7 @@ interface NavigationMenuProps {
 
 const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) => {
   const theme = useTheme();
-  const { user } = useAuthStore(); // Get user from auth store
-
+  const { user } = useAuthStore(); 
   const menuItemStyles = {
     button: {
       '--icon-color': theme.palette.text.secondary,
@@ -42,7 +41,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
     label: {
       fontFamily: 'Inter, sans-serif',
       fontSize: '0.875rem',
-      fontWeight: '500',
+      fontWeight: '400',
     },
   };
 
@@ -52,7 +51,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ collapsed, navigate }) 
   return (
     <Menu menuItemStyles={menuItemStyles}>
       {!collapsed && (
-        <MenuItem disabled className={styles.sectionTitle} style={{ color: theme.palette.text.disabled }}>
+        <MenuItem disabled className={styles.sectionTitle} style={{ color: theme.palette.text.disabled}}>
           WORKSPACE
         </MenuItem>
       )}

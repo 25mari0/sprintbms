@@ -1,10 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { Button, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { FormContainer } from '../components/FormContainer';
-import { FormField } from '../components/FormField'; 
 import { post } from '../services/api';
 import { nameValidation, emailValidation, passwordValidation } from '../utils/userValidations';
+import { TextBox } from '../components/TextBox';
+import { CustomButton } from '../components/CustomButton';
 
 interface RegisterFormData {
   name: string;
@@ -27,43 +28,52 @@ export default function Register() {
   return (
     <FormContainer title="Register">
       <form onSubmit={handleSubmit(onSubmit)}>
-        <FormField
+        <TextBox
+          label="Name"
           register={register('name', nameValidation)}
           error={errors.name}
-          label="Name"
           disabled={isSubmitting}
+          fullWidth
+          sx={{ mb: 2 }}
         />
-        <FormField
+        <TextBox
+          label="Email"
+          type="email"
           register={register('email', emailValidation)}
           error={errors.email}
-          label="Email"
           disabled={isSubmitting}
+          fullWidth
+          sx={{ mb: 2 }}
         />
-        <FormField
-          register={register('password', passwordValidation)}
-          error={errors.password}
+        <TextBox
           label="Password"
           type="password"
+          register={register('password', passwordValidation)}
+          error={errors.password}
           disabled={isSubmitting}
+          fullWidth
+          sx={{ mb: 2 }}
         />
-        <Box sx={{ mt: 2 }}>
-          <Button
+        <Box>
+          <CustomButton
             type="submit"
             variant="contained"
             fullWidth
             disabled={isSubmitting}
+            sx={{ mb: 1, display: 'flex', width: '100%' }}
           >
             Register
-          </Button>
-          <Button
+          </CustomButton>
+          <CustomButton
+            customVariant="secondary"
             variant="text"
             fullWidth
             onClick={() => navigate('/login')}
             disabled={isSubmitting}
-            sx={{ mt: 1 }}
+            sx={{ display: 'flex', width: '100%' }}
           >
             Already have an account? Login
-          </Button>
+          </CustomButton>
         </Box>
       </form>
     </FormContainer>

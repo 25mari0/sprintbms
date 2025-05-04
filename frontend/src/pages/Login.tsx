@@ -1,7 +1,8 @@
 import { useForm } from 'react-hook-form';
-import { Button, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { FormContainer } from '../components/FormContainer';
-import { FormField } from '../components/FormField';
+import { TextBox } from '../components/TextBox';
+import { CustomButton } from '../components/CustomButton';
 import { post } from '../services/api';
 import { useAuthStore, UserData } from '../stores/authStore';
 import { emailValidation, passwordValidation } from '../utils/userValidations';
@@ -26,7 +27,6 @@ export default function Login() {
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({ mode: 'onBlur' });
 
-  // Check route state for expired token
   useEffect(() => {
     if (location.state?.verification === 'expired' && location.state?.token) {
       setExpiredToken(location.state.token);
@@ -49,7 +49,7 @@ export default function Login() {
     if (!expiredToken) return;
     try {
       await post(`/client/account-verification/resend?token=${expiredToken}`);
-      setExpiredToken(null); // Clear token after successful resend
+      setExpiredToken(null);
     } catch {
       toast.error('Failed to resend verification email.');
     }
@@ -58,50 +58,51 @@ export default function Login() {
   return (
     <FormContainer title="Login">
       {expiredToken && (
-        <Box   sx={{ mb: 2, borderRadius: 2, boxShadow: 2 }}>
-          <Button
-            variant="contained"
-            color="primary"
-            fullWidth
+        <Box sx={{ mb: 2 }}>
+          <CustomButton
             onClick={handleResendVerification}
             disabled={isSubmitting}
+            fullWidth
+            sx={{ height: '40px', fontSize: '0.875rem', mb: 1, width: '100%' }}
           >
             Resend Verification Email
-          </Button>
+          </CustomButton>
         </Box>
       )}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <FormField
+        <TextBox
+          label="Email"
           register={register('email', emailValidation)}
           error={errors.email}
-          label="Email"
           disabled={isSubmitting}
+          fullWidth
+          sx={{ mb: 2 }}
         />
-        <FormField
-          register={register('password', passwordValidation)}
-          error={errors.password}
+        <TextBox
           label="Password"
           type="password"
+          register={register('password', passwordValidation)}
+          error={errors.password}
           disabled={isSubmitting}
+          fullWidth
+          sx={{ mb: 2 }}
         />
-        <Button
+        <CustomButton
           type="submit"
-          variant="contained"
-          fullWidth
           disabled={isSubmitting}
-          sx={{ mt: 2, borderRadius: 2, boxShadow: 2 }}
-          >
+          sx={{ height: '40px', fontSize: '0.875rem', mb: 1, display: 'flex', width: '100%' }}
+        >
           Login
-        </Button>
-        <Button
-          variant="text"
-          fullWidth
+        </CustomButton>
+        <CustomButton
+          customVariant="secondary"
+          variant='text'
           onClick={() => navigate('/register')}
           disabled={isSubmitting}
-          sx={{ mt: 1, borderRadius: 2, boxShadow: 2 }}
-          >
+          sx={{ height: '40px', fontSize: '0.875rem', display: 'flex', width: '100%'}}
+        >
           Need an account? Register
-        </Button>
+        </CustomButton>
       </form>
     </FormContainer>
   );

@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { post } from '../services/api';
 import { loadStripe } from '@stripe/stripe-js';
-import { Box, Button, TextField, Typography, CircularProgress } from '@mui/material';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import { CustomButton } from '../components/CustomButton';
+import { TextBox } from '../components/TextBox';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -29,11 +31,11 @@ export default function BusinessCreate() {
 
   return (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4, p: 2 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" align="center" gutterBottom>
         Create Your Business
       </Typography>
       <form onSubmit={handleSubmit}>
-        <TextField
+        <TextBox
           label="Business Name"
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
@@ -42,17 +44,17 @@ export default function BusinessCreate() {
           disabled={isSubmitting}
           sx={{ mb: 2 }}
         />
-        <Button
+        <CustomButton
           type="submit"
           variant="contained"
           color="primary"
           fullWidth
           disabled={isSubmitting}
           startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
-          sx={{ mb: 2 }}
+          sx={{ mb: 2, display: 'flex', width: '100%' }}
         >
           Proceed to Payment
-        </Button>
+        </CustomButton>
       </form>
     </Box>
   );

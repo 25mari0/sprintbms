@@ -119,6 +119,8 @@ const WorkerManagement = () => {
         startIcon={<Add />}
         onClick={() => setOpenCreateModal(true)}
         sx={{ mb: 2 }}
+        // hidden when no workers are present
+        style={{ display: workers.length === 0 ? 'none' : 'flex' }}
       >
         Add Worker
       </CustomButton>

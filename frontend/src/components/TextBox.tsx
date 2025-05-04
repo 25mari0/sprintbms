@@ -1,7 +1,7 @@
 import { TextField, TextFieldProps } from '@mui/material';
 import { FieldError } from 'react-hook-form';
 
-type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size' | 'error' | 'helperText'> & {
+export type TextBoxProps = Omit<TextFieldProps, 'variant' | 'size' | 'error' | 'helperText'> & {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
@@ -36,7 +36,7 @@ export const TextBox = ({
       sx={{
         maxWidth: maxWidth || '300px',
         '& .MuiInputBase-input': { color: '#E8ECEF', fontSize: '0.875rem', py: 1 },
-        '& .MuiInputLabel-root': { color: '#78909C', fontSize: '0.875rem', top: '-6px' },
+        '& .MuiInputLabel-root': { color: '#78909C', fontSize: '0.875rem'},
         '& .MuiOutlinedInput-root': {
           '& fieldset': { borderColor: '#2A2A2A', borderWidth: '1px' },
           '&:hover fieldset': { borderColor: '#4A90E2' },

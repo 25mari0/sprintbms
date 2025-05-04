@@ -14,6 +14,14 @@ const DropdownSelect = ({ value, onChange, ...props }: DropdownSelectProps) => (
       value={value}
       onChange={(e) => onChange(e.target.value as string)}
       label="Status"
+      MenuProps={{
+        PaperProps: {
+          sx: {
+            '--Paper-overlay': 'none', // Disable the gradient overlay
+            background: '#1E1E1E', // Optional: Ensure no background interference
+          },
+        },
+      }}
       sx={{
         color: '#E8ECEF',
         fontSize: '0.875rem',

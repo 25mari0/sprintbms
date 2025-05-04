@@ -98,9 +98,9 @@ const BookingsPage = () => {
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
         <DropdownSelect value={statusFilter} onChange={setStatusFilter} />
         <TextBox
-          label="Search"
+          label="Search Filter"
           value={search}
-          onChange={(e: { target: { value: SetStateAction<string>; }; }) => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e: { key: string; }) => e.key === 'Enter' && handleSearch()}
         />
         <CustomButton

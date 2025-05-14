@@ -2,11 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { get, post } from '../services/api';
-import { Box, CircularProgress, Alert, Button } from '@mui/material';
+import { Box, CircularProgress, Alert } from '@mui/material';
 import { toast } from 'react-toastify';
 import { FormContainer }  from '../components/FormContainer';
-import { FormField } from '../components/FormField';
 import { passwordValidation } from '../utils/userValidations';
+import { CustomButton } from '../components/CustomButton';
+import { TextBox } from '../components/TextBox';
 
 interface FormData {
   password: string;
@@ -148,14 +149,16 @@ const WorkerSetPassword = () => {
             {error}
           </Alert>
         )}
-        <FormField
+        <TextBox
           register={register('password', passwordValidation)}
           error={errors.password}
           label="Password"
           type="password"
+          fullWidth
+          sx={{ mb: 2 }}
           disabled={isSubmitting}
         />
-        <FormField
+        <TextBox
           register={register('confirmPassword', {
             required: 'Confirm Password is required',
             validate: (value) =>
@@ -164,10 +167,12 @@ const WorkerSetPassword = () => {
           error={errors.confirmPassword}
           label="Confirm Password"
           type="password"
+          fullWidth
+          sx={{ mb: 2 }}
           disabled={isSubmitting}
         />
-        <Box sx={{ mt: 2 }}>
-          <Button
+        <Box>
+          <CustomButton
             type="submit"
             variant="contained"
             fullWidth
@@ -178,7 +183,7 @@ const WorkerSetPassword = () => {
             ) : (
               'Set Password'
             )}
-          </Button>
+          </CustomButton>
         </Box>
       </form>
     </FormContainer>

@@ -92,7 +92,7 @@ class AuthService {
         await transactionalEntityManager.upsert(
           Token,
           { userId, token: hashedToken, salt, expiresAt },
-          ['userId'] // Conflict target: update if userId exists
+          ['userId'] //update if userId exists
         );
       });
     } catch (error) {

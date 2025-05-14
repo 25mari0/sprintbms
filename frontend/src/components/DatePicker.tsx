@@ -2,15 +2,32 @@ import { TextBox, TextBoxProps } from './TextBox';
 
 interface DatePickerProps extends Omit<TextBoxProps, 'type'> {
   label: string;
+  showTime?: boolean;   // new prop
 }
 
-const DatePicker = (props: DatePickerProps) => (
+const DatePicker = ({
+  showTime = false,
+  ...props
+}: DatePickerProps) => (
   <TextBox
     {...props}
-    type="date"
+    type={showTime ? 'datetime-local' : 'date'}
     slotProps={{
-      inputLabel: { shrink: true, style: { color: '#78909C', fontSize: '0.875rem' } },
+      inputLabel: {
+        shrink: true,
+        style: { color: '#78909C', fontSize: '0.875rem' },
+      },
       ...props.slotProps,
+    }}
+    sx={{
+      // tint the calendar icon:
+      '& input::-webkit-calendar-picker-indicator': {
+        filter: 'invert(0.7)',
+      },
+      '& input::-moz-calendar-picker-indicator': {
+        filter: 'invert(0.7)',
+      },
+      ...props.sx,
     }}
   />
 );

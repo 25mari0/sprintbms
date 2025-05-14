@@ -60,15 +60,20 @@ class BookingManagementService {
         });
       }
   
-      // Process workers
       for (const worker of workers) {
-        const workerEntity = await transactionalEntityManager.findOneBy(this.userRepository.target, { 
-          id: worker.workerId 
-        });
+        const workerEntity = await transactionalEntityManager.findOne(
+          this.userRepository.target,
+          {
+            where: { id: worker.workerId },
+            relations: ['business']         // ← tell TypeORM to load the `business` relation
+          }
+        );
         if (!workerEntity) throw new AppError(400, 'Worker not found');
+        
         if (workerEntity.business?.id !== businessId) {
           throw new AppError(400, 'Worker does not belong to this business');
         }
+        
   
         await transactionalEntityManager.save(this.bookingWorkerRepository.target, {
           booking: booking,

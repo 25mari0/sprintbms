@@ -4,11 +4,13 @@ import { Booking, BookingsResponse } from '../types/bookingTypes';
 import { Meta } from '../types/index';
 import BookingTable from '../components/Bookings/BookingTable';
 import { Box, CircularProgress, Typography } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { Add, Search } from '@mui/icons-material';
 import { CustomButton } from '../components/CustomButton';
 import DropdownSelect from '../components/DropdownSelect';
 import { TextBox } from '../components/TextBox'; 
 import DatePicker from '../components/DatePicker'; 
+import { CreateBookingModal } from '../components/Bookings/CreateBookingModal';
+
 const BookingsPage = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 20, totalPages: 1 });
@@ -19,6 +21,7 @@ const BookingsPage = () => {
   const [search, setSearch] = useState<string>('');
   const [pickupDateStart, setPickupDateStart] = useState<string>('');
   const [pickupDateEnd, setPickupDateEnd] = useState<string>('');
+  const [openCreateModal, setOpenCreateModal] = useState(false);
 
   const loadBookings = async (
     targetPage: number,
@@ -90,12 +93,31 @@ const BookingsPage = () => {
     loadBookings(1);
   };
 
+  const onBookingCreated = () => {
+    setPage(1);
+    loadBookings(1, search, statusFilter, pickupDateStart, pickupDateEnd);
+  };
+
   return (
     <Box sx={{ p: 4, minHeight: '100vh', bgcolor: '#121212', color: '#E3F2FD' }}>
       <Typography variant="h4" gutterBottom>
         Bookings
       </Typography>
+      
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <CustomButton
+          startIcon={<Add />}
+          customVariant="primary"
+          onClick={() => setOpenCreateModal(true)}
+        >
+          Create Booking
+        </CustomButton>
+        <CreateBookingModal
+          open={openCreateModal}
+          onClose={() => setOpenCreateModal(false)}
+          onCreated={onBookingCreated}
+        />
+      <Box sx={{ width: '1px', height: '24px', bgcolor: '#2A2A2A', mx: 1 }} />
         <DropdownSelect value={statusFilter} onChange={setStatusFilter} />
         <TextBox
           label="Search Filter"
@@ -126,6 +148,8 @@ const BookingsPage = () => {
           Clear Filters
         </CustomButton>
       </Box>
+
+
       <Box sx={{ position: 'relative' }}>
         {loading && (
           <Box

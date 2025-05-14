@@ -32,8 +32,6 @@ export interface Business {
     bookingServices: BookingService[];
   }
   
-
-  
   export interface BookingsResponse {
     status: string;
     data?: Booking[];

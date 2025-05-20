@@ -6,6 +6,8 @@ import { JwtPayload } from '../types/authTypes';
 import { VerificationToken } from '../entities/VerificationToken';
 import { AppError } from '../utils/error';
 import businessService from '../services/business.service';
+import { getLocationFromIp } from '../geo/geo';
+import { getClientIp } from '../utils/ip';
 
 const userRepository = AppDataSource.getRepository(User);
 const verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
@@ -41,10 +43,15 @@ const authController = {
     const { email, password } = req.body;
 
     try {
+      const ipAddress = await getClientIp(req);
+      const location = await getLocationFromIp(ipAddress);
+      if (!location.city) {
+        throw new AppError(500, 'Could not retrieve location from IP address');
+      }
       const user = await authService.authenticateUser(email, password);
 
       const accessToken = authService.generateAccessToken(user!.id, user!.role, user.business?.id, user.business?.licenseExpirationDate);
-      const refreshToken = await authService.generateRefreshToken(user!.id);
+      const refreshToken = await authService.generateRefreshToken(user!.id, ipAddress, location.city);
       
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,

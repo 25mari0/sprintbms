@@ -1,398 +1,459 @@
-// src/components/Bookings/CreateBookingModal.tsx
-import React, {
-    useEffect,
-    useState,
-    useMemo,
-    useCallback,
-    memo,
-  } from 'react';
-  import {
-    Modal,
-    Fade,
-    Box,
-    Typography,
-    TextField,
-    CircularProgress,
-    List,
-    ListItem,
-    ListItemText,
-    InputAdornment,
-  } from '@mui/material';
-  import Autocomplete from '@mui/material/Autocomplete';
-  import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
-  import { debounce } from 'lodash';
-  import { get, post } from '../../services/api';
-  import { Service } from '../../types/serviceTypes';
-  import { Customer, CustomersResponse } from '../../types/customerTypes';
-  import { Worker } from '../../types/workerTypes'; 
-  import { CustomButton } from '../CustomButton';
+import React, { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import {
+  Modal,
+  Fade,
+  Box,
+  Typography,
+  TextField,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  InputAdornment,
+  Stack,
+} from '@mui/material';
+import LocalPhoneRoundedIcon from '@mui/icons-material/LocalPhoneRounded';
+import Autocomplete from '@mui/material/Autocomplete';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
+import { get, post } from '../../services/api';
+import { Service } from '../../types/serviceTypes';
+import { Customer, CustomersResponse } from '../../types/customerTypes';
+import { Worker } from '../../types/workerTypes';
+import { CustomButton } from '../CustomButton';
 import DatePicker from '../DatePicker';
-  
-  const modalStyle = {
-    position: 'absolute' as const,
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 500,
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    bgcolor: 'rgba(30,30,30,0.95)',
-    backdropFilter: 'blur(8px)',
-    color: '#E8ECEF',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-    p: 3,
-    borderRadius: '12px',
-    border: '1px solid #2A2A2A',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: 2,
-  };  
+import { SearchDropdown } from '../SearchDropdown';
 
-  interface CreateBookingForm {
-    customerId: string;
-    licensePlate: string;
-    pickupDate: string;
-    workers: { workerId: string }[];
-    services: { serviceId: number; name: string; basePrice: number; price: number }[];
-  }
-  
-  // A tiny memo’d dropdown so it never re-renders on price edit:
-  const ServiceSelector = memo(({
-    svcOptions,
-    svcLoading,
-    selected,
-    onChange
-  }: {
-    svcOptions: Service[];
-    svcLoading: boolean;
-    selected: Service[];
-    onChange: (e:any, v:Service[])=>void;
-  }) => (
-    <Autocomplete<Service, true, false, false>
-      multiple
-      options={svcOptions}
-      getOptionLabel={s => s.name}
-      value={selected}
-      onChange={onChange}
-      loading={svcLoading}
-      renderInput={params => (
-        <TextField
-          {...params}
-          label="Select Services"
-          size="small"
-          InputProps={{
-            ...params.InputProps,
-            endAdornment: (
-              <>
-                {svcLoading && <CircularProgress size={16}/> }
-                {params.InputProps.endAdornment}
-              </>
-            )
-          }}
-        />
-      )}
-    />
-  ));
-  ServiceSelector.displayName = 'ServiceSelector';
-  
-  export const CreateBookingModal: React.FC<{
-    open: boolean;
-    onClose: ()=>void;
-    onCreated: ()=>void;
-  }> = ({ open, onClose, onCreated }) => {
-    const { control, handleSubmit, reset } = useForm<CreateBookingForm>({
-      defaultValues: { customerId:'', licensePlate:'', pickupDate:'', workers:[], services:[] }
-    });
-    const { fields, append, remove } = useFieldArray({ control, name:'services' });
-  
-    // Customer search
-    const [custInput, setCustInput] = useState('');
-    const [custOptions, setCustOptions] = useState<Customer[]>([]);
-    const [custLoading, setCustLoading] = useState(false);
-  
-    // Workers & services
-    const [workerOptions, setWorkerOptions] = useState<Worker[]>([]);
-    const [svcOptions, setSvcOptions] = useState<Service[]>([]);
-    const [svcLoading, setSvcLoading] = useState(false);
-  
-    // Dropdown state for services
-    const [selectedServices, setSelectedServices] = useState<Service[]>([]);
-  
-    // Fetch workers + services once
-    useEffect(() => {
-      get<Worker[]>('/worker/', undefined, { disableToast:true })
-        .then(r => r.status==='success' && setWorkerOptions(r.data || []))
-        .catch(console.error);
-      setSvcLoading(true);
-      get<Service[]>('/services', undefined, { disableToast:true })
-        .then(r => r.status==='success' && setSvcOptions(r.data||[]))
-        .catch(console.error)
-        .finally(()=>setSvcLoading(false));
-    }, []);
-  
-    // Debounced search
-    const runSearch = useCallback(debounce((q:string)=>{
-      setCustLoading(true);
-      get<CustomersResponse>(`/customer/?search=${encodeURIComponent(q)}&limit=10`, undefined, {disableToast:true})
-        .then(r=> {
-          if(r.status==='success' && r.data) setCustOptions(r.data.data);
-        })
-        .finally(()=>setCustLoading(false));
-    },300),[]);
-  
-    useEffect(()=>{
-      if(custInput) runSearch(custInput);
-      else setCustOptions([]);
-    },[custInput, runSearch]);
-  
-    // Total & baseTotal
-    const watchedServices = useWatch({ control, name: 'services' }) || [];
-    const baseTotal = useMemo(
-        () => watchedServices.reduce((sum, f) => sum + f.basePrice, 0),
-        [watchedServices]
-      );
-      const total = useMemo(
-        () => watchedServices.reduce((sum, f) => sum + f.price, 0),
-        [watchedServices]
-      );
-      const totalPct = baseTotal > 0 ? ((baseTotal - total) / baseTotal) * 100 : 0;
-  
-    // Sync services
-    const onServicesChange = (_:any, newSel:Service[])=>{
-      setSelectedServices(newSel);
-      const exist = new Set(fields.map(f=>f.serviceId));
-      newSel.forEach(s=>{
-        if(!exist.has(Number(s.id))){
-          append({ serviceId: Number(s.id), name:s.name, basePrice:+s.price, price:+s.price });
+// Styles
+const modalStyle = {
+  position: 'absolute' as const,
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 500,
+  maxHeight: '90vh',
+  overflowY: 'auto',
+  bgcolor: 'rgba(30,30,30,0.95)',
+  backdropFilter: 'blur(8px)',
+  color: '#E8ECEF',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+  p: 3,
+  borderRadius: '12px',
+  border: '1px solid #2A2A2A',
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: 2,
+};
+
+// Types
+interface CreateBookingForm {
+  customerId: string;
+  licensePlate: string;
+  pickupDate: string;
+  workers: { workerId: string }[];
+  services: { serviceId: number; name: string; basePrice: number; price: number }[];
+}
+
+interface BookingService {
+  serviceId: number;
+  name: string;
+  basePrice: number;
+  price: number;
+}
+
+// Sub-components
+const ServiceSelector = memo(({
+  options,
+  loading,
+  selected,
+  onChange
+}: {
+  options: Service[];
+  loading: boolean;
+  selected: Service[];
+  onChange: (e: any, v: Service[]) => void;
+}) => (
+  <Autocomplete<Service, true, false, false>
+    multiple
+    options={options}
+    getOptionLabel={s => s.name}
+    value={selected}
+    onChange={onChange}
+    loading={loading}
+    renderInput={params => (
+      <TextField
+        {...params}
+        label="Select Services"
+        size="small"
+        InputProps={{
+          ...params.InputProps,
+          endAdornment: (
+            <>
+              {loading && <CircularProgress size={16} />}
+              {params.InputProps.endAdornment}
+            </>
+          )
+        }}
+      />
+    )}
+  />
+));
+ServiceSelector.displayName = 'ServiceSelector';
+
+const ServicePriceItem = ({
+  service,
+  index,
+  control,
+  onPriceChange
+}: {
+  service: BookingService;
+  index: number;
+  control: any;
+  onPriceChange: (serviceId: number, price: number) => void;
+}) => {
+  const basePrice = service.basePrice || 0;
+  const price = service.price || 0;
+  const discountPercent = basePrice > 0 && price < basePrice
+    ? ((basePrice - price) / basePrice) * 100
+    : 0;
+
+  return (
+    <ListItem key={service.serviceId} divider sx={{ alignItems: 'center' }}>
+      <ListItemText
+        primary={service.name}
+        secondary={
+          <>
+            Base: €{basePrice.toFixed(2)} • Your: €{price.toFixed(2)}
+            {discountPercent > 0 && (
+              <Typography
+                component="span"
+                variant="caption"
+                sx={{ ml: 1, color: '#4caf50' }}
+              >
+                {discountPercent.toFixed(0)}% off
+              </Typography>
+            )}
+          </>
         }
-      });
-      fields.forEach((f,i)=>{
-        if(!newSel.find(s => Number(s.id) === f.serviceId)) remove(i);
-      });
-    };
-  
-    // Submit
-    const onSubmit = async (data:CreateBookingForm)=>{
-      const payload = {
-        customerId: data.customerId,
-        licensePlate: data.licensePlate,
-        pickupDate: data.pickupDate,
-        workers: data.workers.map(w=>({ workerId:w.workerId })),
-        services: data.services.map(s=>({ serviceId:s.serviceId, price:s.price }))
+      />
+      <Controller
+        name={`services.${index}.price`}
+        control={control}
+        defaultValue={price}
+        render={({ field }) => (
+          <TextField
+            {...field}
+            value={Number(field.value)}
+            onChange={(e) => {
+              const newPrice = Number(e.target.value);
+              field.onChange(newPrice);
+              onPriceChange(service.serviceId, newPrice);
+            }}
+            type="number"
+            size="small"
+            sx={{
+              width: 100,
+              ml: 2,
+              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                WebkitAppearance: 'none',
+                margin: 0,
+              },
+              '& input[type=number]': { MozAppearance: 'textfield' },
+            }}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">€</InputAdornment>
+              ),
+            }}
+          />
+        )}
+      />
+    </ListItem>
+  );
+};
+
+// Main component
+export const CreateBookingModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}> = ({ open, onClose, onCreated }) => {
+  // Form setup
+  const { control, handleSubmit, reset } = useForm<CreateBookingForm>({
+    defaultValues: { customerId: '', licensePlate: '', pickupDate: '', workers: [], services: [] }
+  });
+  const { replace } = useFieldArray({ control, name: 'services' });
+
+  // Customer state
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  // Workers state
+  const [workerOptions, setWorkerOptions] = useState<Worker[]>([]);
+
+  // Services state
+  const [serviceOptions, setServiceOptions] = useState<Service[]>([]);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
+  const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [modifiedPrices, setModifiedPrices] = useState<Record<number, number>>({});
+
+  // Fetch workers and services on mount
+  useEffect(() => {
+    // Fetch workers
+    get<Worker[]>('/worker/', undefined, { disableToast: true })
+      .then(response => {
+        if (response.status === 'success') {
+          setWorkerOptions(response.data || []);
+        }
+      })
+      .catch(console.error);
+
+    // Fetch services
+    setIsLoadingServices(true);
+    get<Service[]>('/services', undefined, { disableToast: true })
+      .then(response => {
+        if (response.status === 'success') {
+          setServiceOptions(response.data || []);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingServices(false));
+  }, []);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!open) {
+      reset();
+      setSelectedCustomer(null);
+      setSelectedServices([]);
+      setModifiedPrices({});
+    }
+  }, [open, reset]);
+
+  // Customer search function
+  const fetchCustomers = useCallback(async (search: string) => {
+    const params = new URLSearchParams({
+      page: '1',
+      limit: '10',
+      ...(search && { search }),
+    });
+    const response = await get<CustomersResponse>(
+      `/customer/?${params.toString()}`,
+      undefined,
+      { disableToast: true }
+    );
+    return response.status === 'success' && response.data ? response.data.data : [];
+  }, []);
+
+  // Handle service selection changes
+  const handleServicesChange = useCallback((_: any, newSelectedServices: Service[]) => {
+    setSelectedServices(newSelectedServices);
+
+    const updatedServices = newSelectedServices.map(service => {
+      const serviceId = Number(service.id);
+      return {
+        serviceId,
+        name: service.name,
+        basePrice: +service.price,
+        price: serviceId in modifiedPrices ? modifiedPrices[serviceId] : +service.price
       };
-      const res = await post('/bookings', payload);
-      if(res.status==='success'){ onCreated(); onClose(); reset(); }
+    });
+
+    replace(updatedServices);
+  }, [modifiedPrices, replace]);
+
+  // Handle service price changes
+  const handlePriceChange = useCallback((serviceId: number, newPrice: number) => {
+    setModifiedPrices(prev => ({
+      ...prev,
+      [serviceId]: newPrice
+    }));
+  }, []);
+
+  // Calculate totals
+  const watchedServices = useWatch({ control, name: 'services' }) || [];
+  const baseTotal = useMemo(
+    () => watchedServices.reduce((sum, service) => sum + service.basePrice, 0),
+    [watchedServices]
+  );
+  const total = useMemo(
+    () => watchedServices.reduce((sum, service) => sum + service.price, 0),
+    [watchedServices]
+  );
+  const discountPercent = baseTotal > 0 ? ((baseTotal - total) / baseTotal) * 100 : 0;
+
+  // Form submission
+  const handleFormSubmit = async (data: CreateBookingForm) => {
+    const payload = {
+      customerId: data.customerId,
+      licensePlate: data.licensePlate,
+      pickupDate: data.pickupDate,
+      workers: data.workers.map(w => ({ workerId: w.workerId })),
+      services: data.services.map(s => ({ serviceId: s.serviceId, price: s.price }))
     };
-  
-    return (
-      <Modal open={open} onClose={onClose} closeAfterTransition>
-        <Fade in={open}>
-          <Box sx={modalStyle}>
-            <Typography variant="h6">Create Booking</Typography>
-  
-            {/* Customer */}
-            <Controller name="customerId" control={control}
-              rules={{ required:'Customer required' }}
-              render={({ field:{value,onChange}, fieldState })=>{
-                const sel = custOptions.find(c=>c.id===value)||null;
-                return (
-                  <Autocomplete<Customer,false,false,false>
-                    options={custOptions}
-                    getOptionLabel={c=>c.name}
-                    inputValue={custInput}
-                    onInputChange={(_,v)=>setCustInput(v)}
-                    filterOptions={opts=>opts}
-                    isOptionEqualToValue={(o,v)=>o.id===v.id}
-                    value={sel}
-                    onChange={(_,v)=>onChange(v?.id||'')}
-                    loading={custLoading}
-                    renderOption={(props, opt) => {
-                        // pull key out so we can pass it explicitly
-                        const { key, ...rest } = props as any;
-                        return (
-                          <li key={key} {...rest}>
-                            <Typography>{opt.name}</Typography>
-                            <Typography variant="caption" color="gray">
-                              {opt.phone}
-                            </Typography>
-                          </li>
-                        );
-                      }}
-                    renderInput={params=>(
-                      <TextField
-                        {...params}
-                        label="Search Customer"
-                        size="small"
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message}
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment:(
-                            <>
-                              {custLoading&&<CircularProgress size={16}/>}
-                              {params.InputProps.endAdornment}
-                            </>
-                          )
-                        }}
-                      />
-                    )}
-                  />
-                );
-              }}
-            />
-  
-            {/* License */}
-            <Controller name="licensePlate" control={control}
-              rules={{ required:'Required' }}
-              render={({ field, fieldState })=>(
-                <TextField
-                  {...field}
-                  label="License Plate"
-                  size="small"
-                  error={!!fieldState.error}
-                  helperText={fieldState.error?.message}
-                />
-              )}
-            />
-  
-            {/* Date */}
-            <Controller
-                name="pickupDate"
-                control={control}
-                rules={{ required: 'Required' }}
-                render={({ field, fieldState }) => (
-                <DatePicker
+    
+    const response = await post('/bookings', payload);
+    if (response.status === 'success') {
+      onCreated();
+      onClose();
+      reset();
+    }
+  };
+
+  // Handle modal close
+  const handleClose = () => {
+    onClose();
+    reset();
+  };
+
+  return (
+    <Modal open={open} onClose={handleClose} closeAfterTransition>
+      <Fade in={open}>
+        <Box sx={modalStyle}>
+          <Typography variant="h6">Create Booking</Typography>
+
+          {/* Customer */}
+          <Controller
+            name="customerId"
+            control={control}
+            rules={{ required: 'Customer required' }}
+            render={({ field: { onChange }, fieldState }) => (
+              <SearchDropdown<Customer>
+                value={selectedCustomer}
+                onChange={customer => {
+                  setSelectedCustomer(customer);
+                  onChange(customer?.id || '');
+                }}
+                fetchOptions={fetchCustomers}
+                getOptionLabel={customer => customer.name}
+                renderOption={customer => (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography>{customer.name}</Typography>
+                    <Box sx={{ width: '1px', height: '24px', bgcolor: 'gray', mx: 1 }} />
+                    <Stack direction="row" alignItems="center">
+                      <LocalPhoneRoundedIcon fontSize="small" sx={{ color: 'gray', mr: 0.5 }} />
+                      <Typography fontSize="small" variant="caption" color="gray">
+                        {customer.phone}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                )}
+                label="Search Customer"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+
+          {/* License Plate */}
+          <Controller
+            name="licensePlate"
+            control={control}
+            rules={{ required: 'Required' }}
+            render={({ field, fieldState }) => (
+              <TextField
+                {...field}
+                label="License Plate"
+                size="small"
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message}
+              />
+            )}
+          />
+
+          {/* Pickup Date */}
+          <Controller
+            name="pickupDate"
+            control={control}
+            rules={{ required: 'Required' }}
+            render={({ field, fieldState }) => (
+              <DatePicker
                 label="Pickup At"
-                showTime      // <-- now toggles date+time
+                showTime
                 value={field.value}
                 onChange={(val) => field.onChange(val)}
                 error={fieldState.error}
+              />
+            )}
+          />
+
+          {/* Workers */}
+          <Controller
+            name="workers"
+            control={control}
+            rules={{ validate: v => v.length > 0 || 'Pick ≥1 worker' }}
+            render={({ field: { value, onChange }, fieldState }) => {
+              const selectedWorkers = workerOptions.filter(
+                worker => value.some(v => v.workerId === worker.user.id)
+              );
+              
+              return (
+                <Autocomplete<Worker, true, false, false>
+                  multiple
+                  options={workerOptions}
+                  getOptionLabel={worker => worker.user.name}
+                  value={selectedWorkers}
+                  onChange={(_, newSelectedWorkers) => 
+                    onChange(newSelectedWorkers.map(worker => ({ workerId: worker.user.id })))
+                  }
+                  renderInput={params => (
+                    <TextField
+                      {...params}
+                      label="Assign Workers"
+                      size="small"
+                      error={!!fieldState.error}
+                      helperText={fieldState.error?.message}
+                    />
+                  )}
                 />
-                )}
-                />
+              );
+            }}
+          />
 
-  
-            {/* Workers */}
-            <Controller name="workers" control={control}
-              rules={{ validate:v=>v.length>0||'Pick ≥1 worker' }}
-              render={({ field:{value,onChange}, fieldState })=>{
-                const sel = workerOptions.filter(w=>value.some(v=>v.workerId===w.user.id));
-                return (
-                  <Autocomplete<Worker,true,false,false>
-                    multiple
-                    options={workerOptions}
-                    getOptionLabel={w=>w.user.name}
-                    value={sel}
-                    onChange={(_,v)=>onChange(v.map(w=>({workerId:w.user.id})))}
-                    renderInput={params=>(
-                      <TextField
-                        {...params}
-                        label="Assign Workers"
-                        size="small"
-                        error={!!fieldState.error}
-                        helperText={fieldState.error?.message}
-                      />
-                    )}
-                  />
-                );
-              }}
-            />
-  
-            {/* Services */}
-            <ServiceSelector
-              svcOptions={svcOptions}
-              svcLoading={svcLoading}
-              selected={selectedServices}
-              onChange={onServicesChange}
-            />
-  
-            {/* Price + % */}
-            <List dense sx={{ maxHeight: 200, overflowY: 'auto' }}>
-                {watchedServices.map((f, idx) => {
-                    const pct = f.price < f.basePrice
-                    ? ((f.basePrice - f.price) / f.basePrice) * 100
-                    : 0;
+          {/* Services */}
+          <ServiceSelector
+            options={serviceOptions}
+            loading={isLoadingServices}
+            selected={selectedServices}
+            onChange={handleServicesChange}
+          />
 
-                    return (
-                    <ListItem key={f.serviceId} divider sx={{ alignItems: 'center' }}>
-                        <ListItemText
-                        primary={f.name}
-                        secondary={
-                            <>
-                            Base: €{f.basePrice.toFixed(2)} • Your: €{f.price.toFixed(2)}
-                            {pct > 0 && (
-                                <Typography
-                                component="span"
-                                variant="caption"
-                                sx={{ ml: 1, color: '#4caf50' }}
-                                >
-                                {pct.toFixed(0)}% off
-                                </Typography>
-                            )}
-                            </>
-                        }
-                        />
+          {/* Service Prices */}
+          <List dense sx={{ maxHeight: 200, overflowY: 'auto' }}>
+            {watchedServices.map((service, index) => (
+              <ServicePriceItem
+                key={service.serviceId}
+                service={service}
+                index={index}
+                control={control}
+                onPriceChange={handlePriceChange}
+              />
+            ))}
+          </List>
 
-                        <Controller
-                        name={`services.${idx}.price`}
-                        control={control}
-                        defaultValue={f.price}
-                        render={({ field }) => (
-                            <TextField
-                            {...field}
-                            value={Number(field.value)}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
-                            type="number"
-                            size="small"
-                            sx={{
-                                width: 100,
-                                ml: 2,
-                                // hide spinners
-                                '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                                WebkitAppearance: 'none',
-                                margin: 0,
-                                },
-                                '& input[type=number]': { MozAppearance: 'textfield' },
-                            }}
-                            InputProps={{
-                                endAdornment: (
-                                <InputAdornment position="end">€</InputAdornment>
-                                ),
-                            }}
-                            />
-                        )}
-                        />
-
-                    </ListItem>
-                    );
-                })}
-                </List>
-  
-            {/* Total + overall % */}
-            <Typography variant="h6">
+          {/* Total */}
+          <Typography variant="h6">
             Total: €{total.toFixed(2)}
-            {totalPct > 0 && (
-                <Typography
+            {discountPercent > 0 && (
+              <Typography
                 component="span"
                 variant="subtitle2"
                 sx={{ ml: 2, color: '#4caf50' }}
-                >
-                You save {totalPct.toFixed(0)}%
-                </Typography>
+              >
+                Discount of {discountPercent.toFixed(0)}%
+              </Typography>
             )}
-            </Typography>
-  
-            {/* Actions */}
-            <Box sx={{ display:'flex', justifyContent:'flex-end', gap:1 }}>
-              <CustomButton customVariant="secondary" onClick={()=>{onClose(); reset();}}>
-                Cancel
-              </CustomButton>
-              <CustomButton onClick={handleSubmit(onSubmit)}>
-                Create Booking
-              </CustomButton>
-            </Box>
+          </Typography>
+
+          {/* Actions */}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+            <CustomButton customVariant="secondary" onClick={handleClose}>
+              Cancel
+            </CustomButton>
+            <CustomButton onClick={handleSubmit(handleFormSubmit)}>
+              Create Booking
+            </CustomButton>
           </Box>
-        </Fade>
-      </Modal>
-    );
-  };
+        </Box>
+      </Fade>
+    </Modal>
+  );
+};

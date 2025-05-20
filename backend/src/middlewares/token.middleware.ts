@@ -4,6 +4,8 @@ import { JwtPayload } from '../types/authTypes';
 import authService from '../services/auth.service';
 import { getRefreshTokenFromCookie, getAccessTokenFromCookie } from '../utils/auth';
 import { AppError } from '../utils/error';
+import { compareCity } from '../geo/geo';
+import { getClientIp } from '../utils/ip';
 
 export const tokenMiddleware = {
   authenticate: async (
@@ -11,9 +13,10 @@ export const tokenMiddleware = {
     res: Response,
     next: NextFunction,
   ): Promise<void> => {
-    // Extract tokens from cookies
+    // Extract tokens from cookies & ip
     const accessToken = getAccessTokenFromCookie(req);
     const refreshToken = getRefreshTokenFromCookie(req);
+    const ipAddress = getClientIp(req);
 
     // Case 1: No tokens provided
     if (!accessToken && !refreshToken) {
@@ -59,8 +62,20 @@ export const tokenMiddleware = {
             throw new AppError(401, 'Business info outdated—no valid refresh token to update');
           }
           // Refresh to update business info
-          await refreshAccessToken(req, res, refreshToken!);
+          await refreshAccessToken(req, res, ipAddress, refreshToken!);
           return next();
+        }
+
+        // Check if the user's location matches the one in the token
+        const tokenLocation = await authService.getDBTokenFromCookie(refreshToken!);
+        // Check if IPs are different first
+        if (tokenLocation?.ipAddress !== ipAddress) {
+          // Only do city comparison if IPs are different
+          if (!await compareCity(ipAddress, tokenLocation!.location!)) {
+            res.clearCookie('accessToken');
+            res.clearCookie('refreshToken');
+            throw new AppError(500, 'Session expired, please log in again');
+          }
         }
 
         // All checks passed—set user and proceed
@@ -69,7 +84,7 @@ export const tokenMiddleware = {
       } catch (error) {
         if (error instanceof jwt.TokenExpiredError && refreshTokenValid) {
           // Expired access token with valid refresh token—refresh it
-          await refreshAccessToken(req, res, refreshToken!);
+          await refreshAccessToken(req, res, ipAddress, refreshToken!);
           return next();
         }
         // Invalid access token (e.g., tampered)—fail
@@ -81,7 +96,7 @@ export const tokenMiddleware = {
 
     // If we get here: no access token, but valid refresh token exists
     if (refreshTokenValid) {
-      await refreshAccessToken(req, res, refreshToken!);
+      await refreshAccessToken(req, res, ipAddress, refreshToken!);
       return next();
     }
 
@@ -99,10 +114,23 @@ export const tokenMiddleware = {
 async function refreshAccessToken(
   req: Request & { user?: JwtPayload },
   res: Response,
+  ipAddress: string,
   refreshToken: string,
 ): Promise<void> {
   try {
-    const { accessToken: newAccessToken } = await authService.refreshAccessToken(refreshToken);
+    // Check if the user's location matches the one in the token
+    const tokenLocation = await authService.getDBTokenFromCookie(refreshToken!);
+    // Check if IPs are different first
+    if (tokenLocation?.ipAddress !== ipAddress) {
+      // Only do city comparison if IPs are different
+      if (!await compareCity(ipAddress, tokenLocation!.location!)) {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        throw new AppError(500, 'Session expired, please log in again');
+      }
+    }
+
+    const { accessToken: newAccessToken } = await authService.refreshAccessToken(refreshToken, ipAddress, tokenLocation!.location!);
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

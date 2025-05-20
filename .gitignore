@@ -5,3 +5,4 @@ dist/
 .docker/
 pgadmin_data/
 bruno/
+backend/src/geo/GeoLite2-City.mmdb

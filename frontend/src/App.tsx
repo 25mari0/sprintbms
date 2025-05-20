@@ -6,23 +6,25 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { PublicRoute } from './components/PublicRoute';
 import ProtectedLayout from './components/ProtectedLayout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import VerifyAccount from './pages/VerifyAccount';
-import Success from './pages/Success';
-import BusinessCreate from './pages/BusinessCreate';
-import BusinessRenew from './pages/BusinessRenew';
 import 'react-toastify/dist/ReactToastify.css';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react'; 
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { useEffect } from 'react';
-import Home from './pages/Home';
 import './App.css';
-import BookingsPage from './pages/Bookings';
-import WorkerManagement from './pages/WorkerManagement';
-import WorkerSetPassword from './pages/WorkerSetPassword';
-import CustomerManagement from './pages/CustomerManagement';
-import Services from './pages/Services';
+
+//page imports use React.lazy
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const VerifyAccount = lazy(() => import('./pages/VerifyAccount'));
+const Success = lazy(() => import('./pages/Success'));
+const BusinessCreate = lazy(() => import('./pages/BusinessCreate'));
+const BusinessRenew = lazy(() => import('./pages/BusinessRenew'));
+const Home = lazy(() => import('./pages/Home'));
+const BookingsPage = lazy(() => import('./pages/Bookings'));
+const WorkerManagement = lazy(() => import('./pages/WorkerManagement'));
+const WorkerSetPassword = lazy(() => import('./pages/WorkerSetPassword'));
+const CustomerManagement = lazy(() => import('./pages/CustomerManagement'));
+const Services = lazy(() => import('./pages/Services'));
 
 const theme = createTheme({
   palette: {
@@ -96,8 +98,8 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ minHeight: '100vh', marginLeft: '0px' }}>
+        <AuthProvider>
         <Suspense fallback={<LoadingSpinner />}>
-          <AuthProvider>
             <Routes>
               <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
               <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -112,8 +114,8 @@ const App = () => {
               <Route path="/business/create" element={<ProtectedRoute><ProtectedLayout><BusinessCreate /></ProtectedLayout></ProtectedRoute>} />              
               <Route path="/business/renew" element={<ProtectedRoute><ProtectedLayout><BusinessRenew /></ProtectedLayout></ProtectedRoute>} />   
             </Routes>
-          </AuthProvider>
         </Suspense>
+        </AuthProvider>
       </Box>
       <ToastContainer
         position="top-right"

@@ -23,6 +23,7 @@ const bookingController = {
       res.status(201).json({
         status: 'success',
         data: booking,
+        message: 'Booking created successfully',
       });
     } catch (error) {
       next(error);

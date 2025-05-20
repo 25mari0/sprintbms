@@ -22,6 +22,12 @@ export class Token {
   @Column()
   userId!: string;
 
+  @Column({ type: 'text', nullable: false })
+  ipAddress!: string; // To store the IP address where the token was issued
+
+  @Column({ type: 'text', nullable: false })
+  location!: string; // To store the location where the token was issued
+
   @ManyToOne(() => User, (user) => user.tokens)
   user!: User;
 
@@ -31,8 +37,4 @@ export class Token {
   @Column({ type: 'timestamp' })
   expiresAt!: Date;
 
-  // Additional fields if needed, like:
-  // @Column({ type: 'text', nullable: true })
-  // deviceInfo?: string; // To store info about the device where the token was issued
-  // to-do: fingerprinting
 }

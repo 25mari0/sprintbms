@@ -28,6 +28,18 @@ class AuthService {
     }
   }
 
+  async getDBTokenFromCookie(cookie: string): Promise<Token | null> {
+    try {
+      const decoded = jwt.verify(cookie, process.env.REFRESH_TOKEN_SECRET!) as { userId: string };
+      const token = await this.tokenRepository.findOne({
+        where: { user: { id: decoded.userId }, expiresAt: MoreThan(new Date()) },
+      });
+      return token;
+    } catch {
+      throw new AppError(400, 'Failed to verify refresh token');
+    }
+  }
+
   async authenticateUser(email: string, password: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email },
@@ -74,15 +86,15 @@ class AuthService {
     );
   }
 
-  async generateRefreshToken(userId: string): Promise<string> {
+  async generateRefreshToken(userId: string, ipAddress: string, location: string): Promise<string> {
     const refreshToken = jwt.sign({ userId }, process.env.REFRESH_TOKEN_SECRET!, {
       expiresIn: '30d',
     });
-    await this.storeRefreshToken(userId, refreshToken);
+    await this.storeRefreshToken(userId, refreshToken, ipAddress, location);
     return refreshToken;
   }
 
-  public async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  public async storeRefreshToken(userId: string, refreshToken: string, ipAddress: string, location: string): Promise<void> {
     try {
       const salt = await bcrypt.genSalt(10);
       const hashedToken = await bcrypt.hash(refreshToken, salt);
@@ -91,7 +103,7 @@ class AuthService {
       await this.tokenRepository.manager.transaction(async (transactionalEntityManager) => {
         await transactionalEntityManager.upsert(
           Token,
-          { userId, token: hashedToken, salt, expiresAt },
+          { userId, token: hashedToken, salt, expiresAt, ipAddress, location },
           ['userId'] //update if userId exists
         );
       });
@@ -134,6 +146,8 @@ class AuthService {
 
   async refreshAccessToken(
     refreshToken: string,
+    ipAddress: string,
+    location: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
       const { userId, valid } = await this.validateRefreshToken(refreshToken);
@@ -152,9 +166,9 @@ class AuthService {
       }
 
       const newAccessToken = this.generateAccessToken(user.id, user.role, user.business?.id, user.business?.licenseExpirationDate);
-      const newRefreshToken = await this.generateRefreshToken(userId);
+      const newRefreshToken = await this.generateRefreshToken(userId, ipAddress, location);
       await this.revokeRefreshToken(refreshToken); // revoke the old token
-      await this.storeRefreshToken(userId, newRefreshToken); // store the new one
+      await this.storeRefreshToken(userId, newRefreshToken, ipAddress, location); // store the new one
 
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (error) {

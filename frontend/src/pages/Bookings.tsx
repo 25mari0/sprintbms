@@ -36,7 +36,7 @@ const BookingsPage = () => {
         page: targetPage.toString(),
         limit: rowsPerPage.toString(),
         ...(status && { status }),
-        ...(searchQuery && { bookingText: searchQuery }),
+        ...(searchQuery && { search: searchQuery }),
         ...(startDate && { startDate }),
         ...(endDate && { endDate }),
       });

@@ -1,7 +1,7 @@
 project goals:
 
 - full-stack web application to streamline operations for car detailing businesses, subscription based /w Stripe payments. 
-- combine a robust Node.js backend with a dynamic React frontend to manage bookings, services, customers, and user authentication seamlessly, along with detailed and useful business management analytics
+- combine a robust expressjs/typescript backend with a dynamic React frontend to manage bookings, services, customers, workers and user authentication seamlessly, along with detailed and useful business management analytics
 
 "education" goals:
 
@@ -28,7 +28,7 @@ tech stack:
         -DRY principles
         -fully dockerized backend (decided to not do the same for the FE because I did not see the need)
         -async wrapped error handling
-        -refresh & access tokens
+        -refresh & access cookies w/ ip location fingerprinting
         -optimized db operation's frequency when possible to improve performance
         -husky (githook) with prettier & eslint
         -used .env which will be replaced by a Vault later
@@ -37,7 +37,5 @@ tech stack:
 progress:
 
 - stripe payments are integrated on the backend and frontend
-- backend is around 70% done, just needs an optimized & working get filter for bookings and a couple more get requests for other entities.
-- frontend is starting to take shape, login, register, account verification, payments pages are created and have a proper flow
- 	
-    
+- backend is around 70% done, just needs a few more optimizations and a couple more routes.
+- frontend is starting to take shape, most pages have a proper flow, now adding functionality and uniform styling

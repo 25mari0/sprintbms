@@ -1,5 +1,6 @@
-current platform:
-[text](https://streamable.com/8bq0i6)
+current platform showcase: 
+
+https://streamable.com/8bq0i6
 
 project goals:
 

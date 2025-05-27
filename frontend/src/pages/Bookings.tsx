@@ -12,17 +12,23 @@ import DatePicker from '../components/DatePicker';
 import { CreateBookingModal } from '../components/Bookings/CreateBookingModal';
 
 const BookingsPage = () => {
+  // State management
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [meta, setMeta] = useState<Meta>({ total: 0, page: 1, limit: 20, totalPages: 1 });
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
+  
+  // Filter states
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [search, setSearch] = useState<string>('');
   const [pickupDateStart, setPickupDateStart] = useState<string>('');
   const [pickupDateEnd, setPickupDateEnd] = useState<string>('');
+  
+  // Modal state
   const [openCreateModal, setOpenCreateModal] = useState(false);
 
+  // Load bookings with filters
   const loadBookings = async (
     targetPage: number,
     searchQuery: string = '',
@@ -46,6 +52,7 @@ const BookingsPage = () => {
         {},
         { disableToast: true }
       );
+      
       if (response.status === 'success' && response.data) {
         setBookings(response.data.data || []);
         setMeta(response.data.meta || { total: 0, page: 1, limit: 20, totalPages: 1 });
@@ -62,10 +69,12 @@ const BookingsPage = () => {
     }
   };
 
+  // Load bookings on page/rowsPerPage change
   useEffect(() => {
     loadBookings(page, search, statusFilter, pickupDateStart, pickupDateEnd);
   }, [page, rowsPerPage]);
 
+  // Event handlers
   const handlePageChange = (newPage: number) => {
     if (newPage === page) {
       loadBookings(newPage, search, statusFilter, pickupDateStart, pickupDateEnd);
@@ -100,47 +109,64 @@ const BookingsPage = () => {
 
   return (
     <Box sx={{ p: 4, minHeight: '100vh', bgcolor: '#121212', color: '#E3F2FD' }}>
+      {/* Header */}
       <Typography variant="h4" gutterBottom>
         Bookings
       </Typography>
       
+      {/* Toolbar */}
       <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-      <CustomButton
+        {/* Create Button */}
+        <CustomButton
           startIcon={<Add />}
           customVariant="primary"
           onClick={() => setOpenCreateModal(true)}
         >
           Create Booking
         </CustomButton>
+        
+        {/* Create Modal */}
         <CreateBookingModal
           open={openCreateModal}
           onClose={() => setOpenCreateModal(false)}
           onCreated={onBookingCreated}
         />
-      <Box sx={{ width: '1px', height: '24px', bgcolor: '#2A2A2A', mx: 1 }} />
-        <DropdownSelect value={statusFilter} onChange={setStatusFilter} />
+        
+        {/* Divider */}
+        <Box sx={{ width: '1px', height: '24px', bgcolor: '#2A2A2A', mx: 1 }} />
+        
+        {/* Filters */}
+        <DropdownSelect 
+          value={statusFilter} 
+          onChange={setStatusFilter} 
+        />
+        
         <TextBox
           label="Search Filter"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e: { key: string; }) => e.key === 'Enter' && handleSearch()}
         />
+        
         <CustomButton
           startIcon={<Search />}
           onClick={handleSearch}
         >
           Search
         </CustomButton>
+        
         <DatePicker
           label="Pickup Date Start"
           value={pickupDateStart}
           onChange={(e: { target: { value: SetStateAction<string>; }; }) => setPickupDateStart(e.target.value)}
         />
+        
         <DatePicker
           label="Pickup Date End"
           value={pickupDateEnd}
           onChange={(e: { target: { value: SetStateAction<string>; }; }) => setPickupDateEnd(e.target.value)}
         />
+        
         <CustomButton
           customVariant="secondary"
           onClick={handleClearFilters}
@@ -149,7 +175,7 @@ const BookingsPage = () => {
         </CustomButton>
       </Box>
 
-
+      {/* Table with Loading Overlay */}
       <Box sx={{ position: 'relative' }}>
         {loading && (
           <Box

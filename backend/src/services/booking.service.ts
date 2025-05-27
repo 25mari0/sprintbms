@@ -56,6 +56,7 @@ class BookingManagementService {
           service: serviceEntity,
           base_price: serviceEntity.price,
           charged_price: service.price,
+          time_estimate: serviceEntity.estimated_time_minutes,
           service_name_at_booking: serviceEntity.name,
         });
       }
@@ -65,7 +66,7 @@ class BookingManagementService {
           this.userRepository.target,
           {
             where: { id: worker.workerId },
-            relations: ['business']         // ← tell TypeORM to load the `business` relation
+            relations: ['business']         
           }
         );
         if (!workerEntity) throw new AppError(400, 'Worker not found');

@@ -1,3 +1,5 @@
+// src/components/Bookings/BookingTable.tsx
+import React, { useState } from 'react';
 import {
   Table,
   TableBody,
@@ -5,15 +7,13 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  IconButton,
 } from '@mui/material';
 import { Booking } from '../../types/bookingTypes';
 import { Meta } from '../../types/index';
 import { post } from '../../services/api';
 import { toast } from 'react-toastify';
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
-import { useState } from 'react';
-import { PromptModal } from '../PromptModal'; // Import PromptModal
+import BookingRow from './BookingRow';
+import { PromptModal } from '../PromptModal';
 
 interface BookingTableProps {
   bookings: Booking[];
@@ -22,17 +22,14 @@ interface BookingTableProps {
   onRowsPerPageChange: (newRowsPerPage: number) => void;
 }
 
-const BookingTable = ({
+const BookingTable: React.FC<BookingTableProps> = ({
   bookings,
   meta,
   onPageChange,
   onRowsPerPageChange,
-}: BookingTableProps) => {
+}) => {
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
-  const [deleteBooking, setDeleteBooking] = useState<{
-    id: string;
-    customerName: string;
-  } | null>(null);
+  const [deleteBooking, setDeleteBooking] = useState<{ id: string; customerName: string } | null>(null);
 
   const handleDelete = (id: string, customerName: string) => {
     setDeleteBooking({ id, customerName });
@@ -44,7 +41,7 @@ const BookingTable = ({
     try {
       await post<unknown>(`/bookings/${deleteBooking.id}`, null, { method: 'DELETE' });
       toast.success('Booking deleted successfully');
-      onPageChange(meta.page); // Trigger a re-fetch
+      onPageChange(meta.page); // Refresh the current page
     } catch (error) {
       toast.error('Failed to delete booking');
     } finally {
@@ -53,9 +50,16 @@ const BookingTable = ({
     }
   };
 
-  const calculateTotalChargedPrice = (bookingServices: any[]) => {
-    return bookingServices.reduce((total, service) => total + Number(service.charged_price), 0);
-  };
+  // Table headers with unique keys
+  const tableHeaders = [
+    { id: 'expand', label: '', width: '50px' },
+    { id: 'customer', label: 'Customer' },
+    { id: 'pickup', label: 'Pickup At' },
+    { id: 'price', label: 'Charged Price' },
+    { id: 'license', label: 'License Plate' },
+    { id: 'status', label: 'Status' },
+    { id: 'actions', label: '', width: '50px' },
+  ];
 
   return (
     <div>
@@ -68,63 +72,42 @@ const BookingTable = ({
       >
         <TableHead>
           <TableRow>
-            {['Customer', 'Pickup At', 'Charged Price', 'License Plate', 'Status', ''].map(
-              (header) => (
-                <TableCell
-                  key={header}
-                  sx={{ color: '#78909C', fontSize: '0.875rem', fontWeight: 600, py: 1.5 }}
-                >
-                  {header}
-                </TableCell>
-              )
-            )}
+            {tableHeaders.map((header) => (
+              <TableCell
+                key={header.id}
+                sx={{ 
+                  color: '#78909C', 
+                  fontSize: '0.875rem', 
+                  fontWeight: 600, 
+                  py: 1.5, 
+                  width: header.width || 'auto' 
+                }}
+              >
+                {header.label}
+              </TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
           {bookings.length > 0 ? (
             bookings.map((booking, index) => (
-              <TableRow
-                key={booking.id}
-                sx={{
-                  backgroundColor: index % 2 === 0 ? '#1E1E1E' : '#202020',
-                  '&:hover': { backgroundColor: 'rgba(74, 144, 226, 0.1)' },
-                  transition: 'background-color 0.2s',
-                }}
-              >
-                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
-                  {booking.customer.name}
-                </TableCell>
-                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
-                  {new Date(booking.pickup_at).toLocaleString()}
-                </TableCell>
-                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
-                  {'€' + calculateTotalChargedPrice(booking.bookingServices).toFixed(2)}
-                </TableCell>
-                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
-                  {booking.vehicle_license_plate}
-                </TableCell>
-                <TableCell sx={{ color: '#E8ECEF', fontSize: '0.875rem', py: 1 }}>
-                  {booking.status}
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={() => handleDelete(booking.id, booking.customer.name)}
-                    sx={{ color: '#D32F2F' }}
-                  >
-                    <DeleteOutlineRoundedIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+              <BookingRow
+                key={booking.id || `booking-${index}`}
+                booking={booking}
+                index={index}
+                onDelete={handleDelete}
+              />
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} sx={{ color: '#A8C7E2', py: 4, textAlign: 'center' }}>
+              <TableCell colSpan={7} sx={{ color: '#A8C7E2', py: 4, textAlign: 'center' }}>
                 No bookings available
               </TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+      
       <TablePagination
         component="div"
         count={meta.total}
@@ -139,6 +122,7 @@ const BookingTable = ({
           '& .MuiTablePagination-select': { color: '#E3F2FD' },
         }}
       />
+      
       <PromptModal
         open={openDeleteModal}
         onClose={() => {

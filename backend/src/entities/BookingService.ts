@@ -25,6 +25,10 @@ export class BookingService {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   charged_price!: number;
 
+  //time estimate in minutes
+  @Column({ type: 'int' })
+  time_estimate!: number;
+
   //price of the service at the time of booking
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   base_price!: number; 

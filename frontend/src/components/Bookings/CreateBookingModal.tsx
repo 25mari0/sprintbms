@@ -122,7 +122,7 @@ const ServicePriceItem = ({
         primary={service.name}
         secondary={
           <>
-            Base: €{basePrice.toFixed(2)} • Your: €{price.toFixed(2)}
+            Base: €{basePrice.toFixed(2)} • Charged: €{price.toFixed(2)}
             {discountPercent > 0 && (
               <Typography
                 component="span"
@@ -195,28 +195,31 @@ export const CreateBookingModal: React.FC<{
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [modifiedPrices, setModifiedPrices] = useState<Record<number, number>>({});
 
-  // Fetch workers and services on mount
+  // Fetch workers and services when the modal opens
   useEffect(() => {
-    // Fetch workers
-    get<Worker[]>('/worker/', undefined, { disableToast: true })
-      .then(response => {
-        if (response.status === 'success') {
-          setWorkerOptions(response.data || []);
-        }
-      })
-      .catch(console.error);
+    if (open) { // Only fetch when the modal is open
+      // Fetch workers
+      get<Worker[]>('/worker/', undefined, { disableToast: true })
+        .then(response => {
+          if (response.status === 'success') {
+            setWorkerOptions(response.data || []);
+          }
+        })
+        .catch(console.error);
 
-    // Fetch services
-    setIsLoadingServices(true);
-    get<Service[]>('/services', undefined, { disableToast: true })
-      .then(response => {
-        if (response.status === 'success') {
-          setServiceOptions(response.data || []);
-        }
-      })
-      .catch(console.error)
-      .finally(() => setIsLoadingServices(false));
-  }, []);
+      // Fetch services
+      setIsLoadingServices(true);
+      get<Service[]>('/services', undefined, { disableToast: true })
+        .then(response => {
+          if (response.status === 'success') {
+            setServiceOptions(response.data || []);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsLoadingServices(false));
+    }
+  }, [open]);
+
 
   // Reset form when modal closes
   useEffect(() => {
@@ -325,10 +328,9 @@ export const CreateBookingModal: React.FC<{
                 fetchOptions={fetchCustomers}
                 getOptionLabel={customer => customer.name}
                 renderOption={customer => (
-                  <Stack direction="row" spacing={1} alignItems="center">
+                  <Stack direction="column" spacing={0.5} alignItems="left">
                     <Typography>{customer.name}</Typography>
-                    <Box sx={{ width: '1px', height: '24px', bgcolor: 'gray', mx: 1 }} />
-                    <Stack direction="row" alignItems="center">
+                    <Stack direction="row" alignItems="left">
                       <LocalPhoneRoundedIcon fontSize="small" sx={{ color: 'gray', mr: 0.5 }} />
                       <Typography fontSize="small" variant="caption" color="gray">
                         {customer.phone}

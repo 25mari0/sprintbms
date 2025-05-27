@@ -1,3 +1,6 @@
+current platform:
+[text](https://streamable.com/8bq0i6)
+
 project goals:
 
 - full-stack web application to streamline operations for car detailing businesses, subscription based /w Stripe payments. 

@@ -2,6 +2,8 @@ current platform showcase:
 
 https://streamable.com/8bq0i6
 
+![Image caption](https://github.com/25mari0/sprintbms/blob/master/showcase%202.png)
+
 project goals:
 
 - full-stack web application to streamline operations for car detailing businesses, subscription based /w Stripe payments. 

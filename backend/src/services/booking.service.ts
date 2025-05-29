@@ -1,4 +1,3 @@
-// backend/src/services/booking.service.ts
 import AppDataSource from '../db/data-source';
 import { Booking } from '../entities/Booking';
 import { BookingService } from '../entities/BookingService';

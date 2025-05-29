@@ -34,7 +34,8 @@
     "pg-promise": "^11.10.2",
     "reflect-metadata": "^0.1.13",
     "stripe": "^17.6.0",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "ioredis": "^5.6.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

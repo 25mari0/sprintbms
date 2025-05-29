@@ -2,11 +2,14 @@ import { Service } from '../entities/Service';
 import AppDataSource from '../db/data-source';
 import { BookingService } from '../entities/BookingService';
 import { AppError } from '../utils/error';
+import { CACHE_CONFIG } from '../config/cache.config';
+import { Cacheable, CacheInvalidate } from '../decorators/cache.decorator';
 
 export class ServiceService {
   private serviceRepository = AppDataSource.getRepository(Service);
   private bookingserviceRepository = AppDataSource.getRepository(BookingService)
 
+  @CacheInvalidate([CACHE_CONFIG.PATTERNS.SERVICES]) 
   async createService(
     businessId: string,
     name: string,
@@ -22,12 +25,20 @@ export class ServiceService {
     return await this.serviceRepository.save(service);
   }
 
+  @Cacheable({
+    keyGenerator: (businessId: string) => `services:${businessId}`,
+    ttl: CACHE_CONFIG.TTL.SERVICES, 
+  })
   async getAllServicesForBusiness(businessId: string): Promise<Service[]> {
     return await this.serviceRepository.find({
       where: { business: { id: businessId } },
     });
   }
 
+  @Cacheable({
+    keyGenerator: (serviceId: string, businessId: string) => `service:${serviceId}:${businessId}`,
+    ttl: CACHE_CONFIG.TTL.SERVICES, 
+  })
   async getServiceById(serviceId: string, businessId: string): Promise<Service> {
     // Validate inputs
     if (!serviceId) {

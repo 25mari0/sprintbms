@@ -123,22 +123,33 @@ const authController = {
     try {
       const userId = req.user!.userId;
       const business = await businessService.getBusinessByUserId(userId);
-      const user = await authService.getUserById(userId)
+      const user = await authService.getUserById(userId);
+
+      // Ensure proper date comparison
+      const now = new Date();
+      const expirationDate = business ? new Date(business.licenseExpirationDate) : null;
+      const isPremium = expirationDate ? expirationDate > now : false;
+
+      console.log('Date comparison:', {
+        now,
+        expirationDate,
+        isPremium
+      });
 
       const responseData = {
         userId,
-        email: user?.email,  // email is not in the token payload
+        email: user?.email,
         role: user?.role,
-        hasBusiness: !!business, // True if business exists
-        isPremium: business ? business.licenseExpirationDate > new Date() : false, // True if not expired
-        licenseExpirationDate: business?.licenseExpirationDate || null, // Null if no business
+        hasBusiness: !!business,
+        isPremium,
+        licenseExpirationDate: expirationDate,
       };
 
       let redirect;
       if (!responseData.hasBusiness) {
-        redirect = '/business/create';
+        redirect = '/business/create?mode=create';
       } else if (!responseData.isPremium) {
-        redirect = '/business/renew';
+        redirect = '/business/create?mode=renew';
       }
 
       res.status(200).json({ status: 'success', data: responseData, redirect });

@@ -10,9 +10,14 @@ services:
       - DB_USERNAME=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis  # Point to Redis service
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD} 
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy  # Wait for Redis to be ready
     volumes:
       - ./backend:/app
     healthcheck:
@@ -38,6 +43,31 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7-alpine  # Use specific version and alpine for smaller size
+    container_name: redis_sprintbms
+    restart: unless-stopped  # Auto-restart policy
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Custom config
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    sysctls:
+      - net.core.somaxconn=1024  # Improve connection handling
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -70,3 +100,5 @@ services:
 volumes:
   postgres_data:
   pgadmin_data:
+  redis_data:
+  stripe_data:

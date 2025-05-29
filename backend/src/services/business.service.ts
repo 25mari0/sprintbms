@@ -3,11 +3,17 @@ import { Business } from '../entities/Business';
 import { User } from '../entities/User';
 import { AppError } from '../utils/error';
 import authService from './auth.service';
+import { CACHE_CONFIG } from '../config/cache.config';
+import { Cacheable, CacheInvalidate } from '../decorators/cache.decorator';
 
 class BusinessService {
   private businessRepository = AppDataSource.getRepository(Business);
   private userRepository = AppDataSource.getRepository(User);
 
+  @CacheInvalidate([
+    CACHE_CONFIG.PATTERNS.BUSINESS, 
+    'business:user:*'  // Add this to clear user-business cache
+  ])  
   async createBusiness(
     userId: string,
     name: string,
@@ -47,15 +53,30 @@ class BusinessService {
     return { business, newAccessToken };
   }
 
+  @Cacheable({
+    keyGenerator: (userId: string) => `business:user:${userId}`,
+    ttl: CACHE_CONFIG.TTL.BUSINESS 
+  })
   async getBusinessByUserId(userId: string): Promise<Business | null> {
-    return this.businessRepository.findOne({
+    const business = await this.businessRepository.findOne({
       where: {
         users: { id: userId }, 
       },
       relations: ['users'],
     });
+
+    if (business) {
+      // Ensure date is a Date object, avoids caching issues with JSON serialization
+      business.licenseExpirationDate = new Date(business.licenseExpirationDate);
+    }
+
+    return business;
   }
 
+  @CacheInvalidate([
+    CACHE_CONFIG.PATTERNS.BUSINESS,
+    'business:user:*'
+  ])
   async extendBusinessExpiration(userId: string, daysToAdd: number): Promise<Business> {
     const business = await this.getBusinessByUserId(userId);
     if (!business) {
@@ -74,6 +95,11 @@ class BusinessService {
     return business;
   }
 
+  @Cacheable({
+    keyGenerator: (businessId: string) => `business:${businessId}`,
+    ttl: CACHE_CONFIG.TTL.BUSINESS, 
+    keyPrefix: 'business'
+  })
   async getBusinessById(businessId: string): Promise<Business | null> {
 
     if (!businessId) throw new AppError(400, 'Business ID is required');

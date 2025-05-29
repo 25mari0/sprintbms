@@ -15,7 +15,8 @@ import serviceRoutes from './routes/service.routes';
 import workerRoutes from './routes/worker.routes';
 import multer from 'multer';
 import cors from 'cors';
-
+import redisClient from './config/redis';
+import { cacheManager } from './services/cache-manager.service';
 
 dotenv.config();
 
@@ -41,20 +42,11 @@ const limiter = rateLimit({
 
 app.set('trust proxy', true);
 
-
-/* app.use((req, res, next) => {
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self'",
-  );
-  next();
-}); */
-
 app.use(cors({
   origin: process.env.FRONTEND_URL, // allow only our frontend origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // specify allowed methods
   credentials: true, // allow cookies/credentials if needed (e.g., JWT in cookies)
-  exposedHeaders: ['Authorization'], // Expose only what’s necessary
+  exposedHeaders: ['Authorization'], // Expose only what's necessary
 }));
 
 app.use(cookieParser());
@@ -66,6 +58,33 @@ app.use('/services', serviceRoutes, limiter);
 app.use('/worker', workerRoutes, limiter);
 
 app.use(errorHandler);
+
+// Redis initialization function
+const initializeRedis = async () => {
+  try {
+    await redisClient.connect();
+    console.log('Redis initialized successfully');
+    
+    // Optional: Perform initial cache maintenance
+    // await cacheManager.performMaintenance();
+  } catch (error) {
+    console.error('Failed to initialize Redis:', error);
+    // Decide whether to exit or continue without Redis
+    // For production, you might want to exit
+    // process.exit(1);
+  }
+};
+
+// Optional: Add scheduled maintenance (run daily)
+const scheduleMaintenanceTasks = () => {
+  setInterval(async () => {
+    try {
+      await cacheManager.performMaintenance();
+    } catch (error) {
+      console.error('Cache maintenance failed:', error);
+    }
+  }, 24 * 60 * 60 * 1000); // Daily maintenance
+};
 
 // retry logic for TypeORM initialization
 const connectWithRetry = async () => {
@@ -87,8 +106,20 @@ const connectWithRetry = async () => {
   }
 };
 
-// call retry logic for DB connection
-connectWithRetry();
+// Initialize services in the correct order
+const initializeServices = async () => {
+  // 1. Initialize database first
+  await connectWithRetry();
+  
+  // 2. Initialize Redis
+  await initializeRedis();
+  
+  // 3. Schedule maintenance tasks
+  scheduleMaintenanceTasks();
+};
+
+// Call initialization
+initializeServices();
 
 app.get('/', (req, res) => {
   res.send('API is running!');

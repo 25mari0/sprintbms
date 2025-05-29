@@ -46,8 +46,6 @@ const businessController = {
         req: Request,
         res: Response
          ): Promise<void> => {
-          console.log('Raw body:', req.body); // Should be a Buffer
-          console.log('Type of req.body:', typeof req.body, Buffer.isBuffer(req.body));
         const sig = req.headers['stripe-signature'] as string;
         const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
     

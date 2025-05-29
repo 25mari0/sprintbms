@@ -12,7 +12,7 @@ class BusinessService {
 
   @CacheInvalidate([
     CACHE_CONFIG.PATTERNS.BUSINESS, 
-    'business:user:*'  // Add this to clear user-business cache
+    'business:user:*'  // wildcards - clears user-business cache
   ])  
   async createBusiness(
     userId: string,

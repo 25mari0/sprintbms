@@ -202,7 +202,13 @@ export const CreateBookingModal: React.FC<{
       get<Worker[]>('/worker/', undefined, { disableToast: true })
         .then(response => {
           if (response.status === 'success') {
-            setWorkerOptions(response.data || []);
+            // Filter workers to only those with status 'active' or 'password-reset'
+            const activeWorkers = response.data?.filter(
+              (worker) =>
+                worker.status === 'active' ||
+                worker.status === 'password-reset',
+            );
+            setWorkerOptions(activeWorkers || []);
           }
         })
         .catch(console.error);
@@ -289,8 +295,11 @@ export const CreateBookingModal: React.FC<{
       customerId: data.customerId,
       licensePlate: data.licensePlate,
       pickupDate: data.pickupDate,
-      workers: data.workers.map(w => ({ workerId: w.workerId })),
-      services: data.services.map(s => ({ serviceId: s.serviceId, price: s.price }))
+      workers: data.workers.map((w) => ({ workerId: w.workerId })),
+      services: data.services.map((s) => ({
+        serviceId: s.serviceId,
+        price: s.price,
+      })),
     };
     
     const response = await post('/bookings', payload);

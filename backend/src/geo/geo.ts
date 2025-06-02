@@ -19,7 +19,6 @@ export async function getLocationFromIp(ip: string): Promise<GeoLocation> {
     
     // Get location data
     const response = await reader.city(ip);
-
     
     return {
       country: response.country?.names?.en,
@@ -28,10 +27,19 @@ export async function getLocationFromIp(ip: string): Promise<GeoLocation> {
       latitude: response.location?.latitude,
       longitude: response.location?.longitude
     };
-  } catch (error) {
-    console.error('Error getting location from IP:', error);
-    // Return empty object if lookup fails
-    return {};
+  } catch {
+    // Return same object with undefined values if error occurs
+    // Prevents a crash and allows graceful handling in case of an invalid IP or database issues
+    console.error('bad ip address:', ip);
+
+    // return default values
+    return {
+      country: 'undefined',
+      region: 'undefined',
+      city: 'undefined',
+      latitude: undefined,
+      longitude: undefined
+    };
   }
 }
 

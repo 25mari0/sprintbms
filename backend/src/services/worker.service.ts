@@ -7,6 +7,8 @@ import authService from "./auth.service";
 import emailService from "./email.service";
 import { AppError } from "../utils/error";
 import { randomUUID } from "crypto";
+import { Cacheable, CacheInvalidate } from '../decorators/cache.decorator';
+import { CACHE_CONFIG } from '../config/cache.config';
 import bcrypt from 'bcryptjs';
 
 class WorkerService {
@@ -14,6 +16,7 @@ class WorkerService {
   private businessRepository = AppDataSource.getRepository(Business);
   private verificationTokenRepository = AppDataSource.getRepository(VerificationToken);
 
+  @CacheInvalidate(['workers:*'])
   public async addWorker(
     businessId: string,
     name: string,
@@ -186,6 +189,7 @@ class WorkerService {
   //suspend a worker - does not remove verification token, because if the
   //worker is reactivated, they will need to verify their account again 
   //in case they werent verified before suspension
+  @CacheInvalidate(['workers:*'])
   async suspendWorker(ownerId: string, workerId: string): Promise<void> {
     if (!await this.ownerManagesWorker(ownerId, workerId)) {
       throw new AppError(400, 'Worker does not belong to your business');
@@ -206,6 +210,7 @@ class WorkerService {
     await emailService.sendWorkerSuspended(user.email);
   }
 
+  @CacheInvalidate(['workers:*'])
   async reactivateWorker(ownerId: string, workerId: string): Promise<void> {
     if (!await this.ownerManagesWorker(ownerId, workerId)) {
       throw new AppError(400, 'Worker does not belong to your business');
@@ -232,8 +237,17 @@ class WorkerService {
     return { user, status };
   }
 
+  
+  @Cacheable({
+    keyGenerator: (businessId: string, ownerId: string) => `workers:${businessId}:${ownerId}`,
+    ttl: CACHE_CONFIG.TTL.BUSINESS, 
+  })
   async getWorkers(businessId: string, ownerId: string): Promise<{ user: User; status: string }[]> {
-    const users = await this.userRepository.find({ where: { business: { id: businessId }, id: Not(ownerId) }, relations: ['verificationToken']  });
+    const users = await this.userRepository.find({
+      where: { business: { id: businessId }, id: Not(ownerId) },
+      relations: ['verificationToken'],
+    });
+    
     const workerStatuses = await Promise.all(users.map(async user => ({
       user,
       status: await user.getWorkerStatus()
@@ -241,6 +255,8 @@ class WorkerService {
 
     return workerStatuses;
   }
+
+
 
 }
 

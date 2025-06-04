@@ -16,8 +16,8 @@ router.post(
     workerController.createWorker,
 );
 
-//PASSWORD RESET
-//route for OWNER to reset the worker's password
+// PASSWORD RESET
+// route for OWNER to reset the worker's password
 router.post(
   '/:userId/reset-password',
   tokenMiddleware.authenticate,
@@ -26,7 +26,7 @@ router.post(
   workerController.resetWorkerPassword,
 )
 
-//route for OWNER to resend the worker's password reset link
+// route for OWNER to resend the worker's password reset link
 router.post(
   '/:userId/resend-password-reset',
   tokenMiddleware.authenticate,
@@ -35,13 +35,13 @@ router.post(
   workerController.resendWorkerPasswordReset,
 )
 
-//route to verify if the token is valid
+// route to verify if the token is valid
 router.get(
   '/verify-reset-token',
   authController.validateVerificationToken,
 )
 
-//route for the worker to set a new password
+// route for the worker to set a new password
 router.post(
   '/set-password',
   workerController.setPassword,
@@ -49,7 +49,7 @@ router.post(
 
 //----------------------------------------------------------------
 
-//ACCOUNT VERIFICATION
+// ACCOUNT VERIFICATION
 router.post(
   '/account-verification/:userId/resend',
   tokenMiddleware.authenticate,
@@ -74,18 +74,21 @@ router.post(
 //----------------------------------------------------------------
 
 
-//replies with the worker's data
+// replies with the worker's data
 router.get(
-    '/:userId',
-    tokenMiddleware.authenticate,
-    workerController.getWorker,
-)
+  '/:userId',
+  tokenMiddleware.authenticate,
+  businessMiddleware.isBusinessOwner,
+  workerController.getWorker,
+);
 
-//replies with the list of workers for the business and their status (active, unverified, suspended)
+// replies with the list of workers for the business and their status (active, unverified, suspended)
 router.get(
   '/',
   tokenMiddleware.authenticate,
+  businessMiddleware.hasBusiness, // Both owners and workers need a business
+  premiumMiddleware.isPremium,
   workerController.getWorkers,
-)
+);
 
 export default router;

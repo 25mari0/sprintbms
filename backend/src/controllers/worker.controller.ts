@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { JwtPayload } from '../types/authTypes';
 import WorkerService from '../services/worker.service';
 import workerService from '../services/worker.service';
+import { workerTransformer } from '../utils/transformer';
 
 const workerController = {
     createWorker: async (
@@ -169,24 +170,35 @@ const workerController = {
         }
     },
 
-    getWorkers: async (
-        req: Request & { user?: JwtPayload },
-        res: Response,
-        next: NextFunction
-      ): Promise<void> => {
-        try {
-          const businessId = req.user!.business!.id;
-          const ownerId = req.user!.userId;
-      
-          const workers = await workerService.getWorkers(businessId, ownerId);
-      
-          res.status(200).json({
-            status: 'success',
-            data: workers,
-          });
-        } catch (error) {
-          next(error);
-        }
+  getWorkers: async (
+      req: Request & { user?: JwtPayload },
+      res: Response,
+      next: NextFunction
+    ): Promise<void> => {
+      try {
+        const businessId = req.user!.business!.id;
+        const ownerId = req.user!.userId;
+        const userRole = req.user!.role;
+        
+        const workers = await WorkerService.getWorkers(businessId, ownerId);
+        
+        // Transform data based on user role
+        const transformedWorkers = workers.map(worker => {
+          if (userRole === 'owner') {
+            return workerTransformer.fullData(worker);
+          } else {
+            // Worker role - limited data for booking assignments
+            return workerTransformer.limitedData(worker);
+          }
+        });
+
+        res.status(200).json({
+          status: 'success',
+          data: transformedWorkers,
+        });
+      } catch (error) {
+        next(error);
+      }
     }
 
 };

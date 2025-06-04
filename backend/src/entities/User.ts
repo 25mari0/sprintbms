@@ -63,7 +63,6 @@ export class User {
   }
 
   async getWorkerStatus(): Promise<string> {
-    console.log('Worker status:', this.email, this.role, this.verificationToken, this.lastPasswordChange.getTime(), this.createdAt.getTime());
     if (this.role === 'suspended') {
       return 'suspended';
     } else if (this.verificationToken && this.lastPasswordChange.getTime() === this.createdAt.getTime()) {
